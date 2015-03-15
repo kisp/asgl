@@ -124,3 +124,46 @@ Feature: complete
      When I run `asgl -p DS-CO -fo apx -f "g.apx" -a arg1`
      Then the exit status should be 0
      And the output should be eql to "NO"
+
+  Scenario: skeptical acceptance ex3
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     arg(arg2).
+     att(arg1,arg2).
+     att(arg2,arg1).
+     """
+     When I run `asgl -p DS-CO -fo apx -f "g.apx" -a arg1`
+     Then the exit status should be 0
+     And the output should be eql to "NO"
+
+  Scenario: credulous acceptance ex1
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     """
+     When I run `asgl -p DC-CO -fo apx -f "g.apx" -a arg1`
+     Then the exit status should be 0
+     And the output should be eql to "YES"
+
+  Scenario: credulous acceptance ex2
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     att(arg1,arg1).
+     """
+     When I run `asgl -p DC-CO -fo apx -f "g.apx" -a arg1`
+     Then the exit status should be 0
+     And the output should be eql to "NO"
+
+  Scenario: credulous acceptance ex3
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     arg(arg2).
+     att(arg1,arg2).
+     att(arg2,arg1).
+     """
+     When I run `asgl -p DC-CO -fo apx -f "g.apx" -a arg1`
+     Then the exit status should be 0
+     And the output should be eql to "YES"
