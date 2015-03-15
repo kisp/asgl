@@ -10,6 +10,15 @@ RSpec::Matchers.define :be_meql do |expected|
   end
 end
 
+RSpec::Matchers.define :be_included_with_meql do |expected|
+  match do |actual|
+    expected.any? {|e| e.meql(actual) }
+  end
+  failure_message do |actual|
+    "but got #{actual.inspect}"
+  end
+end
+
 class Set
   def meql(other)
     result = other.is_a?(Set) &&
@@ -46,6 +55,18 @@ class Array
       raise "contains duplicates: #{a}"
     end
     a.to_set    
+  end
+end
+
+class TrueClass
+  def meql(other)
+    other == true
+  end
+end
+
+class FalseClass
+  def meql(other)
+    other == false
   end
 end
 
