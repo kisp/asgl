@@ -1,4 +1,2 @@
 #!/bin/bash
-
-echo '[apx]'
-exit 0
+java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar $*

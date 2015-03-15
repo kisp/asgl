@@ -6,4 +6,4 @@ Feature: formats
   Scenario: print formats
      When I run `asgl --formats`
      Then the exit status should be 0
-     And the output should contain "[apx]"
+     And the output should contain "[apx, tgf]"
