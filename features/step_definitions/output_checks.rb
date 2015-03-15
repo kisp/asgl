@@ -4,5 +4,13 @@ Then(/^the output should be a set of strings$/) do
 end
 
 Then(/^the output should be eql to "(.*?)"$/) do |expected|
-  parse_output(all_output).eql?(parse_output(expected))
+  a = parse_output(all_output)
+  b = parse_output(expected)
+  expect(a).to be_meql(b)
+end
+
+Then(/^the output should be eql to:$/) do |expected|
+  a = parse_output(all_output)
+  b = parse_output(expected)
+  expect(a).to be_meql(b)
 end

@@ -1,7 +1,30 @@
 require 'aruba/cucumber'
 require 'set'
 
+RSpec::Matchers.define :be_meql do |expected|
+  match do |actual|
+    actual.meql(expected)
+  end
+  failure_message do |actual|
+    "but got #{actual.inspect}"
+  end
+end
+
+class Set
+  def meql(other)
+    result = other.is_a?(Set) &&
+             (self.size == other.size) &&
+             self.all? {|elem| other.any? {|q| q.meql(elem) } }
+    # p "meql of #{self} and #{other} is #{result}"
+    result
+  end
+end
+
 class String
+  def meql(other)
+    other.is_a?(String) &&
+      self == other
+  end
   def j2set
     case self
     when "YES"

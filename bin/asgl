@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar $*
+exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar $*

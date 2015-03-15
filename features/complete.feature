@@ -1,0 +1,62 @@
+Feature: complete
+
+  As a user of asgl
+  I want to be able to compute extensions in complete semantics
+
+  Scenario: enumerate all ex1
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     arg(arg2).
+     arg(arg3).
+     att(arg1,arg2).
+     att(arg2,arg3).
+     """
+     When I run `asgl -p EE-CO -fo apx -f "g.apx"`
+     Then the exit status should be 0
+     And the output should be eql to "[[arg1, arg3]]"
+
+  Scenario: enumerate all ex2
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     arg(arg2).
+     arg(3).
+     att(arg1,arg2).
+     att(arg2,arg3).
+     """
+     When I run `asgl -p EE-CO -fo apx -f "g.apx"`
+     Then the exit status should be 0
+     And the output should be eql to "[[arg1, 3]]"
+
+  Scenario: enumerate all ex3
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     """
+     When I run `asgl -p EE-CO -fo apx -f "g.apx"`
+     Then the exit status should be 0
+     And the output should be eql to "[[arg1]]"
+
+  Scenario: enumerate all ex4
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     arg(arg2).
+     arg(arg3).
+     att(arg1,arg2).
+     att(arg2,arg1).
+     att(arg1,arg3).
+     att(arg2,arg3).
+     arg(arg4).
+     arg(arg5).
+     att(arg4,arg5).
+     att(arg5,arg4).
+     """
+     When I run `asgl -p EE-CO -fo apx -f "g.apx"`
+     Then the exit status should be 0
+     And the output should be eql to:
+     """
+     [[],[arg5],[arg2],[arg2,arg5],[arg4],[arg2,arg4],
+       [arg1],[arg1,arg5],[arg1,arg4]]
+     """
