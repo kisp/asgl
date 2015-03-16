@@ -855,9 +855,11 @@ Gecode::Gist::dfs(foo,o);
      (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
 
 (defun list-first-if-se (task extensions)
-  (ecase task
-    (:se (list (first extensions)))
-    (:ee extensions)))
+  (values
+   (ecase task
+     (:se (list (first extensions)))
+     (:ee extensions))
+   (and (eql task :se) (null extensions))))
 
 (defun main% (&key (fo "apx") f p)
   (assert (equal fo "apx"))
@@ -866,18 +868,22 @@ Gecode::Gist::dfs(foo,o);
       (multiple-value-bind (graph vector hash)
           (read-apx-file f)
         (when (eql task :ee) (write-char #\[))
-        (loop for tail on (list-first-if-se
-                           task
-                           (ecase semantic
-                             (:co (complete-all graph))
-                             (:st (stable-all graph))
-                             (:gr (grounded-all graph))
-                             (:pr (preferred-all graph))))
-              for extension = (car tail)
-              do (format t "[~{~A~^,~}]"
-                         (mapcar (lambda (index) (aref vector index)) extension))
-              unless (null (cdr tail))
-                do (write-char #\,))
+        (multiple-value-bind (extensions se-no?)
+            (list-first-if-se
+             task
+             (ecase semantic
+               (:co (complete-all graph))
+               (:st (stable-all graph))
+               (:gr (grounded-all graph))
+               (:pr (preferred-all graph))))
+          (if se-no?
+              (write-string "NO")
+              (loop for tail on extensions
+                    for extension = (car tail)
+                    do (format t "[~{~A~^,~}]"
+                               (mapcar (lambda (index) (aref vector index)) extension))
+                    unless (null (cdr tail))
+                      do (write-char #\,))))
         (when (eql task :ee) (write-char #\]))
         (terpri)))))
 
