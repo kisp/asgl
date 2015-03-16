@@ -23,7 +23,7 @@ Feature: complete
      arg(arg2).
      arg(3).
      att(arg1,arg2).
-     att(arg2,arg3).
+     att(arg2,3).
      """
      When I run `asgl -p EE-CO -fo apx -f "g.apx"`
      Then the exit status should be 0
