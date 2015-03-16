@@ -1,3 +1,5 @@
+;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; -*-
+
 (require 'cmp)
 
 (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
