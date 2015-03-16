@@ -846,7 +846,10 @@ Gecode::Gist::dfs(foo,o);
   (multiple-value-bind (graph vector hash)
       (read-apx-file (second ext:*command-args*))
     (write-char #\[)
-    (dolist (extension (complete-all graph))
-      (format t "~{~A~^,~}"
-              (mapcar (lambda (index) (aref vector index)) extension)))
+    (loop for tail on (complete-all graph)
+          for extension = (car tail)
+          do (format t "[~{~A~^,~}]"
+                     (mapcar (lambda (index) (aref vector index)) extension))
+          unless (null (cdr tail))
+            do (write-char #\,))
     (write-char #\])))
