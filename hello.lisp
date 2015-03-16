@@ -914,7 +914,7 @@ Gecode::Gist::dfs(foo,o);
      (write-line "ASGL v0.0.1")
      (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
     ((equal "--formats" (second ext:*command-args*))
-     (write-line "[agx, tgf]"))
+     (write-line "[apx, tgf]"))
     ((equal "--problems" (second ext:*command-args*))
      (write-line "[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]"))
     (t (apply #'main% (adopt-keywords (cdr ext:*command-args*))))))
