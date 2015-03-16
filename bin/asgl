@@ -47,9 +47,10 @@ function solver
     # echoerr "problem: $problem"
     # echoerr "additional: $additional"
 
-    if [ "$format" = "apx" -a "$problem" = "lines" ];
-    then
+    if [ "$format" = "apx" -a "$problem" = "lines" ]; then
         exec $(dirname $0)/foo $fileinput
+    elif [ "$format" = "apx" -a "$problem" = "EE-CO" ]; then
+        exec $(dirname $0)/hello-lisp $fileinput
     else
         if [ -z "$additional" ]; then
             exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar -f $fileinput -fo $format -p $problem
