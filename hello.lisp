@@ -854,24 +854,31 @@ Gecode::Gist::dfs(foo,o);
      (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
      (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
 
+(defun list-first-if-se (task extensions)
+  (ecase task
+    (:se (list (first extensions)))
+    (:ee extensions)))
+
 (defun main% (&key (fo "apx") f p)
   (assert (equal fo "apx"))
   (multiple-value-bind (task semantic) (parse-problem p)
     (let ((*print-case* :downcase))
       (multiple-value-bind (graph vector hash)
           (read-apx-file f)
-        (write-char #\[)
-        (loop for tail on (ecase semantic
-                            (:co (complete-all graph))
-                            (:st (stable-all graph))
-                            (:gr (grounded-all graph))
-                            (:pr (preferred-all graph)))
+        (when (eql task :ee) (write-char #\[))
+        (loop for tail on (list-first-if-se
+                           task
+                           (ecase semantic
+                             (:co (complete-all graph))
+                             (:st (stable-all graph))
+                             (:gr (grounded-all graph))
+                             (:pr (preferred-all graph))))
               for extension = (car tail)
               do (format t "[~{~A~^,~}]"
                          (mapcar (lambda (index) (aref vector index)) extension))
               unless (null (cdr tail))
                 do (write-char #\,))
-        (write-char #\])
+        (when (eql task :ee) (write-char #\]))
         (terpri)))))
 
 (defun main ()
