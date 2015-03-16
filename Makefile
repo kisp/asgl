@@ -27,3 +27,10 @@ hello-lisp: hello.o Foo.o
 gecode: gecode-patched-headers.tgz
 	rm -rf gecode
 	tar xfz gecode-patched-headers.tgz
+
+install-v1: install
+
+install-ref:
+	rm -f bin/asgl
+	echo '#!/bin/bash' >> bin/asgl
+	echo 'echo hi' >> bin/asgl
