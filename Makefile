@@ -1,18 +1,9 @@
-all: foo hello-lisp
-
-foo.o: foo.lisp
-	rm -f foo.o
-	ecl -norc -eval '(compile-file "foo.lisp" :system-p t)' -eval '(quit)'
-
-foo: foo.o
-	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "foo" :lisp-files (list "foo.o") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
+all: hello-lisp
 
 install: all
-	cp foo bin/foo
 	cp hello-lisp bin/asgl
 
 clean:
-	rm -f foo bin/foo foo.o
 	rm -f hello-lisp bin/asgl hello.o Foo.o hello.data hello.eclh hello.c
 	rm -rf gecode
 
