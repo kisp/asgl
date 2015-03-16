@@ -1,4 +1,4 @@
-Feature: lines
+Feature: dummy lines
 
   As a user of asgl
   I want to be able to count lines of input files
@@ -15,3 +15,14 @@ Feature: lines
      When I run `asgl -p lines -fo apx -f "g.apx"`
      Then the exit status should be 0
      And the output should be eql to "5"
+
+  Scenario: count lines ex2
+     Given a file named "g.apx" with:
+     """
+     arg(arg1).
+     arg(arg2).
+     arg(arg3).
+     """
+     When I run `asgl -p lines -fo apx -f "g.apx"`
+     Then the exit status should be 0
+     And the output should be eql to "3"

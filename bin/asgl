@@ -49,7 +49,7 @@ function solver
 
     if [ "$format" = "apx" -a "$problem" = "lines" ];
     then
-        exec $(dirname $0)/foo
+        exec $(dirname $0)/foo $fileinput
     else
         if [ -z "$additional" ]; then
             exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar -f $fileinput -fo $format -p $problem
