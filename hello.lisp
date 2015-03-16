@@ -861,30 +861,49 @@ Gecode::Gist::dfs(foo,o);
      (:ee extensions))
    (and (eql task :se) (null extensions))))
 
-(defun main% (&key (fo "apx") f p)
+(defun all-for-semantic (graph semantic)
+  (ecase semantic
+    (:co (complete-all graph))
+    (:st (stable-all graph))
+    (:gr (grounded-all graph))
+    (:pr (preferred-all graph))))
+
+(defun ee-se (graph task semantic vector)
+  (when (eql task :ee) (write-char #\[))
+  (multiple-value-bind (extensions se-no?)
+      (list-first-if-se
+       task
+       (all-for-semantic graph semantic))
+    (if se-no?
+        (write-string "NO")
+        (loop for tail on extensions
+              for extension = (car tail)
+              do (format t "[~{~A~^,~}]"
+                         (mapcar (lambda (index) (aref vector index)) extension))
+              unless (null (cdr tail))
+                do (write-char #\,))))
+  (when (eql task :ee) (write-char #\])))
+
+(defun dc-ds (graph task semantic hash arg)
+  (let ((arg-index (gethash arg hash)))
+    (flet ((contains-arg-p (extension)
+             (member arg-index extension)))
+      (let ((extensions (all-for-semantic graph semantic)))
+        (if (ecase task
+              (:ds (every #'contains-arg-p extensions))
+              (:dc (some #'contains-arg-p extensions)))
+            (write-string "YES")
+            (write-string "NO"))))))
+
+(defun main% (&key (fo "apx") f p a)
   (assert (equal fo "apx"))
   (multiple-value-bind (task semantic) (parse-problem p)
     (let ((*print-case* :downcase))
       (multiple-value-bind (graph vector hash)
           (read-apx-file f)
-        (when (eql task :ee) (write-char #\[))
-        (multiple-value-bind (extensions se-no?)
-            (list-first-if-se
-             task
-             (ecase semantic
-               (:co (complete-all graph))
-               (:st (stable-all graph))
-               (:gr (grounded-all graph))
-               (:pr (preferred-all graph))))
-          (if se-no?
-              (write-string "NO")
-              (loop for tail on extensions
-                    for extension = (car tail)
-                    do (format t "[~{~A~^,~}]"
-                               (mapcar (lambda (index) (aref vector index)) extension))
-                    unless (null (cdr tail))
-                      do (write-char #\,))))
-        (when (eql task :ee) (write-char #\]))
+        (ecase semantic
+          ((:ee :se) (ee-se graph task semantic vector))
+          ((:dc :ds) (dc-ds graph task semantic hash a)))
         (terpri)))))
 
 (defun main ()

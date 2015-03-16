@@ -50,7 +50,7 @@ function solver
     if [ -z "$additional" ]; then
         exec $(dirname $0)/hello-lisp -f $fileinput -fo $format -p $problem
     else
-        exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar -f $fileinput -fo $format -p $problem -a $additional
+        exec $(dirname $0)/hello-lisp -f $fileinput -fo $format -p $problem -a $additional
     fi
 }
 
