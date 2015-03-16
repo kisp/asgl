@@ -852,4 +852,5 @@ Gecode::Gist::dfs(foo,o);
                      (mapcar (lambda (index) (aref vector index)) extension))
           unless (null (cdr tail))
             do (write-char #\,))
-    (write-char #\])))
+    (write-char #\])
+    (terpri)))
