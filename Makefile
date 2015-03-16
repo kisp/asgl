@@ -33,5 +33,5 @@ install-v1: install
 install-ref:
 	rm -f bin/asgl
 	echo '#!/bin/bash' >> bin/asgl
-	echo 'exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar $*' >> bin/asgl
+	echo 'exec java -jar $$(dirname $$0)/libexec/tweetysolver-v1.1.1.jar $*' >> bin/asgl
 	chmod +x bin/asgl
