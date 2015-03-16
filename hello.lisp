@@ -903,7 +903,7 @@ Gecode::Gist::dfs(foo,o);
           (read-apx-file f)
         (ecase task
           ((:ee :se) (ee-se graph task semantic vector))
-          ((:dc :ds) (dc-ds graph task semantic hash (intern (string-upcase a)))))
+          ((:dc :ds) (dc-ds graph task semantic hash (read-from-string a))))
         (terpri)))))
 
 (defun main ()
