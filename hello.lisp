@@ -909,4 +909,12 @@ Gecode::Gist::dfs(foo,o);
 (defun main ()
   (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
   (format *error-output* "~S~%" ext:*command-args*)
-  (apply #'main% (adopt-keywords (cdr ext:*command-args*))))
+  (cond
+    ((null (cdr ext:*command-args*))
+     (write-line "ASGL v0.0.1")
+     (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
+    ((equal "--formats" (second ext:*command-args*))
+     (write-line "[agx, tgf]"))
+    ((equal "--problems" (second ext:*command-args*))
+     (write-line "[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]"))
+    (t (apply #'main% (adopt-keywords (cdr ext:*command-args*))))))

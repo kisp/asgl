@@ -9,11 +9,11 @@ foo: foo.o
 
 install: all
 	cp foo bin/foo
-	cp hello-lisp bin/hello-lisp
+	cp hello-lisp bin/asgl
 
 clean:
 	rm -f foo bin/foo foo.o
-	rm -f hello-lisp bin/hello-lisp hello.o Foo.o hello.data hello.eclh hello.c
+	rm -f hello-lisp bin/asgl hello.o Foo.o hello.data hello.eclh hello.c
 	rm -rf gecode
 
 hello.o: gecode hello.lisp
