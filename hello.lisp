@@ -843,6 +843,7 @@ Gecode::Gist::dfs(foo,o);
 
 (defun main ()
   (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
+  (format *error-output* "~S~%" ext:*command-args*)
   (let ((*print-case* :downcase))
     (multiple-value-bind (graph vector hash)
         (read-apx-file (second ext:*command-args*))
