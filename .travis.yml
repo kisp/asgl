@@ -38,7 +38,7 @@ install:
   - md5sum ecl.tar.gz
   - sudo tar -C / -xzf "ecl.tar.gz"
 
-  - ldconfig
+  - sudo ldconfig
 
   - bundle install
 
