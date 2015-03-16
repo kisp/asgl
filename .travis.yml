@@ -55,7 +55,7 @@ install:
   #- git clone --depth=1 git://github.com/cl-babel/babel.git ~/lisp/babel
 
 script:
-  - bundle exec cucumber features/dummy*
+  - bundle exec cucumber
   #- ecl -norc -eval '(format t "~A ~A~%~S~%" (lisp-implementation-type) (lisp-implementation-version) *features*)' -eval '(quit)'
   #- cl -e '(ql:quickload "graph-tgf-test")
   #         (uiop:quit (if (myam:load-and-run! "graph-tgf-test") 0 1))'
