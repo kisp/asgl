@@ -3,6 +3,7 @@ Feature: informational
   As a user of asgl
   I want to be able to query useful information about the solver
 
+  @notref
   Scenario: print information
      When I run `asgl`
      Then the exit status should be 0
@@ -16,6 +17,7 @@ Feature: informational
      And the output should be a set of strings
      And the output should be eql to "[apx, tgf]"
 
+  @notref
   Scenario: print problems
      When I run `asgl --problems`
      Then the exit status should be 0
