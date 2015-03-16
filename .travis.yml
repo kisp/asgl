@@ -18,6 +18,13 @@ env:
 #     - env: LISP=ccl32
 
 install:
+  - sudo apt-get update
+  - sudo apt-get install libgmp-dev
+  - sudo apt-get install libmpfr-dev
+  - sudo apt-get install libffi-dev
+  #- sudo apt-get install flex
+  #- sudo apt-get install bison
+  #- sudo apt-get install libqt4-dev
   - g++ --version
   - as --version
   - ld --version
