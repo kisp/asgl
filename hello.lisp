@@ -848,5 +848,5 @@ Gecode::Gist::dfs(foo,o);
     (write-char #\[)
     (dolist (extension (complete-all graph))
       (format t "~{~A~^,~}"
-              (mapcar (lambda (index) (aref index vector)) extension)))
+              (mapcar (lambda (index) (aref vector index)) extension)))
     (write-char #\])))
