@@ -10,6 +10,45 @@
 (defmacro format* (&rest args)
   `(when *with-logging* (format ,@args)))
 
+(defun vector2hash-table (vector)
+  (let ((hash (make-hash-table :test #'eql)))
+    (dotimes (i (length vector)
+                hash)
+      (setf (gethash (aref vector i) hash) i))))
+
+(defmacro with-apx-readtable (() &body body)
+  `(let ((*readtable* (copy-readtable nil)))
+     (set-macro-character #\, (lambda (stream char) (values)))
+     ,@body))
+
+(defun read-apx-line (string)
+  (with-input-from-string (input string)
+    (read input)
+    (read input)))
+
+(defun read-apx-file (pathname)
+  (let (nodes edges)
+    (with-apx-readtable ()
+      (with-open-file (input pathname)
+        (loop for line = (read-line input nil)
+              while line
+              do (let ((item (read-apx-line line)))
+                   (if (null (cdr item))
+                       (push (first item) nodes)
+                       (push item edges))))))
+    (let* ((vector (coerce (nreverse nodes) 'vector))
+           (adj (make-array (list (length vector) (length vector))
+                            :initial-element 0))
+           (hash (vector2hash-table vector)))
+      (dolist (edge edges)
+        (destructuring-bind (a b) edge
+          (setf (aref adj (gethash a hash) (gethash b hash))
+                1)))
+      (values
+       adj
+       vector
+       hash))))
+
 (defvar *nodes-cache* nil)
 (defvar *edges-cache* nil)
 (defvar *collect-parents-cache* nil)
@@ -48,7 +87,7 @@
 
 (defun make-boolvar (space)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 
 @(return 0) = new Gecode::BoolVar(*foo, 0, 1);
@@ -58,7 +97,7 @@ ks::Foo* foo = ((ks::Foo*)(#0));
 (defun expr-or (space boolvars)
   "Return a new boolvar that is constrained to be the OR of boolvars."
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 
 int len = (int)ecl_length(#1);
@@ -84,7 +123,7 @@ rel(*foo, Gecode::BOT_OR, a, *u);
 (defun expr-and (space boolvars)
   "Return a new boolvar that is constrained to be the AND of boolvars."
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 
 int len = (int)ecl_length(#1);
@@ -110,7 +149,7 @@ rel(*foo, Gecode::BOT_AND, a, *u);
 (defun expr-not (space boolvar)
   "Return a new boolvar that is constrained to be the NOT of boolvar."
   (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :pointer-void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 
 Gecode::BoolVar* a = ((Gecode::BoolVar*)(#1));
@@ -125,7 +164,7 @@ rel(*foo, *a, Gecode::IRT_NQ, *u);
 
 (defun post-nand (space i j)
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-                "{
+    "{
 
 ks::Foo* foo = ((ks::Foo*)(#0));
 
@@ -141,7 +180,7 @@ rel(*foo, vars[i], Gecode::BOT_AND, vars[j], 0);
 (defun post-imp (space i j)
   "Post i ---> j."
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-                "{
+    "{
 
 ks::Foo* foo = ((ks::Foo*)(#0));
 
@@ -157,7 +196,7 @@ rel(*foo, vars[i], Gecode::BOT_IMP, vars[j], 1);
 (defun assert-imp (space a b)
   "BoolVar a --> BoolVar b."
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-                "{
+    "{
 
 ks::Foo* foo = ((ks::Foo*)(#0));
 
@@ -171,7 +210,7 @@ rel(*foo, *a, Gecode::BOT_IMP, *b, 1);
 (defun post-eqv (space i j)
   "Post i ---> j."
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-                "{
+    "{
 
 ks::Foo* foo = ((ks::Foo*)(#0));
 
@@ -187,7 +226,7 @@ rel(*foo, vars[i], Gecode::BOT_EQV, vars[j], 1);
 (defun post-must-be-false (space i)
   "Post that i can only be 0."
   (ffi:c-inline (space i) (:pointer-void :int) :void
-                "{
+    "{
 
 ks::Foo* foo = ((ks::Foo*)(#0));
 
@@ -202,7 +241,7 @@ rel(*foo, vars[i], Gecode::IRT_EQ, 0);
 (defun post-must-be-true (space i)
   "Post that i can only be 1."
   (ffi:c-inline (space i) (:pointer-void :int) :void
-                "{
+    "{
 
 ks::Foo* foo = ((ks::Foo*)(#0));
 
@@ -216,7 +255,7 @@ rel(*foo, vars[i], Gecode::IRT_EQ, 1);
 
 (defun boolvar-post-true (space boolvar)
   (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 
 rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 1);
@@ -225,7 +264,7 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 1);
 
 (defun boolvar-post-false (space boolvar)
   (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 
 rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 0);
@@ -235,7 +274,7 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 0);
 (defun boolvar-post-eql (space a b)
   "Boolvar a eql boolvar b."
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 
 rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
@@ -245,10 +284,10 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
 (defun post-multi-grandparents (space node grandparents)
   "Post node ---> U(grandparents)."
   (ffi:c-inline
-   (space node grandparents)
-   (:pointer-void :int :object)
-   :void
-   "{
+      (space node grandparents)
+      (:pointer-void :int :object)
+      :void
+    "{
 
 ks::Foo* foo = ((ks::Foo*)(#0));
 
@@ -282,7 +321,7 @@ rel(*foo, vars[i], Gecode::BOT_IMP, u, 1);
 
 (defun delete-foo (foo)
   (ffi:c-inline (foo) (:pointer-void) :void
-                "{ delete ((ks::Foo*)#0); }"))
+    "{ delete ((ks::Foo*)#0); }"))
 
 (defun foo-getn (foo)
   (ffi:c-inline (foo) (:pointer-void) :int "{ @(return 0) = ((ks::Foo*)(#0))->getN(); }"))
@@ -290,7 +329,7 @@ rel(*foo, vars[i], Gecode::BOT_IMP, u, 1);
 (defun space-status (space)
   (let ((status
           (ffi:c-inline (space) (:pointer-void) :int
-                        "{
+            "{
 Gecode::SpaceStatus status = (((Gecode::Space*)(#0))->status());
 
 switch (status) {
@@ -318,11 +357,11 @@ default: @(return 0) = 100; break;
 
 (defun boolvar-min (boolvar)
   (ffi:c-inline (boolvar) (:pointer-void) :int
-                "{ @(return 0) = ((Gecode::BoolVar*)(#0))->min(); }"))
+    "{ @(return 0) = ((Gecode::BoolVar*)(#0))->min(); }"))
 
 (defun boolvar-max (boolvar)
   (ffi:c-inline (boolvar) (:pointer-void) :int
-                "{ @(return 0) = ((Gecode::BoolVar*)(#0))->max(); }"))
+    "{ @(return 0) = ((Gecode::BoolVar*)(#0))->max(); }"))
 
 (defun boolvar-domain (boolvar)
   (let ((min (boolvar-min boolvar))
@@ -338,32 +377,32 @@ default: @(return 0) = 100; break;
 
 (defun space-vars (space)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = (void*)(((ks::Foo*)(#0))->getVars());}"))
+    "{ @(return 0) = (void*)(((ks::Foo*)(#0))->getVars());}"))
 
 (defun vars-size (vars)
   (ffi:c-inline (vars) (:pointer-void) :int
-                "{ @(return 0) = ((Gecode::BoolVarArray*)(#0))->size(); }"))
+    "{ @(return 0) = ((Gecode::BoolVarArray*)(#0))->size(); }"))
 
 (defun vars-nth (vars n)
   (ffi:c-inline (vars n) (:pointer-void :int) :pointer-void
-                "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
+    "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
 
 (defun make-dfs (space)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = new Gecode::DFS<ks::Foo>(((ks::Foo*)(#0)));}"))
+    "{ @(return 0) = new Gecode::DFS<ks::Foo>(((ks::Foo*)(#0)));}"))
 
 (defun dfs-next (dfs)
   (ffi:c-inline (dfs) (:pointer-void) :pointer-void
-                "{ @(return 0) = ((Gecode::DFS<ks::Foo>*)(#0))->next(); }"))
+    "{ @(return 0) = ((Gecode::DFS<ks::Foo>*)(#0))->next(); }"))
 
 (defun dfs-statistics (dfs)
   (ffi:c-inline (dfs) (:pointer-void)
-                (values :unsigned-long-long
-                        :unsigned-long-long
-                        :unsigned-long-long
-                        :unsigned-long-long
-                        :unsigned-long-long)
-                "
+      (values :unsigned-long-long
+              :unsigned-long-long
+              :unsigned-long-long
+              :unsigned-long-long
+              :unsigned-long-long)
+    "
 Gecode::DFS<ks::Foo>* dfs = (Gecode::DFS<ks::Foo>*)(#0);
 
 Gecode::Search::Statistics s = dfs->statistics();
@@ -388,7 +427,7 @@ Gecode::Search::Statistics s = dfs->statistics();
 
 (defun dfs-search-gist (space)
   (ffi:c-inline (space) (:pointer-void) :void
-                "
+    "
 ks::Foo* foo = ((ks::Foo*)(#0));
 Gecode::Gist::Print<ks::Foo> p(\"Print solution\");
 Gecode::Gist::Options o;
@@ -804,7 +843,10 @@ Gecode::Gist::dfs(foo,o);
 
 (defun main ()
   (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
-  (dolist (graph '(#2A((0 1 0) (0 0 1) (0 0 0))
-                   #2A((0 1 0) (0 0 0) (0 0 0))
-                   #2A((0 1 0) (0 0 1) (1 0 0))))
-    (format t "complete-all of ~A is ~A~%" graph (complete-all graph))))
+  (multiple-value-bind (graph vector hash)
+      (read-apx-file (second ext:*command-args*))
+    (write-char #\[)
+    (dolist (extension (complete-all graph))
+      (format t "~{~A~^,~}"
+              (mapcar (lambda (index) (aref index vector)) extension)))
+    (write-char #\])))
