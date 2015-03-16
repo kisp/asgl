@@ -25,13 +25,14 @@ install:
   - md5sum gecode.tar.gz
   - tar xfz gecode.tar.gz
   - cd gecode-4.3.3
-  - ./configure
-  - make
+  #- ./configure
+  #- make
   - cd ..
   - curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "http://178.62.230.106/packages/ecl-13.5.1-amd64.tgz"
   - md5sum ecl.tar.gz
   - sudo tar -C / -xzf "ecl.tar.gz"
   - bundle install
+  - make install
   #- curl -L https://github.com/luismbo/cl-travis/raw/master/install.sh | sh
   #- if [ "${LISP:(-2)}" = "32" ]; then
   #    sudo apt-get install libc6-dev-i386 libffi-dev:i386;

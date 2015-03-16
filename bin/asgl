@@ -1,2 +1,148 @@
 #!/bin/bash
-exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar $*
+# (c)2014 Federico Cerutti <federico.cerutti@acm.org> --- MIT LICENCE
+# Generic script interface to probo http://sourceforge.net/projects/probo/
+# Please feel freet to customize it for your own solver
+
+# function for echoing on standard error
+echoerr()
+{
+    # to remove standard error echoing, please comment the following line
+    echo "$@" 1>&2;
+}
+
+################################################################
+# C O N F I G U R A T I O N
+#
+# this script must be customized by defining:
+# 1) procedure for printing author and version information of the solver
+#	(function "information")
+# 2) suitable procedures for invoking your solver (function "solver");
+# 3) suitable procedures for parsing your solver's output
+#	(function "parse_output");
+# 4) list of supported format (array "formats");
+# 5) list of supported problems (array "problems").
+
+# output information
+function information
+{
+    echo "ASGL v0.0.1"
+    echo "Kilian Sprotte <kilian.sprotte@gmail.com>"
+}
+
+# how to invoke your solver: this function must be customized
+function solver
+{
+    fileinput=$1	# input file with correct path
+
+    format=$2	# format of the input file (see below)
+
+    problem=$3          # problem to solve (see below)
+
+    additional=$4	# additional information, i.e. name of an argument
+
+
+    # dummy output
+    # echoerr "input file: $fileinput"
+    # echoerr "format: $format"
+    # echoerr "problem: $problem"
+    # echoerr "additional: $additional"
+
+    if [ "$format" = "apx" -a "$problem" = "lines" ];
+    then
+        exec $(dirname $0)/foo
+    else
+        if [ -z "$additional" ]; then
+            exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar -f $fileinput -fo $format -p $problem
+        else
+            exec java -jar $(dirname $0)/libexec/tweetysolver-v1.1.1.jar -f $fileinput -fo $format -p $problem -a $additional
+        fi
+    fi
+}
+
+# accepted formats: please comment those unsupported
+formats[1]="apx" # "aspartix" format
+formats[2]="tgf" # trivial graph format
+
+# problems that can be accepted: please comment those unsupported
+
+problems[1]="DC-CO"     # Decide credulously according to Complete semantics
+problems[2]="DC-GR"     # Decide credulously according to Grounded semantics
+problems[3]="DC-PR"     # Decide credulously according to Preferred semantics
+problems[4]="DC-ST"     # Decide credulously according to Stable semantics
+problems[5]="DS-CO"     # Decide skeptically according to Complete semantics
+problems[6]="DS-GR"     # Decide skeptically according to Grounded semantics
+problems[7]="DS-PR"     # Decide skeptically according to Preferred semantics
+problems[8]="DS-ST"     # Decide skeptically according to Stable semantics
+problems[9]="EE-CO"     # Enumerate all the extensions according to Complete semantics
+problems[10]="EE-GR"    # Enumerate all the extensions according to Grounded semantics
+problems[11]="EE-PR"    # Enumerate all the extensions according to Preferred semantics
+problems[12]="EE-ST"    # Enumerate all the extensions according to Stable semantics
+problems[13]="SE-CO"    # Enumerate some extension according to Complete semantics
+problems[14]="SE-GR"    # Enumerate some extension according to Grounded semantics
+problems[15]="SE-PR"    # Enumerate some extension according to Preferred semantics
+problems[16]="SE-ST"    # Enumerate some extension according to Stable semantics
+
+function list_output
+{
+    declare -a arr=("${!1}")
+    check_something_printed=false
+    echo -n '['
+    for i in ${arr[@]};
+    do
+        if [ "$check_something_printed" = true ];
+        then
+            echo -n ", "
+        fi
+        echo -n $i
+        check_something_printed=true
+    done
+    echo ']'
+}
+
+function main
+{
+    if [ "$#" = "0" ]
+    then
+        information
+        exit 0
+    fi
+
+    local local_problem=""
+    local local_fileinput=""
+    local local_format=""
+    local local_additional=""
+
+    while [ "$1" != "" ]; do
+        case $1 in
+            "--formats")
+                list_output formats[@]
+                exit 0
+                ;;
+            "--problems")
+                list_output problems[@]
+                exit 0
+                ;;
+            "-p")
+                shift
+                local_problem=$1
+                ;;
+            "-f")
+                shift
+                local_fileinput=$1
+                ;;
+            "-fo")
+                shift
+                local_format=$1
+                ;;
+            "-a")
+                shift
+                local_additional=$1
+                ;;
+        esac
+        shift
+    done
+
+    solver $local_fileinput $local_format $local_problem $local_additional
+}
+
+main $@
