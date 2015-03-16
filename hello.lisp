@@ -901,7 +901,7 @@ Gecode::Gist::dfs(foo,o);
     (let ((*print-case* :downcase))
       (multiple-value-bind (graph vector hash)
           (read-apx-file f)
-        (ecase semantic
+        (ecase task
           ((:ee :se) (ee-se graph task semantic vector))
           ((:dc :ds) (dc-ds graph task semantic hash (intern (string-upcase a)))))
         (terpri)))))
