@@ -18,6 +18,7 @@ hello-lisp: hello.o Foo.o
 gecode: gecode-patched-headers.tgz
 	rm -rf gecode
 	tar xfz gecode-patched-headers.tgz
+	touch gecode
 
 install-v1: install
 
