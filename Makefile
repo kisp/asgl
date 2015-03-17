@@ -12,15 +12,15 @@ test-ref: install-ref
 
 
 # v1
-hello.o: gecode hello.lisp
-	rm -f hello.o
+v1/v1.o: gecode v1/v1.lisp
+	rm -f v1/v1.o
 	ecl -norc -load lisp-scripts/compile-foo.lisp
 
-hello-lisp: hello.o Foo.o
-	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "hello-lisp" :lisp-files (list "hello.o") :ld-flags (list "Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
+v1/v1: v1/v1.o v1/Foo.o
+	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "v1/v1" :lisp-files (list "v1/v1.o") :ld-flags (list "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
 
-install-v1: hello-lisp
-	cp hello-lisp bin/asgl
+install-v1: v1/v1
+	cp v1/v1 bin/asgl
 
 test-v1: install-v1
 	bundle exec cucumber --tags ~@big
@@ -47,7 +47,8 @@ gecode: support/gecode-patched-headers.tgz
 
 # clean
 clean:
-	rm -f hello-lisp bin/asgl hello.o Foo.o hello.data hello.eclh hello.c
+	rm -f bin/asgl
+	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c
 	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
 	[ -z "`git clean -nxd`" ]

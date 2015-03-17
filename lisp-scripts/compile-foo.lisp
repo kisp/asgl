@@ -10,9 +10,8 @@
         (format nil "~A -L~A -lfoo -lgecodesearch -lgecodeint -lgecodekernel -lgecodesupport -lgecodegist"
                 c::*ld-bundle-flags*
                 *default-pathname-defaults*)))
-  ;; (delete-file "foo.fas")
-  (compile-file "hello.lisp" :system-p t)
-  (unless (probe-file "hello.o")
-    (error "hello.o does not exist")))
+  (compile-file "v1/v1.lisp" :system-p t)
+  (unless (probe-file "v1/v1.o")
+    (error "v1/v1.o does not exist")))
 
 (ext:quit)
