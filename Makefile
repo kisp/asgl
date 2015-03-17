@@ -6,6 +6,7 @@ install: all
 clean:
 	rm -f hello-lisp bin/asgl hello.o Foo.o hello.data hello.eclh hello.c
 	rm -rf gecode tmp
+	[ -z "`git clean -nxd`" ]
 
 hello.o: gecode hello.lisp
 #ecl -norc -eval '(compile-file "hello.lisp" :system-p t)' -eval '(quit)'
