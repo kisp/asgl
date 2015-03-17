@@ -48,5 +48,6 @@ gecode: gecode-patched-headers.tgz
 # clean
 clean:
 	rm -f hello-lisp bin/asgl hello.o Foo.o hello.data hello.eclh hello.c
+	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
 	[ -z "`git clean -nxd`" ]
