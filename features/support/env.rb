@@ -14,6 +14,15 @@ RSpec::Matchers.define :be_meql do |expected|
   end
 end
 
+RSpec::Matchers.define :be_meql_verbose do |expected|
+  match do |actual|
+    actual.meql(expected)
+  end
+  failure_message do |actual|
+    "which evals to #{expected}\nbut got #{actual.inspect}"
+  end
+end
+
 RSpec::Matchers.define :be_included_with_meql do |expected|
   match do |actual|
     expected.any? {|e| e.meql(actual) }

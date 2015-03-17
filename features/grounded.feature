@@ -322,3 +322,28 @@ Feature: grounded
      When I run `asgl -p DC-GR -fo apx -f "g.apx" -a 9`
      Then the exit status should be 0
      And the output should be eql to "NO"
+
+  Scenario Outline: grounded extension of a path
+    Given a path from "<from>" to "<to>" named "g.apx"
+    When I run `asgl -p SE-GR -fo apx -f "g.apx"`
+    Then the exit status should be 0
+    And the output should be eql to ruby:
+    """
+    (<from>..<to>).reject{|x| x % 2 != 0}.map(&:to_s).to_set
+    """
+
+    Examples: small
+    | from |  to |
+    |    0 |   0 |
+    |    0 |   1 |
+    |    0 |   2 |
+    |    0 |   3 |
+    |    0 |   4 |
+    |    0 | 100 |
+    |    0 | 101 |
+
+    @big
+    Examples: big
+    | from |   to |
+    |    0 |  300 |
+    |    0 | 3000 |
