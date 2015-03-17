@@ -1,6 +1,10 @@
 require 'aruba/cucumber'
 require 'set'
 
+Before do
+  @aruba_timeout_seconds = 10
+end
+
 RSpec::Matchers.define :be_meql do |expected|
   match do |actual|
     actual.meql(expected)
@@ -54,7 +58,7 @@ class Array
     unless a.size == a.uniq.size
       raise "contains duplicates: #{a}"
     end
-    a.to_set    
+    a.to_set
   end
 end
 
