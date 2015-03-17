@@ -8,7 +8,7 @@ install-ref:
 	chmod +x bin/asgl
 
 test-ref: install-ref
-	bundle exec cucumber --tags ~@notref
+	bundle exec cucumber --tags ~@notref --tags ~@big
 
 
 # v1
@@ -23,7 +23,7 @@ install-v1: hello-lisp
 	cp hello-lisp bin/asgl
 
 test-v1: install-v1
-	bundle exec cucumber
+	bundle exec cucumber --tags ~@big
 
 # gr1
 gr1/gr1.o: gecode gr1/gr1.lisp
