@@ -1,3 +1,4 @@
+@pr
 Feature: preferred
 
   As a user of asgl

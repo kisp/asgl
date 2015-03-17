@@ -1,3 +1,4 @@
+@gr
 Feature: grounded
 
   As a user of asgl

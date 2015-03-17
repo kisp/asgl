@@ -1,3 +1,4 @@
+@st
 Feature: stable
 
   As a user of asgl

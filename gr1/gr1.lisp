@@ -898,6 +898,7 @@ Gecode::Gist::dfs(sp,o);
 (defun main% (&key (fo "apx") f p a)
   (assert (equal fo "apx"))
   (multiple-value-bind (task semantic) (parse-problem p)
+    (assert (eql semantic :gr))
     (let ((*print-case* :downcase))
       (multiple-value-bind (graph vector hash)
           (read-apx-file f)

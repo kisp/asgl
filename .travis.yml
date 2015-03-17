@@ -4,6 +4,7 @@ env:
   matrix:
     - VARIANT=ref
     - VARIANT=v1
+    - VARIANT=gr1
 
 install:
   - sudo apt-get update

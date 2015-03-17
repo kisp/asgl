@@ -37,7 +37,7 @@ install-gr1: gr1/gr1
 	cp gr1/gr1 bin/asgl
 
 test-gr1: install-gr1
-	bundle exec cucumber
+	bundle exec cucumber --tags ~@co --tags ~@st --tags ~@pr
 
 # gecode
 gecode: gecode-patched-headers.tgz
