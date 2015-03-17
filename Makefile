@@ -40,9 +40,9 @@ test-gr1: install-gr1
 	bundle exec cucumber --tags ~@co --tags ~@st --tags ~@pr
 
 # gecode
-gecode: gecode-patched-headers.tgz
+gecode: support/gecode-patched-headers.tgz
 	rm -rf gecode
-	tar xfz gecode-patched-headers.tgz
+	tar xfz support/gecode-patched-headers.tgz
 	touch gecode
 
 # clean
