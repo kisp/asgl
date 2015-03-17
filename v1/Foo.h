@@ -2,7 +2,7 @@
 #include <gecode/search.hh>
 #include <gecode/gist.hh>
 
-namespace ks {
+namespace v1 {
   class Foo : public Gecode::Space
   {
   private:

@@ -1,6 +1,6 @@
 #include "Foo.h"
 
-namespace ks {
+namespace v1 {
 
   Foo::Foo(int _n) : l(*this, _n, 0, 1) {
     n = _n;
