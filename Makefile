@@ -7,7 +7,7 @@ install-ref:
 	echo 'exec java -jar $$(dirname $$0)/libexec/tweetysolver-v1.1.1.jar $$*' >> bin/asgl
 	chmod +x bin/asgl
 
-test-ref:
+test-ref: install-ref
 	bundle exec cucumber --tags ~@notref
 
 
@@ -22,7 +22,7 @@ hello-lisp: hello.o Foo.o
 install-v1: hello-lisp
 	cp hello-lisp bin/asgl
 
-test-v1:
+test-v1: install-v1
 	bundle exec cucumber
 
 # gr1

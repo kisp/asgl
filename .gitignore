@@ -1,2 +1,8 @@
-*.fasl
 tmp
+bin/asgl
+gecode
+*.o
+gr1/gr1
+gr1/gr1.c
+*.eclh
+*.data
