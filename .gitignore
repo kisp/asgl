@@ -7,3 +7,4 @@ gr1/gr1.c
 *.eclh
 *.data
 *.fas
+make.mk
