@@ -1,14 +1,11 @@
+;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; -*-
+
+(in-package #:common-lisp-user)
+
 (ffi:clines "#include \"Sp.h\"")
 
-(defvar *with-timing* nil)
-(defvar *with-logging* nil)
-
-(defmacro aif (test then &optional else)
-  `(let ((it ,test))
-     (if it ,then ,else)))
-
-(defmacro format* (&rest args)
-  `(when *with-logging* (format ,@args)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (use-package :early))
 
 (defun vector2hash-table (vector)
   (let ((hash (make-hash-table :test #'eql)))
@@ -48,39 +45,6 @@
        adj
        vector
        hash))))
-
-(defvar *nodes-cache* nil)
-(defvar *edges-cache* nil)
-(defvar *collect-parents-cache* nil)
-
-(defun clear-graph-caches ()
-  (setq *nodes-cache* nil)
-  (setq *edges-cache* nil)
-  (setq *collect-parents-cache* nil))
-
-(defun call-with-timing (form thunk)
-  (if (not *with-timing*)
-      (funcall thunk)
-      (let ((*print-length* 3)
-            (*print-level* 2))
-        (format *trace-output* "~&Calling ~S..." form)
-        (force-output *trace-output*)
-        (let ((ok)
-              (start (get-internal-real-time)))
-          (unwind-protect
-               (multiple-value-prog1
-                   (funcall thunk)
-                 (let ((end (get-internal-real-time)))
-                   (setq ok t)
-                   (format *trace-output*
-                           "done (~5,3F s)~%"
-                           (/ (- end start)
-                              internal-time-units-per-second))))
-            (unless ok
-              (format *trace-output* " (aborted by a non-local toc)~%")))))))
-
-(defmacro with-timing (form)
-  `(call-with-timing ',form (lambda () ,form)))
 
 (defun make-sp (x)
   (ffi:c-inline (x) (:int) :pointer-void "{ @(return 0) = new gr1::Sp(#0); }"))
@@ -519,114 +483,6 @@ Gecode::Gist::dfs(sp,o);
   (prog1
       (bits-to-set (space-to-list space) :unassigned-permitted-as-out t)
     (delete-sp space)))
-
-(defun order (graph)
-  (array-dimension graph 0))
-
-(defun %nodes% (graph)
-  (loop for i from 0 below (order graph)
-        collect i))
-
-(defun nodes (graph)
-  (if *nodes-cache*
-      (progn
-        (assert (eq graph (car *nodes-cache*)))
-        (cdr *nodes-cache*))
-      (cdr (setq *nodes-cache* (cons graph (%nodes% graph))))))
-
-(defun map-nodes (fn graph)
-  (dolist (node (nodes graph))
-    (funcall fn node)))
-
-(defmacro do-nodes ((node graph) &body body)
-  `(map-nodes (lambda (,node) ,@body) ,graph))
-
-(defun %edges% (graph)
-  (let (list)
-    (dotimes (i (order graph) list)
-      (dotimes (j (order graph))
-        (when (eql 1 (aref graph i j))
-          (push (list i j) list))))))
-
-(defun edges (graph)
-  (if *edges-cache*
-      (progn
-        (assert (eq graph (car *edges-cache*)))
-        (cdr *edges-cache*))
-      (cdr (setq *edges-cache* (cons graph (%edges% graph))))))
-
-(defun map-edges (fn graph)
-  (dolist (edge (edges graph))
-    (funcall fn edge)))
-
-(defmacro do-edges ((edge graph) &body body)
-  `(map-edges (lambda (,edge) ,@body) ,graph))
-
-(defun map-triangles (fn graph)
-  (let ((seen (make-hash-table :test #'equal)))
-    (do-edges (edge graph)
-      (destructuring-bind (u v) edge
-        (do-nodes (w graph)
-          (when (and (/= u v w)
-                     (eql 1 (aref graph v w))
-                     (eql 1 (aref graph w u)))
-            (let ((set (sort (list u v w) #'<)))
-              (unless (gethash set seen)
-                (funcall fn u v w)
-                (setf (gethash set seen) t)))))))))
-
-(defmacro do-triangles ((u v w graph) &body body)
-  `(map-triangles (lambda (,u ,v ,w) ,@body) ,graph))
-
-(defun %collect-parents% (graph node)
-  (let (result)
-    (map-edges (lambda (edge)
-                 (when (eql (second edge) node)
-                   (push (first edge) result)))
-               graph)
-    (nreverse result)))
-
-(defun collect-parents (graph node)
-  (when (null *collect-parents-cache*)
-    (setq *collect-parents-cache*
-          (cons graph (make-hash-table))))
-  (assert (eq graph (car *collect-parents-cache*)))
-  (aif (gethash node (cdr *collect-parents-cache*))
-       (cdr it)
-       (let ((parents (%collect-parents% graph node)))
-         (setf (gethash node (cdr *collect-parents-cache*))
-               (cons t parents))
-         parents)))
-
-(defun map-grandparents (fn graph)
-  "Call FN with node and list of grandparents."
-  (map-edges (lambda (edge)
-               (funcall fn
-                        (second edge)
-                        (collect-parents graph (first edge))))
-             graph))
-
-(defmacro do-grandparents ((node grandparents graph) &body body)
-  `(map-grandparents (lambda (,node ,grandparents) ,@body) ,graph))
-
-(defun map-parents (fn graph)
-  "Call FN with node and list of parents."
-  (dolist (node (nodes graph))
-    (funcall fn node (collect-parents graph node))))
-
-(defmacro do-parents ((node parents graph) &body body)
-  `(map-parents (lambda (,node ,parents) ,@body) ,graph))
-
-(defun map-parents-grandparents (fn graph)
-  "Call FN with node and list of grandparents."
-  (do-parents (node parents graph)
-    (funcall fn node
-             (mapcar #'cons
-                     parents
-                     (mapcar (lambda (parent) (collect-parents graph parent)) parents)))))
-
-(defmacro do-parents-grandparents ((node parents-grandparents graph) &body body)
-  `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
 
 (defun conflict-free-all (graph)
   (check-array-is-square graph)

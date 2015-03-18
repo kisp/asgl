@@ -8,3 +8,4 @@ gr1/gr1.c
 *.data
 *.fas
 make.mk
+*.a
