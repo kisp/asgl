@@ -31,6 +31,8 @@ install:
 
   - bundle install
 
+  - bash scripts/generate-make-mk.sh
+
   - make install-$VARIANT
   #- curl -L https://github.com/luismbo/cl-travis/raw/master/install.sh | sh
   #- if [ "${LISP:(-2)}" = "32" ]; then
