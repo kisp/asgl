@@ -910,7 +910,7 @@ Gecode::Gist::dfs(sp,o);
 (defun main ()
   (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
   (format *error-output* "~S~%" ext:*command-args*)
-  (format *error-output* "from foo: ~S~%" (foo:tollb))
+  ;; (format *error-output* "from foo: ~S~%" (foo:tollb))
   (cond
     ((null (cdr ext:*command-args*))
      (write-line "ASGL v0.0.1")
