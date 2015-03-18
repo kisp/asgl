@@ -109,11 +109,7 @@
       (error "more than one parent: ~S" parents))))
 
 (defun component-pathname (component)
-  (let ((path (asdf/component:component-find-path component)))
-    (make-pathname
-     :name (asdf/component:component-name component)
-     :type "lisp"
-     :directory `(:relative ,@(butlast path)))))
+  (enough-namestring (asdf/component:component-pathname component)))
 
 (defun format-load-line (component)
   (format t "~C  -load ~A \\~%"
@@ -150,56 +146,23 @@
 (defun o-pathname (pathname)
   (make-pathname :type "o" :defaults pathname))
 
-#|
+(defun lib-pathname (system)
+  (make-pathname
+   :name (format nil "lib~A" (asdf/component:component-name system))
+   :type "a"
+   :defaults (enough-namestring (asdf/component:component-pathname system))))
 
-#(:file "io" :depends-on ("package" "macros" "lists" "types"))
-alexandria/io.o: alexandria/io.lisp
-rm -f alexandria/io.o
-ecl -norc \
--load alexandria/package.lisp \
--load alexandria/definitions.lisp \
--load alexandria/binding.lisp \
--load alexandria/strings.lisp \
--load alexandria/conditions.lisp \
--load alexandria/hash-tables.lisp \
--load alexandria/symbols.lisp \
--load alexandria/macros.lisp \
--load alexandria/control-flow.lisp \
--load alexandria/features.lisp \
--load alexandria/functions.lisp \
--load alexandria/lists.lisp \
--load alexandria/types.lisp \
--s -compile alexandria/io.lisp
-test -f alexandria/io.o
-|#
+(defun fas-pathname (system)
+  (make-pathname
+   :name (asdf/component:component-name system)
+   :type "fas"
+   :defaults (enough-namestring (asdf/component:component-pathname system))))
 
-
-#|
-
-foo/foo.fas: foo/package.o foo/a.o foo/b.o
-ecl -norc \
--eval "(require 'cmp)" \
--eval "(defvar *lisp-files* nil)" \
--eval '(push "foo/package.o" *lisp-files*)' \
--eval '(push "foo/a.o" *lisp-files*)' \
--eval '(push "foo/b.o" *lisp-files*)' \
--eval '(setq *lisp-files* (nreverse *lisp-files*))' \
--eval '(c:build-fasl "foo/foo.fas" :lisp-files *lisp-files*)' \
--eval '(quit)'
-
-foo/libfoo.a: foo/package.o foo/a.o foo/b.o
-ecl -norc \
--eval "(require 'cmp)" \
--eval "(defvar *lisp-files* nil)" \
--eval '(push "foo/package.o" *lisp-files*)' \
--eval '(push "foo/a.o" *lisp-files*)' \
--eval '(push "foo/b.o" *lisp-files*)' \
--eval '(setq *lisp-files* (nreverse *lisp-files*))' \
--eval '(c:build-static-library "foo/foo" :lisp-files *lisp-files*)' \
--eval '(quit)'
-
-
-|#
+(defun make-mk-pathname (system)
+  (make-pathname
+   :name "make"
+   :type "mk"
+   :defaults (enough-namestring (asdf/component:component-pathname system))))
 
 (defun !rm-f (pathname)
   `(rm -f ,pathname))
@@ -214,15 +177,17 @@ ecl -norc \
 
 (defun %static-lib-rule (sorted-components)
   (let* ((system (asdf/component:component-system (first sorted-components)))
-         (fas-pathname (make-pathname
-                        :name (format nil "lib~A" (asdf/component:component-name system))
-                        :type "a"
-                        :defaults (enough-namestring (asdf/component:component-pathname system))))
+         (lib-short-pathname (make-pathname
+                              :name (format nil "~A" (asdf/component:component-name system))
+                              :type "a"
+                              :defaults (enough-namestring (asdf/component:component-pathname system))))
+         (lib-pathname (lib-pathname system))
          (inputs (mapcar #'o-pathname
                          (mapcar #'component-pathname sorted-components))))
-    (format-rule fas-pathname
+    (format-rule lib-pathname
                  inputs
-                 `(((ecl -norc)
+                 `(,(!rm-f lib-pathname)
+                   ((ecl -norc)
                     (-eval "\"(require 'cmp)\"")
                     (-eval "\"(defvar *lisp-files* nil)\"")
                     ,@(mapcar
@@ -230,21 +195,20 @@ ecl -norc \
                          `(-eval ,(format nil "'(push ~S *lisp-files*)'" (namestring o))))
                        inputs)
                     (-eval "'(setq *lisp-files* (nreverse *lisp-files*))'")
-                    (-eval ,(format nil "'(c:build-static-library ~S :lisp-files *lisp-files*)'" (namestring fas-pathname)))
-                    (-eval "'(quit)'"))))
+                    (-eval ,(format nil "'(c:build-static-library ~S :lisp-files *lisp-files*)'" (namestring lib-short-pathname)))
+                    (-eval "'(quit)'"))
+                   ,(!test-f lib-pathname)))
     (terpri)))
 
 (defun %fas-rule (sorted-components)
   (let* ((system (asdf/component:component-system (first sorted-components)))
-         (fas-pathname (make-pathname
-                        :name (asdf/component:component-name system)
-                        :type "fas"
-                        :defaults (enough-namestring (asdf/component:component-pathname system))))
+         (fas-pathname (fas-pathname system))
          (inputs (mapcar #'o-pathname
                          (mapcar #'component-pathname sorted-components))))
     (format-rule fas-pathname
                  inputs
-                 `(((ecl -norc)
+                 `(,(!rm-f fas-pathname)
+                   ((ecl -norc)
                     (-eval "\"(require 'cmp)\"")
                     (-eval "\"(defvar *lisp-files* nil)\"")
                     ,@(mapcar
@@ -253,7 +217,8 @@ ecl -norc \
                        inputs)
                     (-eval "'(setq *lisp-files* (nreverse *lisp-files*))'")
                     (-eval ,(format nil "'(c:build-fasl ~S :lisp-files *lisp-files*)'" (namestring fas-pathname)))
-                    (-eval "'(quit)'"))))
+                    (-eval "'(quit)'"))
+                   ,(!test-f fas-pathname)))
     (terpri)))
 
 (defun %o-rule (component sorted-components)
@@ -268,21 +233,36 @@ ecl -norc \
                    ,(!test-f o-pathname)))
     (terpri)))
 
+(defun %clean-rule (sorted-components)
+  (let* ((system (asdf/component:component-system (first sorted-components)))
+         (clean-target (make-pathname
+                        :name "clean"
+                        :type nil
+                        :defaults (enough-namestring (asdf/component:component-pathname system))))
+         (inputs (append
+                  (list (lib-pathname system)
+                        (fas-pathname system)
+                        (make-mk-pathname system))
+                  (mapcar #'o-pathname
+                          (mapcar #'component-pathname sorted-components)))))
+    (format-rule clean-target
+                 nil
+                 `(,@(mapcar (lambda (x) (!rm-f x)) inputs)))
+    (terpri)))
+
 (defun process-system (system)
   (let ((components (system-lisp-files system)))
     (check-same-parent components)
     (with-open-file (*standard-output*
-                     (make-pathname
-                      :name "make"
-                      :type "mk"
-                      :defaults (enough-namestring (asdf/component:component-pathname system)))
+                     (make-mk-pathname system)
                      :direction :output
                      :if-exists :supersede)
       (let ((sorted-components (sort-components components)))
         (%static-lib-rule sorted-components)
         (%fas-rule sorted-components)
         (dolist (component sorted-components)
-          (%o-rule component sorted-components))))))
+          (%o-rule component sorted-components))
+        (%clean-rule sorted-components)))))
 
 (defun main ()
   (format* "~S~%" ext:*command-args*)
