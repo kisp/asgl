@@ -47,13 +47,16 @@ gecode: support/gecode-patched-headers.tgz
 	touch gecode
 
 # clean
-clean:
+clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean
 	rm -f bin/asgl
 	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c
 	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
 	[ -z "`git clean -nxd`" ]
 
-#include foo/make.mk
-#include alexandria/make.mk
-#include arnesi-list-match/make.mk
+%/alexandria/make.mk %/arnesi-list-match/make.mk %/myam/make.mk:
+	ecl -norc -load support/asdf.lisp -load lisp-scripts/deps.lisp -eval '(main)' -- lib/*/*.asd
+
+include lib/myam/make.mk
+include lib/alexandria/make.mk
+include lib/arnesi-list-match/make.mk

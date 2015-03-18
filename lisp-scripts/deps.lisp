@@ -3,7 +3,7 @@
 (in-package #:common-lisp-user)
 
 (defun format* (&rest args)
-  (write-string "[INFO] " *error-output*)
+  (write-string ";;; " *error-output*)
   (apply #'format *error-output* args)
   (fresh-line *error-output*))
 
@@ -60,6 +60,29 @@
                (let ((obj (funcall tie-breaker free-objs result)))
                  (setf free-objs (remove obj free-objs))
                  (next-result obj))))))))
+
+(defmethod asdf/component:component-pathname ((component pathname))
+  component)
+
+(defun system-dependencies (system)
+  (mapcar #'asdf/system:find-system
+          (asdf/component:component-sideway-dependencies system)))
+
+(defun system-deep-dependencies (system)
+  (remove-duplicates
+   (cons system
+         (mappend #'system-deep-dependencies
+                  (system-dependencies system)))))
+
+(defun system-rules (system)
+  (mapcar (lambda (dependency) (cons dependency system))
+          (system-dependencies system)))
+
+(defun sort-systems (systems)
+  (topological-sort
+   systems
+   (mappend #'system-rules systems)
+   (lambda (a b) (declare (ignore b)) (first a))))
 
 (defun component-rules (component)
   (let ((components (asdf/component:module-components
@@ -173,7 +196,8 @@
 (defun !ecl-s-compile (loads source)
   `((ecl -norc)
     ,@(mapcar (lambda (x) `(-load ,(component-pathname x))) loads)
-    (-s -compile ,(component-pathname source))))
+    (-s -compile ,(component-pathname source))
+    (-eval "'(fresh-line)'")))
 
 (defun %static-lib-rule (sorted-components)
   (let* ((system (asdf/component:component-system (first sorted-components)))
@@ -224,12 +248,23 @@
 (defun %o-rule (component sorted-components)
   (let* ((pathname (component-pathname component))
          (o-pathname (o-pathname pathname))
-         (loads (items-upto sorted-components component)))
+         (loads (items-upto sorted-components component))
+         (system (asdf/component:component-system component))
+         (system-dependencies
+           (items-upto
+            (sort-systems (system-deep-dependencies system))
+            system)))
     (format-rule o-pathname
-                 (cons (component-pathname component)
-                       (mapcar #'component-pathname loads))
+                 (append
+                  (cons (component-pathname component)
+                        (mapcar #'component-pathname loads))
+                  (mapcar #'fas-pathname system-dependencies))
                  `(,(!rm-f o-pathname)
-                   ,(!ecl-s-compile loads component)
+                   ,(!ecl-s-compile
+                     (append
+                      (mapcar #'fas-pathname system-dependencies)
+                      loads)
+                     component)
                    ,(!test-f o-pathname)))
     (terpri)))
 
@@ -265,13 +300,10 @@
         (%clean-rule sorted-components)))))
 
 (defun main ()
-  (format* "~S~%" ext:*command-args*)
   (let ((asd-paths (asd-paths ext:*command-args*)))
-    (format* "~S~%" asd-paths)
     (populate-registry asd-paths)
-    (format* "~S~%" (filter-test-systems (asd-paths-find-systems asd-paths)))
     (let ((systems (filter-test-systems (asd-paths-find-systems asd-paths))))
       (dolist (system systems)
-        (format* "processing ~A" system)
+        (format* "Processing ~A" system)
         (process-system system)))
     (quit)))
