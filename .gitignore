@@ -9,3 +9,4 @@ gr1/gr1.c
 *.fas
 make.mk
 *.a
+*.fasl

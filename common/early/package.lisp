@@ -9,4 +9,6 @@
            #:nodes
            #:do-nodes #:do-edges
            #:do-parents #:do-grandparents #:do-parents-grandparents
-           #:map-triangles #:do-triangles))
+           #:map-triangles #:do-triangles)
+  ;; apx
+  (:export #:read-apx-file))
