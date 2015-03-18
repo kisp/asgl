@@ -26,12 +26,14 @@ test-v1: install-v1
 	bundle exec cucumber --tags ~@big
 
 # gr1
-gr1/gr1.o: gecode gr1/gr1.lisp
+gr1/gr1.o: gecode gr1/gr1.lisp foo/foo.fas
 	rm -f gr1/gr1.o
-	ecl -norc -load lisp-scripts/compile-gr1.lisp
+	ecl -norc \
+	  -load foo/foo.fas \
+	  -load lisp-scripts/compile-gr1.lisp
 
-gr1/gr1: gr1/Sp.o gr1/gr1.o
-	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "gr1/gr1" :lisp-files (list "gr1/gr1.o") :ld-flags (list "gr1/Sp.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
+gr1/gr1: gr1/Sp.o gr1/gr1.o foo/libfoo.a
+	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "gr1/gr1" :lisp-files (list "foo/libfoo.a" "gr1/gr1.o") :ld-flags (list "gr1/Sp.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
 
 install-gr1: gr1/gr1
 	cp gr1/gr1 bin/asgl
@@ -52,3 +54,7 @@ clean:
 	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
 	[ -z "`git clean -nxd`" ]
+
+#include foo/make.mk
+#include alexandria/make.mk
+#include arnesi-list-match/make.mk

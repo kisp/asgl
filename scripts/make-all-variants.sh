@@ -2,6 +2,8 @@
 
 set -e
 
+ecl -norc -load support/asdf.lisp -load lisp-scripts/deps.lisp -eval '(main)' -- lib/*/*.asd
+
 make clean
 make install-ref
 make test-ref
