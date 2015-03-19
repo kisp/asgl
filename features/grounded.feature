@@ -329,7 +329,7 @@ Feature: grounded
     Then the exit status should be 0
     And the output should be eql to ruby:
     """
-    (<from>..<to>).reject{|x| x % 2 != 0}.map(&:to_s).to_set
+    (<from>..<to>).reject{|x| x % 2 != 0}.map{|x| 'arg' + x.to_s}.to_set
     """
 
     Examples: small
