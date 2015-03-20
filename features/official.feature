@@ -179,10 +179,11 @@ Feature: official
     | rdm50_3                     |
     | rdm50_4                     |
     | rdm50_5                     |
-    | real_0                      |
 
     @big
     Examples: big
+    | name    |
+    | real_0  |
     | real_10 |
     | real_11 |
     | real_12 |
