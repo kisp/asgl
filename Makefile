@@ -7,7 +7,7 @@ install-ref:
 	echo 'exec java -jar $$(dirname $$0)/libexec/tweetysolver-v1.1.1.jar $$*' >> bin/asgl
 	chmod +x bin/asgl
 
-test-ref: install-ref
+test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 	bundle exec cucumber --tags ~@notref --tags ~@big
 
 
@@ -22,7 +22,7 @@ v1/v1: v1/v1.o v1/Foo.o
 install-v1: v1/v1
 	cp v1/v1 bin/asgl
 
-test-v1: install-v1
+test-v1: install-v1 data/iccma15_solutions data/iccma15_testcases
 	bundle exec cucumber --tags ~@big
 
 # gr1
@@ -61,7 +61,7 @@ gr1/gr1: gr1/Sp.o gr1/gr1.o common/early/libearly.a common/early/libmyfoo.a
 install-gr1: gr1/gr1
 	cp gr1/gr1 bin/asgl
 
-test-gr1: install-gr1
+test-gr1: install-gr1 data/iccma15_solutions data/iccma15_testcases
 	bundle exec cucumber --tags ~@co --tags ~@st --tags ~@pr
 
 # gecode
@@ -86,6 +86,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean common/ea
 	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c
 	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
+	rm -rf data/iccma15_solutions data/iccma15_testcases
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 include common/early/make.mk
