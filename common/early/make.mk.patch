@@ -29,3 +29,16 @@
  	  -eval '(quit)'
  	test -f common/early/early.fas
  
+@@ -61,6 +61,12 @@
+ 	test -f common/early/apx.o
+ 
+ common/early/clean: 
++	rm -f common/early/count_args.cpp
++	rm -f common/early/count_args.o
++	rm -f common/early/libmyfoo.a
++	rm -f common/early/myfoo.cpp
++	rm -f common/early/myfoo.o
++	rm -f common/early/slurp.o
+ 	rm -f common/early/libearly.a
+ 	rm -f common/early/early.fas
+ 	rm -f common/early/make.mk
