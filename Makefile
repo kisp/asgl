@@ -76,7 +76,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean common/ea
 	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c
 	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
-	[ -z "`git clean -nxd`" ]
+	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 include common/early/make.mk
 include lib/myam/make.mk
