@@ -94,10 +94,16 @@ end
 
 def is_array_of_strings?(x)
   x.is_a?(Array) &&
-  x.all? { |elem| elem.is_a?(String) }
+    x.all? { |elem| elem.is_a?(String) }
 end
 
 def is_set_of_strings?(x)
   is_array_of_strings?(x) &&
-  x.uniq.length == x.length
+    x.uniq.length == x.length
+end
+
+def copy_to_tmp_auba(path)
+  raise "tmp/aruba does not exit" unless File.exist?("tmp/aruba")
+  system("cp #{path} tmp/aruba")
+  raise "cp of #{path} to tmp/aruba failed" unless $?.success?
 end

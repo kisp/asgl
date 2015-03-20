@@ -70,6 +70,16 @@ gecode: support/gecode-patched-headers.tgz
 	tar xfz support/gecode-patched-headers.tgz
 	touch gecode
 
+data/iccma15_solutions: data/iccma15_solutions.tar.xz
+	rm -rf data/iccma15_solutions
+	tar xf data/iccma15_solutions.tar.xz
+	touch data/iccma15_solutions
+
+data/iccma15_testcases: data/iccma15_testcases.tar.xz
+	rm -rf data/iccma15_testcases
+	tar xf data/iccma15_testcases.tar.xz
+	touch data/iccma15_testcases
+
 # clean
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean common/early/clean
 	rm -f bin/asgl
