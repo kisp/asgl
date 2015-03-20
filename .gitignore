@@ -10,3 +10,5 @@ gr1/gr1.c
 make.mk
 *.a
 *.fasl
+common/early/count_args.cpp
+common/early/myfoo.cpp

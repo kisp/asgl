@@ -32,8 +32,31 @@ gr1/gr1.o: gecode gr1/gr1.lisp common/early/early.fas
 	  -load common/early/early.fas \
 	  -load lisp-scripts/compile-gr1.lisp
 
-gr1/gr1: gr1/Sp.o gr1/gr1.o common/early/libearly.a
-	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "gr1/gr1" :lisp-files (list "common/early/libearly.a" "gr1/gr1.o") :ld-flags (list "gr1/Sp.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
+
+
+common/early/myfoo.cpp: common/early/myfoo.rl
+	ragel -G2 common/early/myfoo.rl -o common/early/myfoo.cpp
+
+common/early/count_args.cpp: common/early/count_args.rl
+	ragel -G2 common/early/count_args.rl -o common/early/count_args.cpp
+
+common/early/libmyfoo.a: common/early/myfoo.o common/early/slurp.o common/early/count_args.o
+	ar rcs common/early/libmyfoo.a common/early/myfoo.o common/early/slurp.o \
+	  common/early/count_args.o
+
+common/early/myfoo.o: common/early/myfoo.cpp common/early/myfoo.h
+	g++ -O2 -Wall -fPIC -c common/early/myfoo.cpp -o common/early/myfoo.o
+
+common/early/slurp.o: common/early/slurp.cpp common/early/myfoo.h
+	g++ -O2 -Wall -fPIC -c common/early/slurp.cpp -o common/early/slurp.o
+
+common/early/count_args.o: common/early/count_args.cpp common/early/myfoo.h
+	g++ -O2 -Wall -fPIC -c common/early/count_args.cpp -o common/early/count_args.o
+
+
+
+gr1/gr1: gr1/Sp.o gr1/gr1.o common/early/libearly.a common/early/libmyfoo.a
+	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "gr1/gr1" :lisp-files (list "common/early/libearly.a" "gr1/gr1.o") :ld-flags (list "common/early/libmyfoo.a" "gr1/Sp.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
 
 install-gr1: gr1/gr1
 	cp gr1/gr1 bin/asgl
