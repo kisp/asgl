@@ -12,12 +12,14 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
-v1/v1.o: gecode v1/v1.lisp
+v1/v1.o: gecode v1/v1.lisp common/early/early.fas
 	rm -f v1/v1.o
-	ecl -norc -load lisp-scripts/compile-foo.lisp
+	ecl -norc \
+	  -load common/early/early.fas \
+	  -load lisp-scripts/compile-foo.lisp
 
-v1/v1: v1/v1.o v1/Foo.o
-	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "v1/v1" :lisp-files (list "v1/v1.o") :ld-flags (list "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
+v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a
+	ecl -norc -eval '(require "cmp")' -eval '(c:build-program "v1/v1" :lisp-files (list "common/early/libearly.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' -eval '(quit)'
 
 install-v1: v1/v1
 	cp v1/v1 bin/asgl
@@ -31,7 +33,6 @@ gr1/gr1.o: gecode gr1/gr1.lisp common/early/early.fas
 	ecl -norc \
 	  -load common/early/early.fas \
 	  -load lisp-scripts/compile-gr1.lisp
-
 
 
 common/early/myfoo.cpp: common/early/myfoo.rl
