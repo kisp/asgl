@@ -62,7 +62,7 @@ install-gr1: gr1/gr1
 	cp gr1/gr1 bin/asgl
 
 test-gr1: install-gr1 data/iccma15_solutions data/iccma15_testcases
-	bundle exec cucumber --tags ~@co --tags ~@st --tags ~@pr
+	bundle exec cucumber --tags ~@co --tags ~@st --tags ~@pr --tags ~@big
 
 # gecode
 gecode: support/gecode-patched-headers.tgz
