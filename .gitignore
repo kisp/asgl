@@ -12,3 +12,5 @@ make.mk
 *.fasl
 common/early/count_args.cpp
 common/early/myfoo.cpp
+data/iccma15_solutions
+data/iccma15_testcases

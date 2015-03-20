@@ -44,10 +44,11 @@
     si_aset(4, adj, att_val_a, att_val_b, ecl_make_fixnum(1));
   }
 
-  val = [^),]+;
-arg = 'arg' '(' (val >S %E) ')' '.';
-att = (('att' %ATT_START) '(' (val >S %ATT_VAL_A) ',' (val >S %ATT_VAL_B) ')' '.') %ATT_END;
-main := (arg | att) ('\n' (arg | att))* ('\n')? 0 @{ res = 0; };
+  val = [^), ]+;
+ws = ('\n' | ' ')+;
+arg = 'arg' ws? '(' ws? (val >S %E) ws? ')' ws? '.';
+att = (('att' %ATT_START) ws? '(' ws? (val >S %ATT_VAL_A) ws? ',' ws? (val >S %ATT_VAL_B) ')' ws? '.') %ATT_END;
+main := ws? (arg | att) (ws (arg | att | ws))* ws? 0 @{ res = 0; };
 }%%
 
 %% write data;

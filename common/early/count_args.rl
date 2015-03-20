@@ -4,10 +4,11 @@
 %%{
   machine foo;
   action E { arg_count++; }
-  val = [^),]+;
-arg = 'arg' '(' val ')' '.' %E;
-att = 'att' '(' val ',' val ')' '.';
-main := (arg | att) ('\n' (arg | att))* ('\n')? 0 @{ res = 0; };
+  val = [^), ]+;
+ws = ('\n' | ' ')+;
+arg = 'arg' ws? '(' ws? val ws? ')' ws? '.' %E;
+att = 'att' ws? '(' ws? val ws? ',' ws? val ')' ws? '.';
+main := ws? (arg | att) (ws (arg | att))* ws? 0 @{ res = 0; };
 }%%
 
 %% write data;

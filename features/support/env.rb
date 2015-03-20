@@ -84,7 +84,7 @@ class FalseClass
 end
 
 def convert_to_json(string)
-  string.gsub(/([-_[:alnum:]]+)/, '"\1"')
+  string.gsub(/([^\[, \n\]]+)/, '"\1"')
 end
 
 def parse_output(string)
