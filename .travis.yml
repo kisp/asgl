@@ -48,6 +48,7 @@ install:
 
 script:
   - make test-$VARIANT
+  - make clean
   #- ecl -norc -eval '(format t "~A ~A~%~S~%" (lisp-implementation-type) (lisp-implementation-version) *features*)' -eval '(quit)'
   #- cl -e '(ql:quickload "graph-tgf-test")
   #         (uiop:quit (if (myam:load-and-run! "graph-tgf-test") 0 1))'
