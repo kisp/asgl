@@ -7,7 +7,14 @@ Feature: official
     Then the exit status should be 0
     And the output should be eql to solution "<name>.EE-GR"
 
-    Examples:
+    #| rdm1000_0                   |
+    #| rdm1000_1                   |
+    #| rdm1000_2                   |
+    #| rdm1000_3                   |
+    #| rdm1000_4                   |
+    #| rdm1000_5                   |
+
+    Examples: small
     | name                        |
     | 109649__200__11_12_65__35   |
     | 116134__200__18_19_87__57   |
@@ -99,12 +106,6 @@ Feature: official
     | 5786688__400__32_32_257__47 |
     | 600053__300__15_27_127__59  |
     | 665218__400__23_23_95__53   |
-    | rdm1000_0                   |
-    | rdm1000_1                   |
-    | rdm1000_2                   |
-    | rdm1000_3                   |
-    | rdm1000_4                   |
-    | rdm1000_5                   |
     | rdm200_0                    |
     | rdm200_10                   |
     | rdm200_11                   |
@@ -179,22 +180,25 @@ Feature: official
     | rdm50_4                     |
     | rdm50_5                     |
     | real_0                      |
-    | real_10                     |
-    | real_11                     |
-    | real_12                     |
-    | real_13                     |
-    | real_14                     |
-    | real_15                     |
-    | real_16                     |
-    | real_17                     |
-    | real_18                     |
-    | real_19                     |
-    | real_1                      |
-    | real_2                      |
-    | real_3                      |
-    | real_4                      |
-    | real_5                      |
-    | real_6                      |
-    | real_7                      |
-    | real_8                      |
-    | real_9                      |
+
+    @big
+    Examples: big
+    | real_10 |
+    | real_11 |
+    | real_12 |
+    | real_13 |
+    | real_14 |
+    | real_15 |
+    | real_16 |
+    | real_17 |
+    | real_18 |
+    | real_19 |
+    | real_1  |
+    | real_2  |
+    | real_3  |
+    | real_4  |
+    | real_5  |
+    | real_6  |
+    | real_7  |
+    | real_8  |
+    | real_9  |
