@@ -19,6 +19,8 @@
 (defmacro with-apx-readtable (() &body body)
   `(let ((*readtable* (copy-readtable nil)))
      (set-macro-character #\, (lambda (stream char) (values)))
+     ;; disable quote
+     (set-syntax-from-char #\' #\a)
      ,@body))
 
 (defun read-apx-line (string)
@@ -32,10 +34,11 @@
       (with-open-file (input pathname)
         (loop for line = (read-line input nil)
               while line
-              do (let ((item (read-apx-line line)))
-                   (if (null (cdr item))
-                       (push (first item) nodes)
-                       (push item edges))))))
+              do (unless (zerop (length (string-trim '(#\space) line)))
+                   (let ((item (read-apx-line line)))
+                     (if (null (cdr item))
+                         (push (first item) nodes)
+                         (push item edges)))))))
     (let* ((vector (coerce (nreverse nodes) 'vector))
            (adj (make-array (list (length vector) (length vector))
                             :initial-element 0))
