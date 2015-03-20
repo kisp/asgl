@@ -1,0 +1,31 @@
+--- a/common/early/make.mk	2015-03-20 10:17:03.244350239 +0100
++++ b/common/early/make.mk	2015-03-20 10:15:11.065341129 +0100
+@@ -1,4 +1,4 @@
+-common/early/libearly.a: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o
++common/early/libearly.a: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
+ 	rm -f common/early/libearly.a
+ 	ecl -norc \
+ 	  -eval "(require 'cmp)" \
+@@ -8,11 +8,11 @@
+ 	  -eval '(push "common/early/graph.o" *lisp-files*)' \
+ 	  -eval '(push "common/early/apx.o" *lisp-files*)' \
+ 	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
+-	  -eval '(c:build-static-library "common/early/early.a" :lisp-files *lisp-files*)' \
++	  -eval '(c:build-static-library "common/early/early.a" :lisp-files *lisp-files* :ld-flags (list "common/early/libmyfoo.a"))' \
+ 	  -eval '(quit)'
+ 	test -f common/early/libearly.a
+ 
+-common/early/early.fas: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o
++common/early/early.fas: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
+ 	rm -f common/early/early.fas
+ 	ecl -norc \
+ 	  -eval "(require 'cmp)" \
+@@ -22,7 +22,7 @@
+ 	  -eval '(push "common/early/graph.o" *lisp-files*)' \
+ 	  -eval '(push "common/early/apx.o" *lisp-files*)' \
+ 	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
+-	  -eval '(c:build-fasl "common/early/early.fas" :lisp-files *lisp-files*)' \
++	  -eval '(c:build-fasl "common/early/early.fas" :lisp-files *lisp-files* :ld-flags (list "common/early/libmyfoo.a"))' \
+ 	  -eval '(quit)'
+ 	test -f common/early/early.fas
+ 
