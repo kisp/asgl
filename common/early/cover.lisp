@@ -55,7 +55,7 @@
   (let ((pathname (merge-pathnames pathname)))
     (macrolet ((frob (x)
                  `(pprint `(setq ,',x ',,x) output)))
-      (format *error-output* ";;; Save cover data ~A" pathname)
+      (format *error-output* ";;; Save cover data ~A~%" pathname)
       (with-open-file (output pathname
                               :direction :output
                               :if-exists :supersede)
@@ -68,7 +68,7 @@
 (cl:defun load-points (pathname)
   (let ((pathname (merge-pathnames pathname))
         (*load-verbose* nil))
-    (format *error-output* ";;; Load cover data ~A" pathname)
+    (format *error-output* ";;; Load cover data ~A~%" pathname)
     (load pathname)))
 
 (cl:defun forget (&rest ids)

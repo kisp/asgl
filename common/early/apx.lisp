@@ -4,6 +4,9 @@
 
 (in-package #:early)
 
+(eval-when (:compile-toplevel :execute)
+  (cover:annotate t))
+
 (defun vector2hash-table (vector)
   (let ((hash (make-hash-table :test #'eql)))
     (dotimes (i (length vector)
@@ -85,3 +88,6 @@ long msize = 99;
        adj
        vector
        hash))))
+
+(eval-when (:compile-toplevel :execute)
+  (cover:annotate nil))

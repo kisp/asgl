@@ -4,7 +4,7 @@
     :depends-on ()
     :components
     ((:file "package")
-     (:file "utils" :depends-on ("package"))
-     (:file "graph" :depends-on ("utils"))
-     (:file "apx" :depends-on ("graph"))
+     (:file "utils" :depends-on ("package" "cover"))
+     (:file "graph" :depends-on ("utils" "cover"))
+     (:file "apx" :depends-on ("graph" "cover"))
      (:file "cover" :depends-on ())))

@@ -2,6 +2,9 @@
 
 (in-package #:early)
 
+(eval-when (:compile-toplevel :execute)
+  (cover:annotate t))
+
 ;;; general
 (defmacro aif (test then &optional else)
   `(let ((it ,test))
@@ -39,3 +42,6 @@
 
 (defmacro format* (&rest args)
   `(when *with-logging* (format ,@args)))
+
+(eval-when (:compile-toplevel :execute)
+  (cover:annotate nil))

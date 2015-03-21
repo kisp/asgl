@@ -2,6 +2,9 @@
 
 (in-package #:early)
 
+(eval-when (:compile-toplevel :execute)
+  (cover:annotate t))
+
 (defvar *nodes-cache* nil)
 (defvar *edges-cache* nil)
 (defvar *collect-parents-cache* nil)
@@ -102,3 +105,6 @@
 
 (defmacro do-parents-grandparents ((node parents-grandparents graph) &body body)
   `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
+
+(eval-when (:compile-toplevel :execute)
+  (cover:annotate nil))

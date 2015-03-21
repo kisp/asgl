@@ -7,7 +7,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package :early))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
+(eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
 (defun make-sp (x)
@@ -421,5 +421,5 @@ default: @(return 0) = 100; break;
          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
     (cover:save-points *cover-file*)))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
+(eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
