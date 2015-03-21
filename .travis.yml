@@ -2,10 +2,12 @@ language: lisp
 
 env:
   matrix:
+    - VARIANT=ref CUKE_ARGS="--tags ~@slow"
+    - VARIANT=v1 CUKE_ARGS="--tags ~@slow"
+    - VARIANT=gr1 CUKE_ARGS="--tags ~@slow"
     - VARIANT=ref
     - VARIANT=v1
     - VARIANT=gr1
-    - CUKE_ARGS="--tags ~@slow"
 
 install:
   - sudo apt-get update
