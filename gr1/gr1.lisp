@@ -13,15 +13,6 @@
 (defun make-sp (x)
   (ffi:c-inline (x) (:int) :pointer-void "{ @(return 0) = new gr1::Sp(#0); }"))
 
-(defun make-boolvar (space)
-  (ffi:c-inline (space) (:pointer-void) :pointer-void
-    "
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-@(return 0) = new Gecode::BoolVar(*sp, 0, 1);
-
-"))
-
 (defun expr-or (space boolvars)
   "Return a new boolvar that is constrained to be the OR of boolvars."
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
@@ -74,22 +65,6 @@ rel(*sp, Gecode::BOT_AND, a, *u);
 
 "))
 
-(defun expr-not (space boolvar)
-  "Return a new boolvar that is constrained to be the NOT of boolvar."
-  (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :pointer-void
-    "
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-Gecode::BoolVar* a = ((Gecode::BoolVar*)(#1));
-
-Gecode::BoolVar* u = new Gecode::BoolVar(*sp, 0, 1);
-
-rel(*sp, *a, Gecode::IRT_NQ, *u);
-
-@(return 0) = u;
-
-"))
-
 (defun post-nand (space i j)
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
     "{
@@ -102,52 +77,6 @@ int i = #1;
 int j = #2;
 
 rel(*sp, vars[i], Gecode::BOT_AND, vars[j], 0);
-
-}"))
-
-(defun post-imp (space i j)
-  "Post i ---> j."
-  (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-    "{
-
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-Gecode::BoolVarArray vars = *(sp->getVars());
-
-int i = #1;
-int j = #2;
-
-rel(*sp, vars[i], Gecode::BOT_IMP, vars[j], 1);
-
-}"))
-
-(defun assert-imp (space a b)
-  "BoolVar a --> BoolVar b."
-  (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-    "{
-
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-Gecode::BoolVar* a = (Gecode::BoolVar*)#1;
-Gecode::BoolVar* b = (Gecode::BoolVar*)#2;
-
-rel(*sp, *a, Gecode::BOT_IMP, *b, 1);
-
-}"))
-
-(defun post-eqv (space i j)
-  "Post i ---> j."
-  (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-    "{
-
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-Gecode::BoolVarArray vars = *(sp->getVars());
-
-int i = #1;
-int j = #2;
-
-rel(*sp, vars[i], Gecode::BOT_EQV, vars[j], 1);
 
 }"))
 
@@ -181,24 +110,6 @@ rel(*sp, vars[i], Gecode::IRT_EQ, 1);
 
 }"))
 
-(defun boolvar-post-true (space boolvar)
-  (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :void
-    "
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-rel(*sp, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 1);
-
-"))
-
-(defun boolvar-post-false (space boolvar)
-  (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :void
-    "
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-rel(*sp, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 0);
-
-"))
-
 (defun boolvar-post-eql (space a b)
   "Boolvar a eql boolvar b."
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
@@ -209,50 +120,9 @@ rel(*sp, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
 
 "))
 
-(defun post-multi-grandparents (space node grandparents)
-  "Post node ---> U(grandparents)."
-  (ffi:c-inline
-      (space node grandparents)
-      (:pointer-void :int :object)
-      :void
-    "{
-
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-
-Gecode::BoolVarArray vars = *(sp->getVars());
-
-int i = #1;
-
-int len = (int)ecl_length(#2);
-Gecode::BoolVarArgs a(len);
-
-cl_object mylist = #2;
-int __i = 0;
-while (!Null(mylist)) {
-  cl_object mycar = ecl_car(mylist);
-  a[__i] = vars[ecl_to_int(mycar)];
-  mylist = ecl_cdr(mylist);
-  __i++;
-}
-
-Gecode::BoolVar u(*sp, 0, 1);
-
-rel(*sp, Gecode::BOT_OR, a, u);
-
-rel(*sp, vars[i], Gecode::BOT_IMP, u, 1);
-
-}"))
-
-(defun dummy (list)
-  (dolist (x list)
-    (print x)))
-
 (defun delete-sp (sp)
   (ffi:c-inline (sp) (:pointer-void) :void
     "{ delete ((gr1::Sp*)#0); }"))
-
-(defun sp-getn (sp)
-  (ffi:c-inline (sp) (:pointer-void) :int "{ @(return 0) = ((gr1::Sp*)(#0))->getN(); }"))
 
 (defun space-status (space)
   (let ((status
@@ -273,12 +143,6 @@ default: @(return 0) = 100; break;
       (1 :failed)
       (2 :solved)
       (3 :branch))))
-
-(defun space-print-to-string (space)
-  (let ((status (space-status space)))
-    (format nil "#<!!SPACE ~S ~{~S~^ ~}>"
-            status
-            (mapcar #'boolvar-domain (space-vars-as-list space)))))
 
 (defun space-to-list (space)
   (mapcar #'boolvar-domain (space-vars-as-list space)))
@@ -314,55 +178,6 @@ default: @(return 0) = 100; break;
 (defun vars-nth (vars n)
   (ffi:c-inline (vars n) (:pointer-void :int) :pointer-void
     "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
-
-(defun make-dfs (space)
-  (ffi:c-inline (space) (:pointer-void) :pointer-void
-    "{ @(return 0) = new Gecode::DFS<gr1::Sp>(((gr1::Sp*)(#0)));}"))
-
-(defun dfs-next (dfs)
-  (ffi:c-inline (dfs) (:pointer-void) :pointer-void
-    "{ @(return 0) = ((Gecode::DFS<gr1::Sp>*)(#0))->next(); }"))
-
-(defun dfs-statistics (dfs)
-  (ffi:c-inline (dfs) (:pointer-void)
-      (values :unsigned-long-long
-              :unsigned-long-long
-              :unsigned-long-long
-              :unsigned-long-long
-              :unsigned-long-long)
-    "
-Gecode::DFS<gr1::Sp>* dfs = (Gecode::DFS<gr1::Sp>*)(#0);
-
-Gecode::Search::Statistics s = dfs->statistics();
-
-@(return 0) = s.fail;
-@(return 1) = s.node;
-@(return 2) = s.depth;
-@(return 3) = s.restart;
-@(return 4) = s.nogood;
-
-"))
-
-(defun dfs-search-all (space)
-  (let ((dfs (make-dfs space)))
-    (delete-sp space)
-    (values
-     (loop for solution = (dfs-next dfs)
-        until (si:null-pointer-p solution)
-        collect solution)
-     (multiple-value-list
-      (dfs-statistics dfs)))))
-
-(defun dfs-search-gist (space)
-  (ffi:c-inline (space) (:pointer-void) :void
-    "
-gr1::Sp* sp = ((gr1::Sp*)(#0));
-Gecode::Gist::Print<gr1::Sp> p(\"Print solution\");
-Gecode::Gist::Options o;
-o.inspect.click(&p);
-Gecode::Gist::dfs(sp,o);
-")
-  (delete-sp space))
 
 (defvar *space*)
 (defvar *vars-vector*)
@@ -413,12 +228,6 @@ Gecode::Gist::dfs(sp,o);
                       (setf (gethash key imp-or-table) t)))))
          ,@body))))
 
-(defun cart-product (n)
-  (let ((solutions (dfs-search-all (make-sp n))))
-    (prog1
-        (mapcar #'space-to-list solutions)
-      (mapc #'delete-sp solutions))))
-
 (defun check-array-is-square (graph)
   (assert (eql (array-dimension graph 0) (array-dimension graph 1))))
 
@@ -434,69 +243,10 @@ Gecode::Gist::dfs(sp,o);
          when (eql x 1)
          collect i)))
 
-(defun space-indices-that-are-in (space &key delete)
-  (prog1
-      (bits-to-set (space-to-list space))
-    (when delete
-      (delete-sp space))))
-
-(defun space-indices-that-are-in-and-delete (space)
-  (space-indices-that-are-in space :delete t))
-
 (defun space-indices-that-are-in-otherwise-out-and-delete (space)
   (prog1
       (bits-to-set (space-to-list space) :unassigned-permitted-as-out t)
     (delete-sp space)))
-
-(defun conflict-free-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-sp order)))
-      (do-edges (edge graph)
-        (post-nand space (first edge) (second edge)))
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-sp solutions))))))
-
-(defun constr2-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-sp order)))
-      (do-grandparents (node grandparents graph)
-        (cond
-          ((null grandparents)
-           (post-must-be-false space node))
-          ((null (cdr grandparents))
-           (post-imp space node (first grandparents)))
-          (t
-           (post-multi-grandparents space node grandparents))))
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-sp solutions))))))
-
-(defun constr3-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-sp order)))
-      (dolist (node (nodes graph))
-        (when (null (collect-parents graph node))
-          (post-must-be-true space node)))
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-sp solutions))))))
-
-(defun constr4-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-sp order)))
-
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-sp solutions))))))
 
 (defmacro sortf2 (a b)
   `(unless (< ,a ,b)
@@ -505,27 +255,10 @@ Gecode::Gist::dfs(sp,o);
 (defun safe-sort (list)
   (sort (copy-list list) #'<))
 
-(defun dfs-search-all-and-list-ins (space)
-  (multiple-value-bind (solutions statistics)
-      (with-timing (dfs-search-all space))
-    (values
-     (mapcar #'space-indices-that-are-in-and-delete solutions)
-     statistics)))
-
-(defun dfs-search-gist-or-list-ins (space gist)
-  (if gist
-      (dfs-search-gist space)
-      (dfs-search-all-and-list-ins space)))
-
 (defun constrain-conflict-free (graph constrain-nand)
   (with-timing
       (do-edges (edge graph)
         (funcall constrain-nand (first edge) (second edge)))))
-
-(defun constrain-not-attacked-are-in (graph constrain-must-be-true)
-  (do-parents (node parents graph)
-    (when (null parents)
-      (funcall constrain-must-be-true node))))
 
 (defun constrain-in-eqv-acceptable (graph
                                     post-must-be-false
@@ -586,25 +319,6 @@ Gecode::Gist::dfs(sp,o);
        #'!!expr-or!!
        #'!!var!!))))
 
-(defun constrain-stable (graph)
-  (with-local-post-env ()
-    (with-timing
-        (do-parents (node parents graph)
-          (when parents
-            (assert-imp
-             space
-             (expr-not space (!!var!! node))
-             (!!expr-or!! parents)))))))
-
-(defun complete-all (graph &key gist)
-  (check-array-is-square graph)
-  (clear-graph-caches)
-  (let* ((order (order graph))
-         (space (with-timing (make-sp order))))
-    (with-post-env-setup (space)
-      (constrain-complete graph))
-    (dfs-search-gist-or-list-ins space gist)))
-
 (defun grounded-all (graph &key gist)
   (when gist (error "gist does not make sense here"))
   (check-array-is-square graph)
@@ -615,22 +329,6 @@ Gecode::Gist::dfs(sp,o);
       (constrain-complete graph))
     (with-timing (space-status space))
     (list (space-indices-that-are-in-otherwise-out-and-delete space))))
-
-(defun preferred-all (graph &key gist)
-  (declare (ignore gist))
-  (remove-duplicates
-   (sort (complete-all graph) #'< :key #'length)
-   :test #'subsetp))
-
-(defun stable-all (graph &key gist)
-  (check-array-is-square graph)
-  (clear-graph-caches)
-  (let* ((order (order graph))
-         (space (with-timing (make-sp order))))
-    (with-post-env-setup (space)
-      (constrain-complete graph)
-      (constrain-stable graph))
-    (dfs-search-gist-or-list-ins space gist)))
 
 (defun adopt-keywords (list)
   (mapcar (lambda (x)
