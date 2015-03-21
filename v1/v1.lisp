@@ -13,15 +13,6 @@
 (defun make-foo (x)
   (ffi:c-inline (x) (:int) :pointer-void "{ @(return 0) = new v1::Foo(#0); }"))
 
-(defun make-boolvar (space)
-  (ffi:c-inline (space) (:pointer-void) :pointer-void
-    "
-v1::Foo* foo = ((v1::Foo*)(#0));
-
-@(return 0) = new Gecode::BoolVar(*foo, 0, 1);
-
-"))
-
 (defun expr-or (space boolvars)
   "Return a new boolvar that is constrained to be the OR of boolvars."
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
@@ -105,22 +96,6 @@ rel(*foo, vars[i], Gecode::BOT_AND, vars[j], 0);
 
 }"))
 
-(defun post-imp (space i j)
-  "Post i ---> j."
-  (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-    "{
-
-v1::Foo* foo = ((v1::Foo*)(#0));
-
-Gecode::BoolVarArray vars = *(foo->getVars());
-
-int i = #1;
-int j = #2;
-
-rel(*foo, vars[i], Gecode::BOT_IMP, vars[j], 1);
-
-}"))
-
 (defun assert-imp (space a b)
   "BoolVar a --> BoolVar b."
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
@@ -132,22 +107,6 @@ Gecode::BoolVar* a = (Gecode::BoolVar*)#1;
 Gecode::BoolVar* b = (Gecode::BoolVar*)#2;
 
 rel(*foo, *a, Gecode::BOT_IMP, *b, 1);
-
-}"))
-
-(defun post-eqv (space i j)
-  "Post i ---> j."
-  (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-    "{
-
-v1::Foo* foo = ((v1::Foo*)(#0));
-
-Gecode::BoolVarArray vars = *(foo->getVars());
-
-int i = #1;
-int j = #2;
-
-rel(*foo, vars[i], Gecode::BOT_EQV, vars[j], 1);
 
 }"))
 
@@ -181,24 +140,6 @@ rel(*foo, vars[i], Gecode::IRT_EQ, 1);
 
 }"))
 
-(defun boolvar-post-true (space boolvar)
-  (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :void
-    "
-v1::Foo* foo = ((v1::Foo*)(#0));
-
-rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 1);
-
-"))
-
-(defun boolvar-post-false (space boolvar)
-  (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :void
-    "
-v1::Foo* foo = ((v1::Foo*)(#0));
-
-rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, 0);
-
-"))
-
 (defun boolvar-post-eql (space a b)
   "Boolvar a eql boolvar b."
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
@@ -209,50 +150,9 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
 
 "))
 
-(defun post-multi-grandparents (space node grandparents)
-  "Post node ---> U(grandparents)."
-  (ffi:c-inline
-      (space node grandparents)
-      (:pointer-void :int :object)
-      :void
-    "{
-
-v1::Foo* foo = ((v1::Foo*)(#0));
-
-Gecode::BoolVarArray vars = *(foo->getVars());
-
-int i = #1;
-
-int len = (int)ecl_length(#2);
-Gecode::BoolVarArgs a(len);
-
-cl_object mylist = #2;
-int __i = 0;
-while (!Null(mylist)) {
-  cl_object mycar = ecl_car(mylist);
-  a[__i] = vars[ecl_to_int(mycar)];
-  mylist = ecl_cdr(mylist);
-  __i++;
-}
-
-Gecode::BoolVar u(*foo, 0, 1);
-
-rel(*foo, Gecode::BOT_OR, a, u);
-
-rel(*foo, vars[i], Gecode::BOT_IMP, u, 1);
-
-}"))
-
-(defun dummy (list)
-  (dolist (x list)
-    (print x)))
-
 (defun delete-foo (foo)
   (ffi:c-inline (foo) (:pointer-void) :void
     "{ delete ((v1::Foo*)#0); }"))
-
-(defun foo-getn (foo)
-  (ffi:c-inline (foo) (:pointer-void) :int "{ @(return 0) = ((v1::Foo*)(#0))->getN(); }"))
 
 (defun space-status (space)
   (let ((status
@@ -273,12 +173,6 @@ default: @(return 0) = 100; break;
       (1 :failed)
       (2 :solved)
       (3 :branch))))
-
-(defun space-print-to-string (space)
-  (let ((status (space-status space)))
-    (format nil "#<!!SPACE ~S ~{~S~^ ~}>"
-            status
-            (mapcar #'boolvar-domain (space-vars-as-list space)))))
 
 (defun space-to-list (space)
   (mapcar #'boolvar-domain (space-vars-as-list space)))
@@ -413,12 +307,6 @@ Gecode::Gist::dfs(foo,o);
                       (setf (gethash key imp-or-table) t)))))
          ,@body))))
 
-(defun cart-product (n)
-  (let ((solutions (dfs-search-all (make-foo n))))
-    (prog1
-        (mapcar #'space-to-list solutions)
-      (mapc #'delete-foo solutions))))
-
 (defun check-array-is-square (graph)
   (assert (eql (array-dimension graph 0) (array-dimension graph 1))))
 
@@ -448,56 +336,6 @@ Gecode::Gist::dfs(foo,o);
       (bits-to-set (space-to-list space) :unassigned-permitted-as-out t)
     (delete-foo space)))
 
-(defun conflict-free-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-foo order)))
-      (do-edges (edge graph)
-        (post-nand space (first edge) (second edge)))
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-foo solutions))))))
-
-(defun constr2-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-foo order)))
-      (do-grandparents (node grandparents graph)
-        (cond
-          ((null grandparents)
-           (post-must-be-false space node))
-          ((null (cdr grandparents))
-           (post-imp space node (first grandparents)))
-          (t
-           (post-multi-grandparents space node grandparents))))
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-foo solutions))))))
-
-(defun constr3-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-foo order)))
-      (dolist (node (nodes graph))
-        (when (null (collect-parents graph node))
-          (post-must-be-true space node)))
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-foo solutions))))))
-
-(defun constr4-all (graph)
-  (check-array-is-square graph)
-  (let ((order (order graph)))
-    (let ((space (make-foo order)))
-
-      (let ((solutions (dfs-search-all space)))
-        (prog1
-            (mapcar #'bits-to-set (mapcar #'space-to-list solutions))
-          (mapc #'delete-foo solutions))))))
-
 (defmacro sortf2 (a b)
   `(unless (< ,a ,b)
      (rotatef ,a ,b)))
@@ -521,11 +359,6 @@ Gecode::Gist::dfs(foo,o);
   (with-timing
       (do-edges (edge graph)
         (funcall constrain-nand (first edge) (second edge)))))
-
-(defun constrain-not-attacked-are-in (graph constrain-must-be-true)
-  (do-parents (node parents graph)
-    (when (null parents)
-      (funcall constrain-must-be-true node))))
 
 (defun constrain-in-eqv-acceptable (graph
                                     post-must-be-false
