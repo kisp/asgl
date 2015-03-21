@@ -2,14 +2,18 @@
 
 (defpackage :cover
   (:use :cl)
-  (:shadow #:defun #:defmacro)
+  (:shadow #:defun #+nil #:defmacro)
   (:export #:annotate #:report #:reset #:forget
-           #:forget-all #:*line-limit*))
+           #:forget-all #:*line-limit*
+           #:save-points #:load-points))
 
 (in-package :cover)
 
 ;;; This is the September 15, 1991 version of
 ;;; Richard Waters' test case coverage checker
+
+;;; with adoptions.
+
 
 #|----------------------------------------------------------------------------|
 | Copyright 1991 by the Massachusetts Institute of Technology, Cambridge MA. |
@@ -43,8 +47,29 @@
 (defvar *count* 0)
 (defvar *hit* 1)
 (defvar *points* nil)
+
 (defvar *annotating* nil)
 (defvar *testing* nil)
+
+(cl:defun save-points (pathname)
+  (let ((pathname (merge-pathnames pathname)))
+    (macrolet ((frob (x)
+                 `(pprint `(setq ,',x ',,x) output)))
+      (format *error-output* ";;; Save cover data ~A" pathname)
+      (with-open-file (output pathname
+                              :direction :output
+                              :if-exists :supersede)
+        (with-standard-io-syntax
+          (frob *count*)
+          (frob *hit*)
+          (frob *points*))
+        t))))
+
+(cl:defun load-points (pathname)
+  (let ((pathname (merge-pathnames pathname))
+        (*load-verbose* nil))
+    (format *error-output* ";;; Load cover data ~A" pathname)
+    (load pathname)))
 
 (cl:defun forget (&rest ids)
   (forget1 ids *points*)
@@ -186,7 +211,7 @@
 
 (cl:defun annotate1 (flag)
   (shadowing-import
-   (set-difference '(defun defmacro)
+   (set-difference '(defun #+nil defmacro)
                    (package-shadowing-symbols *package*)))
   (when (and flag (not *testing*))
     (warn "Coverage annotation applied."))
@@ -195,6 +220,7 @@
 (cl:defmacro defun (n argl &body b)
   (process 'defun 'cl:defun n argl b))
 
+#+nil
 (cl:defmacro defmacro (n a &body b)
   (process 'defmacro 'cl:defmacro n a b))
 

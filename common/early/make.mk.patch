@@ -1,8 +1,8 @@
 --- a/common/early/make.mk	2015-03-20 10:17:03.244350239 +0100
 +++ b/common/early/make.mk	2015-03-20 10:15:11.065341129 +0100
 @@ -1,4 +1,4 @@
--common/early/libearly.a: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o
-+common/early/libearly.a: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
+-common/early/libearly.a: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o
++common/early/libearly.a: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
  	rm -f common/early/libearly.a
  	ecl -norc \
  	  -eval "(require 'cmp)" \
@@ -15,8 +15,8 @@
  	  -eval '(quit)'
  	test -f common/early/libearly.a
  
--common/early/early.fas: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o
-+common/early/early.fas: common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
+-common/early/early.fas: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o
++common/early/early.fas: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
  	rm -f common/early/early.fas
  	ecl -norc \
  	  -eval "(require 'cmp)" \
