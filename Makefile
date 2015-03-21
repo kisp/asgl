@@ -8,7 +8,7 @@ install-ref:
 	chmod +x bin/asgl
 
 test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
-	bundle exec cucumber --tags ~@notref --tags ~@big
+	bundle exec cucumber --tags ~@notref --tags ~@big ${CUKE_ARGS}
 
 
 # v1
@@ -25,7 +25,7 @@ install-v1: v1/v1
 	cp v1/v1 bin/asgl
 
 test-v1: install-v1 data/iccma15_solutions data/iccma15_testcases
-	bundle exec cucumber --tags ~@big
+	bundle exec cucumber --tags ~@big ${CUKE_ARGS}
 
 # gr1
 gr1/gr1.o: gecode gr1/gr1.lisp common/early/early.fas
@@ -63,7 +63,7 @@ install-gr1: gr1/gr1
 	cp gr1/gr1 bin/asgl
 
 test-gr1: install-gr1 data/iccma15_solutions data/iccma15_testcases
-	bundle exec cucumber --tags ~@co --tags ~@st --tags ~@pr --tags ~@big
+	bundle exec cucumber --tags ~@co --tags ~@st --tags ~@pr --tags ~@big ${CUKE_ARGS}
 
 # gecode
 gecode: support/gecode-patched-headers.tgz

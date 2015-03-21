@@ -2,8 +2,6 @@
 
 set -e
 
-#ecl -norc -load support/asdf.lisp -load lisp-scripts/deps.lisp -eval '(main)' -- lib/*/*.asd
-
 bash scripts/generate-make-mk.sh
 
 make clean

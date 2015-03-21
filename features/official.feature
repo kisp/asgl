@@ -1,3 +1,4 @@
+@slow
 Feature: official
 
   @gr
