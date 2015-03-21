@@ -16,7 +16,7 @@
 
 (defun %nodes% (graph)
   (loop for i from 0 below (order graph)
-        collect i))
+     collect i))
 
 (defun nodes (graph)
   (if *nodes-cache*

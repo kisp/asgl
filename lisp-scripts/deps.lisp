@@ -9,7 +9,7 @@
 
 (defun mappend (function &rest lists)
   (loop for results in (apply #'mapcar function lists)
-        append results))
+     append results))
 
 (defun items-upto (list x)
   (subseq list 0 (position x list)))
@@ -36,30 +36,30 @@
         (when (or (not info) (zerop (first info)))
           (push obj free-objs))))
     (loop
-      (flet ((next-result (obj)
-               (push obj result)
-               (dolist (successor (rest (gethash obj obj-info)))
-                 (let* ((successor-info (gethash successor obj-info))
-                        (count (1- (first successor-info))))
-                   (setf (first successor-info) count)
-                   (when (zerop count)
-                     (push successor free-objs))))))
-        (cond ((endp free-objs)
-               (let ((n-table-874 obj-info))
-                 (with-hash-table-iterator (gen872 n-table-874)
-                   (loop
-                     (multiple-value-bind (n-more-873 obj info)
-                         (gen872)
-                       (unless n-more-873 (return nil))
-                       (unless (zerop (first info))
-                         (error "Topological sort failed due to constraint on ~S." OBJ))))))
-               (return (nreverse result)))
-              ((endp (rest free-objs))
-               (next-result (pop free-objs)))
-              (t
-               (let ((obj (funcall tie-breaker free-objs result)))
-                 (setf free-objs (remove obj free-objs))
-                 (next-result obj))))))))
+       (flet ((next-result (obj)
+                (push obj result)
+                (dolist (successor (rest (gethash obj obj-info)))
+                  (let* ((successor-info (gethash successor obj-info))
+                         (count (1- (first successor-info))))
+                    (setf (first successor-info) count)
+                    (when (zerop count)
+                      (push successor free-objs))))))
+         (cond ((endp free-objs)
+                (let ((n-table-874 obj-info))
+                  (with-hash-table-iterator (gen872 n-table-874)
+                    (loop
+                       (multiple-value-bind (n-more-873 obj info)
+                           (gen872)
+                         (unless n-more-873 (return nil))
+                         (unless (zerop (first info))
+                           (error "Topological sort failed due to constraint on ~S." OBJ))))))
+                (return (nreverse result)))
+               ((endp (rest free-objs))
+                (next-result (pop free-objs)))
+               (t
+                (let ((obj (funcall tie-breaker free-objs result)))
+                  (setf free-objs (remove obj free-objs))
+                  (next-result obj))))))))
 
 (defmethod asdf/component:component-pathname ((component pathname))
   component)
@@ -88,11 +88,11 @@
   (let ((components (asdf/component:module-components
                      (asdf/component:component-parent component))))
     (let ((dependencies
-            (mapcar (lambda (name)
-                      (find name components
-                            :key #'asdf/component:component-name
-                            :test #'equal))
-                    (asdf/component:component-sideway-dependencies component))))
+           (mapcar (lambda (name)
+                     (find name components
+                           :key #'asdf/component:component-name
+                           :test #'equal))
+                   (asdf/component:component-sideway-dependencies component))))
       (assert (every #'identity dependencies))
       (mapcar (lambda (dependency) (cons dependency component)) dependencies))))
 
@@ -104,8 +104,8 @@
 
 (defun asd-paths (args)
   (let ((pos
-          (or (position "--" args :test #'equal)
-              (error "-- not found"))))
+         (or (position "--" args :test #'equal)
+             (error "-- not found"))))
     (mapcar #'parse-namestring (nthcdr (1+ pos) args))))
 
 (defun populate-registry (asd-paths)
@@ -114,7 +114,7 @@
 
 (defun asd-paths-find-systems (asd-paths)
   (loop for x in asd-paths
-        collect (asdf/system:find-system (pathname-name x) t)))
+     collect (asdf/system:find-system (pathname-name x) t)))
 
 (defun filter-test-systems (systems)
   (remove-if
@@ -127,7 +127,7 @@
 
 (defun check-same-parent (components)
   (let ((parents
-          (remove-duplicates (mapcar #'asdf/component:component-parent components))))
+         (remove-duplicates (mapcar #'asdf/component:component-parent components))))
     (unless (eql 1 (length parents))
       (error "more than one parent: ~S" parents))))
 
@@ -152,13 +152,13 @@
                (terpri))
              (format-multiline (x)
                (loop for tail on x
-                     for c = (car tail)
-                     for level = 0 then 2
-                     do (indent level)
-                     do (format-args c)
-                     when (cdr tail)
-                       do (format t " \\")
-                     do (terpri)))
+                  for c = (car tail)
+                  for level = 0 then 2
+                  do (indent level)
+                  do (format-args c)
+                  when (cdr tail)
+                  do (format t " \\")
+                  do (terpri)))
              (format-exp (x)
                (if (consp (car x))
                    (format-multiline x)
@@ -211,17 +211,17 @@
     (format-rule lib-pathname
                  inputs
                  `(,(!rm-f lib-pathname)
-                   ((ecl -norc)
-                    (-eval "\"(require 'cmp)\"")
-                    (-eval "\"(defvar *lisp-files* nil)\"")
-                    ,@(mapcar
-                       (lambda (o)
-                         `(-eval ,(format nil "'(push ~S *lisp-files*)'" (namestring o))))
-                       inputs)
-                    (-eval "'(setq *lisp-files* (nreverse *lisp-files*))'")
-                    (-eval ,(format nil "'(c:build-static-library ~S :lisp-files *lisp-files*)'" (namestring lib-short-pathname)))
-                    (-eval "'(quit)'"))
-                   ,(!test-f lib-pathname)))
+                    ((ecl -norc)
+                     (-eval "\"(require 'cmp)\"")
+                     (-eval "\"(defvar *lisp-files* nil)\"")
+                     ,@(mapcar
+                        (lambda (o)
+                          `(-eval ,(format nil "'(push ~S *lisp-files*)'" (namestring o))))
+                        inputs)
+                     (-eval "'(setq *lisp-files* (nreverse *lisp-files*))'")
+                     (-eval ,(format nil "'(c:build-static-library ~S :lisp-files *lisp-files*)'" (namestring lib-short-pathname)))
+                     (-eval "'(quit)'"))
+                    ,(!test-f lib-pathname)))
     (terpri)))
 
 (defun %fas-rule (sorted-components)
@@ -232,17 +232,17 @@
     (format-rule fas-pathname
                  inputs
                  `(,(!rm-f fas-pathname)
-                   ((ecl -norc)
-                    (-eval "\"(require 'cmp)\"")
-                    (-eval "\"(defvar *lisp-files* nil)\"")
-                    ,@(mapcar
-                       (lambda (o)
-                         `(-eval ,(format nil "'(push ~S *lisp-files*)'" (namestring o))))
-                       inputs)
-                    (-eval "'(setq *lisp-files* (nreverse *lisp-files*))'")
-                    (-eval ,(format nil "'(c:build-fasl ~S :lisp-files *lisp-files*)'" (namestring fas-pathname)))
-                    (-eval "'(quit)'"))
-                   ,(!test-f fas-pathname)))
+                    ((ecl -norc)
+                     (-eval "\"(require 'cmp)\"")
+                     (-eval "\"(defvar *lisp-files* nil)\"")
+                     ,@(mapcar
+                        (lambda (o)
+                          `(-eval ,(format nil "'(push ~S *lisp-files*)'" (namestring o))))
+                        inputs)
+                     (-eval "'(setq *lisp-files* (nreverse *lisp-files*))'")
+                     (-eval ,(format nil "'(c:build-fasl ~S :lisp-files *lisp-files*)'" (namestring fas-pathname)))
+                     (-eval "'(quit)'"))
+                    ,(!test-f fas-pathname)))
     (terpri)))
 
 (defun %o-rule (component sorted-components)
@@ -251,21 +251,21 @@
          (loads (items-upto sorted-components component))
          (system (asdf/component:component-system component))
          (system-dependencies
-           (items-upto
-            (sort-systems (system-deep-dependencies system))
-            system)))
+          (items-upto
+           (sort-systems (system-deep-dependencies system))
+           system)))
     (format-rule o-pathname
                  (append
                   (cons (component-pathname component)
                         (mapcar #'component-pathname loads))
                   (mapcar #'fas-pathname system-dependencies))
                  `(,(!rm-f o-pathname)
-                   ,(!ecl-s-compile
-                     (append
-                      (mapcar #'fas-pathname system-dependencies)
-                      loads)
-                     component)
-                   ,(!test-f o-pathname)))
+                    ,(!ecl-s-compile
+                      (append
+                       (mapcar #'fas-pathname system-dependencies)
+                       loads)
+                      component)
+                    ,(!test-f o-pathname)))
     (terpri)))
 
 (defun %clean-rule (sorted-components)

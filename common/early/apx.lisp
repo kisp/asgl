@@ -7,12 +7,12 @@
 (defun vector2hash-table (vector)
   (let ((hash (make-hash-table :test #'eql)))
     (dotimes (i (length vector)
-                hash)
+              hash)
       (setf (gethash (aref vector i) hash) i))))
 
 (defun hash-table2vector (hash vector)
   (loop for k being the hash-keys in hash using (hash-value v)
-        do (setf (aref vector v) k)))
+     do (setf (aref vector v) k)))
 
 (defmacro with-apx-readtable (() &body body)
   `(let ((*readtable* (copy-readtable nil)))
@@ -36,8 +36,8 @@ long msize = 99;
 @(return 1) = msize;
 }")
       (let ((arg-count
-              (ffi:c-inline (buffer size) (:pointer-void :long) :int
-                "{ @(return 0) = count_args((char*)#0, #1); }")))
+             (ffi:c-inline (buffer size) (:pointer-void :long) :int
+               "{ @(return 0) = count_args((char*)#0, #1); }")))
         (let ((adj (make-array (list arg-count arg-count) :initial-element 0))
               (vector (make-array arg-count))
               (hash (make-hash-table :test #'equal)))
@@ -59,7 +59,7 @@ long msize = 99;
     #+nil(describe table)
     #+nil(format t "here are all the keys:~%")
     #+nil(loop for key being the hash-keys of table
-               do (format t "~S~%" key))
+            do (format t "~S~%" key))
     (format t "the table count is ~S~%"
             (hash-table-count table))
     #+nil(assert (not (zerop (hash-table-count table)))))
@@ -68,11 +68,11 @@ long msize = 99;
     (with-apx-readtable ()
       (with-open-file (input pathname)
         (loop for line = (read-line input nil)
-              while line
-              do (let ((item (read-apx-line line)))
-                   (if (null (cdr item))
-                       (push (first item) nodes)
-                       (push item edges))))))
+           while line
+           do (let ((item (read-apx-line line)))
+                (if (null (cdr item))
+                    (push (first item) nodes)
+                    (push item edges))))))
     (let* ((vector (coerce (nreverse nodes) 'vector))
            (adj (make-array (list (length vector) (length vector))
                             :initial-element 0))
