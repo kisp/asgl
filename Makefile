@@ -88,6 +88,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean common/ea
 	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
 	rm -rf data/iccma15_solutions data/iccma15_testcases
+	rm -f cover.data
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 include common/early/make.mk

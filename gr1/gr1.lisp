@@ -1,11 +1,14 @@
 ;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; -*-
 
-(in-package #:common-lisp-user)
+(in-package :cl-user)
 
 (ffi:clines "#include \"Sp.h\"")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package :early))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (cover:annotate t))
 
 (defun make-sp (x)
   (ffi:c-inline (x) (:int) :pointer-void "{ @(return 0) = new gr1::Sp(#0); }"))
@@ -696,16 +699,29 @@ Gecode::Gist::dfs(sp,o);
           ((:dc :ds) (dc-ds graph task semantic hash a)))
         (terpri)))))
 
+(defvar *cover-file*
+  (merge-pathnames "cover.data"
+                   (probe-file (ext:getenv "ASGL_HOME"))))
+
 (defun main ()
   (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
   (format *error-output* "~S~%" ext:*command-args*)
-  ;; (format *error-output* "from foo: ~S~%" (foo:tollb))
-  (cond
-    ((null (cdr ext:*command-args*))
-     (write-line "ASGL v0.0.1")
-     (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
-    ((equal "--formats" (second ext:*command-args*))
-     (write-line "[apx, tgf]"))
-    ((equal "--problems" (second ext:*command-args*))
-     (write-line "[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]"))
-    (t (apply #'main% (adopt-keywords (cdr ext:*command-args*))))))
+  (when (probe-file *cover-file*)
+    (cover:load-points *cover-file*))
+  (unwind-protect
+       (cond
+         ((null (cdr ext:*command-args*))
+          (write-line "ASGL v0.0.1")
+          (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
+         ((equal "--formats" (second ext:*command-args*))
+          (write-line "[apx, tgf]"))
+         ((equal "--problems" (second ext:*command-args*))
+          (write-line "[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]"))
+         ((equal "--cover-report" (second ext:*command-args*))
+          (cover:report :out *error-output*)
+          (terpri *error-output*))
+         (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
+    (cover:save-points *cover-file*)))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (cover:annotate nil))
