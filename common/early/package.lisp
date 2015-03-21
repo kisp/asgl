@@ -8,7 +8,6 @@
            #:order
            #:nodes
            #:do-nodes #:do-edges
-           #:do-parents #:do-grandparents #:do-parents-grandparents
-           #:map-triangles #:do-triangles)
+           #:do-parents #:do-grandparents #:do-parents-grandparents)
   ;; apx
   (:export #:read-apx-file))

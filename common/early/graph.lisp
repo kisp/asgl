@@ -102,19 +102,3 @@
 
 (defmacro do-parents-grandparents ((node parents-grandparents graph) &body body)
   `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
-
-(defun map-triangles (fn graph)
-  (let ((seen (make-hash-table :test #'equal)))
-    (do-edges (edge graph)
-      (destructuring-bind (u v) edge
-        (do-nodes (w graph)
-          (when (and (/= u v w)
-                     (eql 1 (aref graph v w))
-                     (eql 1 (aref graph w u)))
-            (let ((set (sort (list u v w) #'<)))
-              (unless (gethash set seen)
-                (funcall fn u v w)
-                (setf (gethash set seen) t)))))))))
-
-(defmacro do-triangles ((u v w graph) &body body)
-  `(map-triangles (lambda (,u ,v ,w) ,@body) ,graph))

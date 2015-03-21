@@ -520,33 +520,6 @@ Gecode::Gist::dfs(foo,o);
     (when (null parents)
       (funcall constrain-must-be-true node))))
 
-(defun constrain-triangles (graph imp-or)
-  (with-timing
-      (do-triangles (u v w graph)
-        (let ((uvw (list u v w)))
-          (assert (eql 1 (aref graph u v)))
-          (assert (eql 1 (aref graph v w)))
-          (assert (eql 1 (aref graph w u)))
-          (let ((u-attackers (set-difference (collect-parents graph u) uvw))
-                (v-attackers (set-difference (collect-parents graph v) uvw))
-                (w-attackers (set-difference (collect-parents graph w) uvw)))
-            (cond
-              ((and (zerop (aref graph v u))
-                    (zerop (aref graph w v))
-                    (zerop (aref graph u w))
-                    ;; no self-loops
-                    (zerop (aref graph u u))
-                    (zerop (aref graph v v))
-                    (zerop (aref graph w w))
-                    ;; at least one attacker
-                    u-attackers
-                    v-attackers
-                    w-attackers)
-               (funcall imp-or v u-attackers)
-               (funcall imp-or w v-attackers)
-               (funcall imp-or u w-attackers))
-              (t #+nil(warn "skipping ~A" (list u v w)))))))))
-
 (defun constrain-in-eqv-acceptable (graph
                                     post-must-be-false
                                     post-must-be-true
@@ -585,8 +558,6 @@ Gecode::Gist::dfs(foo,o);
     #+nil
     (constrain-not-attacked-are-in
      graph (lambda (node) (post-must-be-true space node)))
-    #+nil
-    (constrain-triangles graph #'!!imp-or!!)
     (flet ((post-must-be-false (node)
              (post-must-be-false space node))
            (post-must-be-true (node)
