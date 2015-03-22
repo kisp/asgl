@@ -13,27 +13,27 @@
 (defun %%order (graph)
   (length graph))
 
-(defun %%node-precedents (graph node)
+(defun %%parents (graph node)
   (aref graph node))
 
-(defun (setf %%node-precedents) (value graph node)
+(defun (setf %%parents) (value graph node)
   (setf (aref graph node) value))
 
-(defmacro do-%%precedents ((node precedents &optional return)
-                           &body body)
-  `(dolist (,node ,precedents ,return)
+(defmacro do-%%parents ((node parents &optional return)
+                        &body body)
+  `(dolist (,node ,parents ,return)
      ,@body body))
 
-(defun %%precedents-add (node precedents)
-  (cons node precedents))
+(defun %%parents-add (node parents)
+  (cons node parents))
 
-(defmacro %%push-precedents (obj place &environment env)
+(defmacro %%push-parents (obj place &environment env)
   (multiple-value-bind (dummies vals newval setter getter)
       (get-setf-expansion place env)
     (let ((g (gensym)))
       `(let* ((,g ,obj)
               ,@(mapcar #'list dummies vals)
-              (,(car newval) (%%precedents-add ,g ,getter))
+              (,(car newval) (%%parents-add ,g ,getter))
               ,@(cdr newval))
          ,setter))))
 
@@ -54,7 +54,7 @@
   `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
 
 (defun add-edge (graph from to)
-  (%%push-precedents to (%%node-precedents graph from)))
+  (%%push-parents from (%%parents graph to)))
 
 (defun make-graph-from-adj (adj)
   (let* ((order (array-dimension adj 0))
@@ -75,8 +75,8 @@
 
 (defun map-edges (fn graph)
   (dotimes (i (%%order graph))
-    (do-%%precedents (j (%%node-precedents graph i))
-      (funcall fn i j))))
+    (do-%%parents (j (%%parents graph i))
+      (funcall fn j i))))
 
 (defun %collect-parents% (graph node)
   (let (result)
