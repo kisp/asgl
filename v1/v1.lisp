@@ -2,6 +2,8 @@
 
 (in-package :cl-user)
 
+(declaim (optimize (debug 3) (safety 3) (speed 0)))
+
 (ffi:clines "#include \"Foo.h\"")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)

@@ -4,6 +4,8 @@
 
 (in-package #:early)
 
+(declaim (optimize (debug 3) (safety 3) (speed 0)))
+
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
