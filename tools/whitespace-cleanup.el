@@ -5,10 +5,11 @@
 (defun cleanup-file (file)
   (message "Opening %s..." file)
   (find-file file)
-  (setq indent-tabs-mode nil)
   (whitespace-cleanup)
   (save-buffer)
   (kill-buffer))
+
+(custom-set-default 'indent-tabs-mode nil)
 
 (dolist (arg argv)
   (cleanup-file arg))
