@@ -2,6 +2,7 @@
 
 (defpackage #:early
   (:use #:cl)
+  (:export #:asgl-home)
   (:export #:with-timing #:format* #:aif #:it)
   ;; graph
   (:export

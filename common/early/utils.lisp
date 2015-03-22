@@ -5,6 +5,32 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
+;;; from cl-fad
+(defun component-present-p (value)
+  "Helper function for DIRECTORY-PATHNAME-P which checks whether VALUE
+   is neither NIL nor the keyword :UNSPECIFIC."
+  (and value (not (eql value :unspecific))))
+
+(defun directory-pathname-p (pathspec)
+  "Returns NIL if PATHSPEC \(a pathname designator) does not designate
+a directory, PATHSPEC otherwise.  It is irrelevant whether file or
+directory designated by PATHSPEC does actually exist."
+  (and
+   (not (component-present-p (pathname-name pathspec)))
+   (not (component-present-p (pathname-type pathspec)))
+   pathspec))
+
+;;; config
+(defun asgl-home ()
+  (let ((var (ext:getenv "ASGL_HOME")))
+    (unless var
+      (error "ASGL_HOME is not set"))
+    (let ((home (probe-file var)))
+      (unless (and home (directory-pathname-p home))
+        (error "ASGL_HOME does not point to an existing directory: ~S"
+               (ext:getenv "ASGL_HOME")))
+      home)))
+
 ;;; general
 (defmacro aif (test then &optional else)
   `(let ((it ,test))

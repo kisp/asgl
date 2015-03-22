@@ -398,8 +398,7 @@ default: @(return 0) = 100; break;
         (terpri)))))
 
 (defvar *cover-file*
-  (merge-pathnames "cover.data"
-                   (probe-file (ext:getenv "ASGL_HOME"))))
+  (merge-pathnames "cover.data" (asgl-home)))
 
 (defun main ()
   (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
