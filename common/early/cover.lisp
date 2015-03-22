@@ -214,7 +214,7 @@
    (set-difference '(defun #+nil defmacro)
                    (package-shadowing-symbols *package*)))
   (when (and flag (not *testing*))
-    (warn "Coverage annotation applied."))
+    (format *error-output* "Coverage annotation applied.~%"))
   (setq *annotating* (not (null flag))))
 
 (cl:defmacro defun (n argl &body b)
