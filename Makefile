@@ -1,3 +1,4 @@
+# -*- indent-tabs: t -*-
 all: test-gr1
 
 # ref
