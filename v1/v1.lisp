@@ -535,8 +535,27 @@ Gecode::Gist::dfs(foo,o);
 (defvar *cover-file*
   (merge-pathnames "cover.data" (asgl-home)))
 
+(defun print-error-log (eout e)
+  (format eout "Unhandled error detected: ~%")
+  (format eout "~A~%" e)
+  (format eout "Backtrace: ~%")
+  (loop for x from (- (si::ihs-top) 2) downto 1
+     do
+       (format eout "~A~%" (si::ihs-fun x))
+       (format eout " Args:~%")
+       (let ((env (si::decode-ihs-env (si::ihs-env x))))
+         (dolist (ip env)
+           (format eout "      ~A= ~A~%" (car ip) (cdr ip))))
+       (format eout "~%"))
+  (format eout "~%"))
+
 (defun main ()
-  (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
+  (setq *debugger-hook* (lambda (c old)
+                          (ext:dump-c-backtrace 32)
+                          (terpri *error-output*)
+                          (print-error-log *error-output* c)
+                          (format t "ERROR: ~A~%" c)
+                          (ext:quit 1)))
   (format *error-output* "~S~%" ext:*command-args*)
   (when (probe-file *cover-file*)
     (cover:load-points *cover-file*))
