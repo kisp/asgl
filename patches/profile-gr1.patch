@@ -1,0 +1,38 @@
+diff --git a/gr1/gr1.lisp b/gr1/gr1.lisp
+index 2fc78f7..60eabc5 100644
+--- a/gr1/gr1.lisp
++++ b/gr1/gr1.lisp
+@@ -390,6 +390,7 @@ default: @(return 0) = 100; break;
+       (multiple-value-bind (graph vector hash)
+           (read-apx-file f)
+         (ecase task
+-          ((:ee :se) (ee-se graph task semantic vector))
++          ((:ee :se) (let ((*standard-output* (make-broadcast-stream)))
++                       (ee-se graph task semantic vector)))
+           ((:dc :ds) (dc-ds graph task semantic hash a)))
+         (terpri)))))
+
+ (defvar *cover-file*
+   (merge-pathnames "cover.data" (asgl-home)))
+
++(eval-when (eval load compile)
++  (require :profile))
++
+ (defun main ()
+   (setq *debugger-hook* (lambda (c old) (format t "ERROR: ~A~%" c) (ext:quit 1)))
+   (format *error-output* "~S~%" ext:*command-args*)
++  (profile:profile "EARLY")
++  (profile:profile "CL-USER")
+   (when (probe-file *cover-file*)
+     (cover:load-points *cover-file*))
+   (unwind-protect
+@@ -415,4 +421,5 @@ default: @(return 0) = 100; break;
+           (cover:report :out *error-output*)
+           (terpri *error-output*))
+          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
+-    (cover:save-points *cover-file*)))
++    (cover:save-points *cover-file*))
++  (profile:report))
+
+ (eval-when (:compile-toplevel :execute)
+   (cover:annotate nil))
