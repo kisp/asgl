@@ -3,7 +3,7 @@
 (defpackage #:early
   (:use #:cl)
   (:export #:asgl-home)
-  (:export #:with-timing #:format* #:aif #:it)
+  (:export #:with-timing #:log* #:aif #:it)
   ;; graph
   (:export
    #:make-graph-from-adj

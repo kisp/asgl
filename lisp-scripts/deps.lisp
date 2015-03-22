@@ -2,7 +2,7 @@
 
 (in-package #:common-lisp-user)
 
-(defun format* (&rest args)
+(defun show* (&rest args)
   (write-string ";;; " *error-output*)
   (apply #'format *error-output* args)
   (fresh-line *error-output*))
@@ -304,6 +304,6 @@
     (populate-registry asd-paths)
     (let ((systems (filter-test-systems (asd-paths-find-systems asd-paths))))
       (dolist (system systems)
-        (format* "Processing ~A" system)
+        (show* "Processing ~A" system)
         (process-system system)))
     (quit)))

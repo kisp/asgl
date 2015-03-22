@@ -66,10 +66,17 @@ directory designated by PATHSPEC does actually exist."
   `(call-with-timing ',form (lambda () ,form)))
 
 ;;; logging
-(defvar *with-logging* nil)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defconstant *with-logging* nil))
 
-(defmacro format* (&rest args)
-  `(when *with-logging* (format ,@args)))
+(defmacro log* (&rest args)
+  (when *with-logging*
+    `(progn
+       (fresh-line *error-output*)
+       (write-string "[log] " *error-output*)
+       (format *error-output* ,@args)
+       (terpri *error-output*)
+       nil)))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
