@@ -1,3 +1,4 @@
+// -*- mode:c -*-
 #include <stdlib.h>
 #include "myfoo.h"
 
