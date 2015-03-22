@@ -7,16 +7,24 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
-(defvar *collect-parents-cache* nil)
-
 ;;; primitives
-(defun %%order (graph)
+(deftype %%graph () 'simple-array)
+(deftype %%node () 'fixnum)
+
+(declaim (inline %%order %%parents (setf %%parents) %%parents-add))
+
+(cl:defun %%order (graph)
+  (declare (type %%graph graph))
   (length graph))
 
-(defun %%parents (graph node)
+(cl:defun %%parents (graph node)
+  (declare (type %%graph graph)
+           (type %%node node))
   (aref graph node))
 
-(defun (setf %%parents) (value graph node)
+(cl:defun (setf %%parents) (value graph node)
+  (declare (type %%graph graph)
+           (type %%node node))
   (setf (aref graph node) value))
 
 (defmacro do-%%parents ((node parents &optional return)
@@ -24,7 +32,8 @@
   `(dolist (,node ,parents ,return)
      ,@body body))
 
-(defun %%parents-add (node parents)
+(cl:defun %%parents-add (node parents)
+  (declare (type %%node node))
   (cons node parents))
 
 (defmacro %%push-parents (obj place &environment env)
@@ -39,7 +48,7 @@
 
 ;;; api
 (defun clear-graph-caches ()
-  (setq *collect-parents-cache* nil))
+  )
 
 (defun order (graph)
   (%%order graph))
@@ -66,42 +75,24 @@
     graph))
 
 ;;; support
-(defun map-nodes (fn graph)
-  (dotimes (node (order graph))
+(cl:defun map-nodes (fn graph)
+  (declare (optimize speed (safety 0) (debug 0)))
+  (dotimes (node (%%order graph))
     (funcall fn node)))
 
 (defmacro do-nodes ((node graph) &body body)
   `(map-nodes (lambda (,node) ,@body) ,graph))
 
-(defun map-edges (fn graph)
+(cl:defun map-edges (fn graph)
+  (declare (optimize speed (safety 0) (debug 0)))
   (dotimes (i (%%order graph))
     (do-%%parents (j (%%parents graph i))
       (funcall fn j i))))
 
-(defun %collect-parents% (graph node)
-  (let (result)
-    (map-edges (lambda (from to)
-                 (when (eql to node)
-                   (push from result)))
-               graph)
-    (nreverse result)))
-
-(defun collect-parents (graph node)
-  (when (null *collect-parents-cache*)
-    (setq *collect-parents-cache*
-          (cons graph (make-hash-table))))
-  (assert (eq graph (car *collect-parents-cache*)))
-  (aif (gethash node (cdr *collect-parents-cache*))
-       (cdr it)
-       (let ((parents (%collect-parents% graph node)))
-         (setf (gethash node (cdr *collect-parents-cache*))
-               (cons t parents))
-         parents)))
-
 (defun map-parents (fn graph)
   "Call FN with node and list of parents."
   (do-nodes (node graph)
-    (funcall fn node (collect-parents graph node))))
+    (funcall fn node (%%parents graph node))))
 
 (defun map-parents-grandparents (fn graph)
   "Call FN with node and list of grandparents."
@@ -109,7 +100,7 @@
     (funcall fn node
              (mapcar #'cons
                      parents
-                     (mapcar (lambda (parent) (collect-parents graph parent)) parents)))))
+                     (mapcar (lambda (parent) (%%parents graph parent)) parents)))))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
