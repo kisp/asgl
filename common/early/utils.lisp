@@ -39,15 +39,15 @@ directory designated by PATHSPEC does actually exist."
      (if it ,then ,else)))
 
 ;;; timing
-(defvar *with-timing* nil)
+(defvar *with-timing* t)
 
 (defun call-with-timing (form thunk)
   (if (not *with-timing*)
       (funcall thunk)
       (let ((*print-length* 3)
             (*print-level* 2))
-        (format *trace-output* "~&Calling ~S..." form)
-        (force-output *trace-output*)
+        (format *error-output* "~&Calling ~S..." form)
+        (force-output *error-output*)
         (let ((ok)
               (start (get-internal-real-time)))
           (unwind-protect
@@ -55,12 +55,12 @@ directory designated by PATHSPEC does actually exist."
                    (funcall thunk)
                  (let ((end (get-internal-real-time)))
                    (setq ok t)
-                   (format *trace-output*
+                   (format *error-output*
                            "done (~5,3F s)~%"
                            (/ (- end start)
                               internal-time-units-per-second))))
             (unless ok
-              (format *trace-output* " (aborted by a non-local toc)~%")))))))
+              (format *error-output* " (aborted by a non-local toc)~%")))))))
 
 (defmacro with-timing (form)
   `(call-with-timing ',form (lambda () ,form)))
