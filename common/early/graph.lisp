@@ -7,25 +7,63 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
-(defvar *edges-cache* nil)
 (defvar *collect-parents-cache* nil)
+
+;;; primitives
+(defun %%order (graph)
+  (length graph))
+
+(defun %%node-precedents (graph node)
+  (aref graph node))
+
+(defun (setf %%node-precedents) (value graph node)
+  (setf (aref graph node) value))
+
+(defmacro do-%%precedents ((node precedents &optional return)
+                           &body body)
+  `(dolist (,node ,precedents ,return)
+     ,@body body))
+
+(defun %%precedents-add (node precedents)
+  (cons node precedents))
+
+(defmacro %%push-precedents (obj place &environment env)
+  (multiple-value-bind (dummies vals newval setter getter)
+      (get-setf-expansion place env)
+    (let ((g (gensym)))
+      `(let* ((,g ,obj)
+              ,@(mapcar #'list dummies vals)
+              (,(car newval) (%%precedents-add ,g ,getter))
+              ,@(cdr newval))
+         ,setter))))
 
 ;;; api
 (defun clear-graph-caches ()
-  (setq *edges-cache* nil)
   (setq *collect-parents-cache* nil))
 
 (defun order (graph)
-  (array-dimension graph 0))
+  (%%order graph))
 
-(defmacro do-edges ((edge graph) &body body)
-  `(map-edges (lambda (,edge) ,@body) ,graph))
+(defmacro do-edges ((from to graph) &body body)
+  `(map-edges (lambda (,from ,to) ,@body) ,graph))
 
 (defmacro do-parents ((node parents graph) &body body)
   `(map-parents (lambda (,node ,parents) ,@body) ,graph))
 
 (defmacro do-parents-grandparents ((node parents-grandparents graph) &body body)
   `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
+
+(defun add-edge (graph from to)
+  (%%push-precedents to (%%node-precedents graph from)))
+
+(defun make-graph-from-adj (adj)
+  (let* ((order (array-dimension adj 0))
+         (graph (make-array order)))
+    (dotimes (i order)
+      (dotimes (j order)
+        (when (eql 1 (aref adj i j))
+          (add-edge graph i j))))
+    graph))
 
 ;;; support
 (defun map-nodes (fn graph)
@@ -35,29 +73,16 @@
 (defmacro do-nodes ((node graph) &body body)
   `(map-nodes (lambda (,node) ,@body) ,graph))
 
-(defun %edges% (graph)
-  (let (list)
-    (dotimes (i (order graph) list)
-      (dotimes (j (order graph))
-        (when (eql 1 (aref graph i j))
-          (push (list i j) list))))))
-
-(defun edges (graph)
-  (if *edges-cache*
-      (progn
-        (assert (eq graph (car *edges-cache*)))
-        (cdr *edges-cache*))
-      (cdr (setq *edges-cache* (cons graph (%edges% graph))))))
-
 (defun map-edges (fn graph)
-  (dolist (edge (edges graph))
-    (funcall fn edge)))
+  (dotimes (i (%%order graph))
+    (do-%%precedents (j (%%node-precedents graph i))
+      (funcall fn i j))))
 
 (defun %collect-parents% (graph node)
   (let (result)
-    (map-edges (lambda (edge)
-                 (when (eql (second edge) node)
-                   (push (first edge) result)))
+    (map-edges (lambda (from to)
+                 (when (eql to node)
+                   (push from result)))
                graph)
     (nreverse result)))
 

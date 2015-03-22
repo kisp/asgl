@@ -230,9 +230,6 @@ default: @(return 0) = 100; break;
                       (setf (gethash key imp-or-table) t)))))
          ,@body))))
 
-(defun check-array-is-square (graph)
-  (assert (eql (array-dimension graph 0) (array-dimension graph 1))))
-
 (defun bits-to-set (list &key (unassigned-permitted-as-out nil))
   (if unassigned-permitted-as-out
       (loop for x in list
@@ -259,8 +256,8 @@ default: @(return 0) = 100; break;
 
 (defun constrain-conflict-free (graph constrain-nand)
   (with-timing
-      (do-edges (edge graph)
-        (funcall constrain-nand (first edge) (second edge)))))
+      (do-edges (from to graph)
+        (funcall constrain-nand from to))))
 
 (defun constrain-in-eqv-acceptable (graph
                                     post-must-be-false
@@ -323,7 +320,6 @@ default: @(return 0) = 100; break;
 
 (defun grounded-all (graph &key gist)
   (when gist (error "gist does not make sense here"))
-  (check-array-is-square graph)
   (clear-graph-caches)
   (let* ((order (order graph))
          (space (with-timing (make-sp order))))

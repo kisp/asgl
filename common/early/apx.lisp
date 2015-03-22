@@ -54,7 +54,7 @@ long msize = 99;
                         :void
                         "{ myfoo((char*)#0, #1, #2, #3); }")
           (hash-table2vector hash vector)
-          (values adj vector hash)))))
+          (values (make-graph-from-adj adj) vector hash)))))
   #+nil
   (let ((table (make-hash-table :test #'equal)))
     (time

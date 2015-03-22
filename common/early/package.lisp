@@ -6,11 +6,11 @@
   (:export #:with-timing #:format* #:aif #:it)
   ;; graph
   (:export
+   #:make-graph-from-adj
    #:clear-graph-caches
    #:order
    #:do-edges
    #:do-parents
-   #:do-parents-grandparents
-   )
+   #:do-parents-grandparents)
   ;; apx
   (:export #:read-apx-file))
