@@ -7,31 +7,29 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
-(defvar *nodes-cache* nil)
 (defvar *edges-cache* nil)
 (defvar *collect-parents-cache* nil)
 
+;;; api
 (defun clear-graph-caches ()
-  (setq *nodes-cache* nil)
   (setq *edges-cache* nil)
   (setq *collect-parents-cache* nil))
 
 (defun order (graph)
   (array-dimension graph 0))
 
-(defun %nodes% (graph)
-  (loop for i from 0 below (order graph)
-     collect i))
+(defmacro do-edges ((edge graph) &body body)
+  `(map-edges (lambda (,edge) ,@body) ,graph))
 
-(defun nodes (graph)
-  (if *nodes-cache*
-      (progn
-        (assert (eq graph (car *nodes-cache*)))
-        (cdr *nodes-cache*))
-      (cdr (setq *nodes-cache* (cons graph (%nodes% graph))))))
+(defmacro do-parents ((node parents graph) &body body)
+  `(map-parents (lambda (,node ,parents) ,@body) ,graph))
 
+(defmacro do-parents-grandparents ((node parents-grandparents graph) &body body)
+  `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
+
+;;; support
 (defun map-nodes (fn graph)
-  (dolist (node (nodes graph))
+  (dotimes (node (order graph))
     (funcall fn node)))
 
 (defmacro do-nodes ((node graph) &body body)
@@ -55,9 +53,6 @@
   (dolist (edge (edges graph))
     (funcall fn edge)))
 
-(defmacro do-edges ((edge graph) &body body)
-  `(map-edges (lambda (,edge) ,@body) ,graph))
-
 (defun %collect-parents% (graph node)
   (let (result)
     (map-edges (lambda (edge)
@@ -78,24 +73,10 @@
                (cons t parents))
          parents)))
 
-(defun map-grandparents (fn graph)
-  "Call FN with node and list of grandparents."
-  (map-edges (lambda (edge)
-               (funcall fn
-                        (second edge)
-                        (collect-parents graph (first edge))))
-             graph))
-
-(defmacro do-grandparents ((node grandparents graph) &body body)
-  `(map-grandparents (lambda (,node ,grandparents) ,@body) ,graph))
-
 (defun map-parents (fn graph)
   "Call FN with node and list of parents."
-  (dolist (node (nodes graph))
+  (do-nodes (node graph)
     (funcall fn node (collect-parents graph node))))
-
-(defmacro do-parents ((node parents graph) &body body)
-  `(map-parents (lambda (,node ,parents) ,@body) ,graph))
 
 (defun map-parents-grandparents (fn graph)
   "Call FN with node and list of grandparents."
@@ -104,9 +85,6 @@
              (mapcar #'cons
                      parents
                      (mapcar (lambda (parent) (collect-parents graph parent)) parents)))))
-
-(defmacro do-parents-grandparents ((node parents-grandparents graph) &body body)
-  `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))

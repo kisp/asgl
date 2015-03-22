@@ -9,6 +9,7 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
+#+nil
 (defun vector2hash-table (vector)
   (let ((hash (make-hash-table :test #'eql)))
     (dotimes (i (length vector)
@@ -24,6 +25,7 @@
      (set-macro-character #\, (lambda (stream char) (values)))
      ,@body))
 
+#+nil
 (defun read-apx-line (string)
   (with-input-from-string (input string)
     (read input)
