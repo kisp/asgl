@@ -34,9 +34,10 @@
 (defun read-apx-file (pathname)
   (let ()
     (multiple-value-bind (buffer size)
-        (ffi:c-inline ((coerce (namestring (merge-pathnames pathname)) 'base-string))
-            (:object) (values :pointer-void :long)
-          "{
+        (ffi:c-inline
+         ((coerce (namestring (merge-pathnames pathname)) 'base-string))
+         (:object) (values :pointer-void :long)
+         "{
 long msize = 99;
 
 @(return 0) = slurp_file(#0, &msize);
@@ -44,25 +45,23 @@ long msize = 99;
 }")
       (let ((arg-count
              (ffi:c-inline (buffer size) (:pointer-void :long) :int
-               "{ @(return 0) = count_args((char*)#0, #1); }")))
+                           "{ @(return 0) = count_args((char*)#0, #1); }")))
         (let ((adj (make-array (list arg-count arg-count) :initial-element 0))
               (vector (make-array arg-count))
               (hash (make-hash-table :test #'equal)))
           (ffi:c-inline (buffer size hash adj)
-              (:pointer-void :long :object :object)
-              :void
-            "{ myfoo((char*)#0, #1, #2, #3); }")
+                        (:pointer-void :long :object :object)
+                        :void
+                        "{ myfoo((char*)#0, #1, #2, #3); }")
           (hash-table2vector hash vector)
-          (values
-           adj
-           vector
-           hash)))))
+          (values adj vector hash)))))
   #+nil
   (let ((table (make-hash-table :test #'equal)))
     (time
-     (ffi:c-inline ((coerce (namestring (merge-pathnames pathname)) 'base-string)
-                    table)
-         (:object :object) :void "{ myfoo(#0,#1); }"))
+     (ffi:c-inline
+      ((coerce (namestring (merge-pathnames pathname)) 'base-string)
+       table)
+      (:object :object) :void "{ myfoo(#0,#1); }"))
     #+nil(describe table)
     #+nil(format t "here are all the keys:~%")
     #+nil(loop for key being the hash-keys of table

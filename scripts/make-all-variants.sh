@@ -3,7 +3,7 @@
 set -e
 
 if [ -z "$ASGL_HOME" ]; then
-  export ASGL_HOME=`pwd`
+    export ASGL_HOME=`pwd`
 fi
 
 bash scripts/generate-make-mk.sh
