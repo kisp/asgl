@@ -1,3 +1,4 @@
+# -*- dont-indent:t -*-
 language: lisp
 
 env:
