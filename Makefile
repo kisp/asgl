@@ -7,9 +7,7 @@ all: test-gr1
 # ref
 install-ref:
 	rm -f bin/asgl
-	echo '#!/bin/bash' >> bin/asgl
-	echo 'exec java -jar $$(dirname $$0)/libexec/tweetysolver-v1.1.1.jar $$*' \
-	  >> bin/asgl
+	cp support/ref-wrapper.sh bin/asgl
 	chmod +x bin/asgl
 
 test-ref: install-ref data/iccma15_solutions data/iccma15_testcases

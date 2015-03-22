@@ -170,14 +170,12 @@ Feature: syntax
     Then the exit status should be 0
     And the output should be eql to "[[arg1]]"
 
-    @notref
   Scenario: spaces in expression 6
     Given a file named "g.apx" with "arg(arg1).\narg(arg2).\natt(arg1, arg2).\n"
     When I run `asgl -p EE-GR -fo apx -f "g.apx"`
     Then the exit status should be 0
     And the output should be eql to "[[arg1]]"
 
-    @notref
   Scenario: spaces in expression 7
     Given a file named "g.apx" with "arg(arg1).\narg(arg2).\natt(arg1,  arg2).\n"
     When I run `asgl -p EE-GR -fo apx -f "g.apx"`
