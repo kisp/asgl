@@ -46,15 +46,18 @@ long msize = 99;
       (let ((arg-count
              (ffi:c-inline (buffer size) (:pointer-void :long) :int
                            "{ @(return 0) = count_args((char*)#0, #1); }")))
-        (let ((adj (make-array (list arg-count arg-count) :initial-element 0))
-              (vector (make-array arg-count))
-              (hash (make-hash-table :test #'equal)))
-          (ffi:c-inline (buffer size hash adj)
+        (let ((vector (make-array arg-count))
+              (hash (make-hash-table :test #'equal))
+              ;; TODO use graph api
+              (graph (make-array arg-count)))
+          (ffi:c-inline (buffer size hash
+                                (lambda (from to)
+                                  (add-edge graph from to)))
                         (:pointer-void :long :object :object)
                         :void
                         "{ myfoo((char*)#0, #1, #2, #3); }")
           (hash-table2vector hash vector)
-          (values (make-graph-from-adj adj) vector hash)))))
+          (values graph vector hash)))))
   #+nil
   (let ((table (make-hash-table :test #'equal)))
     (time

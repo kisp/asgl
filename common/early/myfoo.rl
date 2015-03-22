@@ -42,7 +42,7 @@
   }
 
   action ATT_END {
-    si_aset(4, adj, att_val_a, att_val_b, ecl_make_fixnum(1));
+    ecl_function_dispatch(cl_env_copy,fn)(2, att_val_a, att_val_b);
   }
 
   val = [^), ]+;
@@ -54,7 +54,7 @@ main := ws? (arg | att) (ws (arg | att | ws))* ws? 0 @{ res = 0; };
 
 %% write data;
 
-void myfoo(char *buffer, long size, cl_object table, cl_object adj) {
+void myfoo(char *buffer, long size, cl_object table, cl_object fn) {
   char *p = buffer;
   char *pe = p + size + 1;
   int cs = 0;
@@ -66,6 +66,8 @@ void myfoo(char *buffer, long size, cl_object table, cl_object adj) {
 
   cl_object att_val_a = ECL_NIL;
   cl_object att_val_b = ECL_NIL;
+
+  const cl_env_ptr cl_env_copy = ecl_process_env();
 
   %% write init;
   %% write exec;
