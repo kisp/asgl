@@ -24,4 +24,3 @@ namespace gr1 {
     void print(std::ostream&) const;
   };
 }
-

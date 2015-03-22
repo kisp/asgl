@@ -23,10 +23,9 @@ int count_args(char *buffer, long size) {
   int arg_count = 0;
   %% write init;
   %% write exec;
-  
+
   if (res)
     FEerror("(count_args) Parsing apx file failed. Invalid format?", 0);
 
   return arg_count;
 }
-

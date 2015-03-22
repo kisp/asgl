@@ -21,7 +21,6 @@ namespace v1 {
 
     Gecode::BoolVarArray* getVars();
 
-    void print(std::ostream&) const;    
+    void print(std::ostream&) const;
   };
 }
-
