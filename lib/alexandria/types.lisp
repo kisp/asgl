@@ -28,12 +28,12 @@ ARRAY-DIMENSION-LIMIT."
                                                (symbol-name sybtype-name))))
                     (push result predicate-names)
                     result))
-		(make-docstring (range-beg range-end range-type)
-		  (let ((inf (ecase range-type (:negative "-inf") (:positive "+inf"))))
-		    (format nil "Type specifier denoting the ~(~A~) range from ~A to ~A."
-			    type
-			    (if (equal range-beg ''*) inf (ensure-car range-beg))
-			    (if (equal range-end ''*) inf (ensure-car range-end))))))
+                (make-docstring (range-beg range-end range-type)
+                  (let ((inf (ecase range-type (:negative "-inf") (:positive "+inf"))))
+                    (format nil "Type specifier denoting the ~(~A~) range from ~A to ~A."
+                            type
+                            (if (equal range-beg ''*) inf (ensure-car range-beg))
+                            (if (equal range-end ''*) inf (ensure-car range-end))))))
            (let* ((negative-name     (make-subtype-name '#:negative-~a))
                   (non-positive-name (make-subtype-name '#:non-positive-~a))
                   (non-negative-name (make-subtype-name '#:non-negative-~a))
@@ -61,20 +61,20 @@ ARRAY-DIMENSION-LIMIT."
                      (long-float   (values ''* '(0.0L0) '(0.0L0) ''* 0.0L0))))
              `(progn
                 (deftype ,negative-name ()
-		  ,(make-docstring negative-extremum below-zero :negative)
-		  `(,',base-type ,,negative-extremum ,',below-zero))
+                  ,(make-docstring negative-extremum below-zero :negative)
+                  `(,',base-type ,,negative-extremum ,',below-zero))
 
                 (deftype ,non-positive-name ()
-		  ,(make-docstring negative-extremum zero :negative)
-		  `(,',base-type ,,negative-extremum ,',zero))
+                  ,(make-docstring negative-extremum zero :negative)
+                  `(,',base-type ,,negative-extremum ,',zero))
 
                 (deftype ,non-negative-name ()
-		  ,(make-docstring zero positive-extremum :positive)
-		  `(,',base-type ,',zero ,,positive-extremum))
+                  ,(make-docstring zero positive-extremum :positive)
+                  `(,',base-type ,',zero ,,positive-extremum))
 
                 (deftype ,positive-name ()
-		  ,(make-docstring above-zero positive-extremum :positive)
-		  `(,',base-type ,',above-zero ,,positive-extremum))
+                  ,(make-docstring above-zero positive-extremum :positive)
+                  `(,',base-type ,',above-zero ,,positive-extremum))
 
                 (declaim (inline ,@predicate-names))
 

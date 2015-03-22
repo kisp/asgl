@@ -305,6 +305,3 @@ Example:
 
 (dolist (name '(destructuring-ccase destructuring-ecase))
   (setf (documentation name 'function) (documentation 'destructuring-case 'function)))
-
-
-

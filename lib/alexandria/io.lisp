@@ -40,7 +40,7 @@ which is only sent to WITH-OPEN-FILE when it's not NIL."
 (defmacro with-output-to-file ((stream-name file-name &rest args
                                             &key (direction nil direction-p)
                                             &allow-other-keys)
-			       &body body)
+                               &body body)
   "Evaluate BODY with STREAM-NAME to an output stream on the file
 FILE-NAME. ARGS is sent as is to the call to OPEN except EXTERNAL-FORMAT,
 which is only sent to WITH-OPEN-FILE when it's not NIL."
@@ -60,10 +60,10 @@ unless it's NIL, which means the system default."
     (let ((*print-pretty* nil))
       (with-output-to-string (datum)
         (let ((buffer (make-array buffer-size :element-type 'character)))
-	  (loop
-	     :for bytes-read = (read-sequence buffer file-stream)
-	     :do (write-sequence buffer datum :start 0 :end bytes-read)
-	     :while (= bytes-read buffer-size)))))))
+          (loop
+             :for bytes-read = (read-sequence buffer file-stream)
+             :do (write-sequence buffer datum :start 0 :end bytes-read)
+             :while (= bytes-read buffer-size)))))))
 
 (defun write-string-into-file (string pathname &key (if-exists :error)
                                                     if-does-not-exist
@@ -96,10 +96,10 @@ unless it's NIL, which means the system default."
     (write-sequence bytes stream)))
 
 (defun copy-file (from to &key (if-to-exists :supersede)
-			       (element-type '(unsigned-byte 8)) finish-output)
+                               (element-type '(unsigned-byte 8)) finish-output)
   (with-input-from-file (input from :element-type element-type)
     (with-output-to-file (output to :element-type element-type
-				    :if-exists if-to-exists)
+                                    :if-exists if-to-exists)
       (copy-stream input output
                    :element-type element-type
                    :finish-output finish-output))))

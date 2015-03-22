@@ -28,13 +28,13 @@ predicate that returns true, without calling the remaining predicates.
 If none of the predicates returns true, NIL is returned."
   (declare (optimize (speed 3) (safety 1) (debug 1)))
   (let ((predicate (ensure-function predicate))
-	(more-predicates (mapcar #'ensure-function more-predicates)))
+        (more-predicates (mapcar #'ensure-function more-predicates)))
     (lambda (&rest arguments)
       (or (apply predicate arguments)
-	  (some (lambda (p)
-		  (declare (type function p))
-		  (apply p arguments))
-		more-predicates)))))
+          (some (lambda (p)
+                  (declare (type function p))
+                  (apply p arguments))
+                more-predicates)))))
 
 (defun conjoin (predicate &rest more-predicates)
   "Returns a function that applies each of PREDICATE and MORE-PREDICATE
@@ -44,15 +44,15 @@ predicates returns false, returns the primary value of the last predicate."
   (if (null more-predicates)
       predicate
       (lambda (&rest arguments)
-	(and (apply predicate arguments)
-	     ;; Cannot simply use CL:EVERY because we want to return the
-	     ;; non-NIL value of the last predicate if all succeed.
-	     (do ((tail (cdr more-predicates) (cdr tail))
-		  (head (car more-predicates) (car tail)))
-		 ((not tail)
-		  (apply head arguments))
-	       (unless (apply head arguments)
-		 (return nil)))))))
+        (and (apply predicate arguments)
+             ;; Cannot simply use CL:EVERY because we want to return the
+             ;; non-NIL value of the last predicate if all succeed.
+             (do ((tail (cdr more-predicates) (cdr tail))
+                  (head (car more-predicates) (car tail)))
+                 ((not tail)
+                  (apply head arguments))
+               (unless (apply head arguments)
+                 (return nil)))))))
 
 
 (defun compose (function &rest more-functions)
@@ -61,11 +61,11 @@ arguments to to each in turn, starting from the rightmost of MORE-FUNCTIONS,
 and then calling the next one with the primary value of the last."
   (declare (optimize (speed 3) (safety 1) (debug 1)))
   (reduce (lambda (f g)
-	    (let ((f (ensure-function f))
-		  (g (ensure-function g)))
-	      (lambda (&rest arguments)
-		(declare (dynamic-extent arguments))
-		(funcall f (apply g arguments)))))
+            (let ((f (ensure-function f))
+                  (g (ensure-function g)))
+              (lambda (&rest arguments)
+                (declare (dynamic-extent arguments))
+                (funcall f (apply g arguments)))))
           more-functions
           :initial-value function))
 
@@ -77,7 +77,7 @@ and then calling the next one with the primary value of the last."
     (let* ((args (cons function more-functions))
            (funs (make-gensym-list (length args) "COMPOSE")))
       `(let ,(loop for f in funs for arg in args
-		   collect `(,f (ensure-function ,arg)))
+                   collect `(,f (ensure-function ,arg)))
          (declare (optimize (speed 3) (safety 1) (debug 1)))
          (lambda (&rest arguments)
            (declare (dynamic-extent arguments))
@@ -90,11 +90,11 @@ MORE-FUNCTIONS, and then calling the next one with all the return values of
 the last."
   (declare (optimize (speed 3) (safety 1) (debug 1)))
   (reduce (lambda (f g)
-	    (let ((f (ensure-function f))
-		  (g (ensure-function g)))
-	      (lambda (&rest arguments)
-		(declare (dynamic-extent arguments))
-		(multiple-value-call f (apply g arguments)))))
+            (let ((f (ensure-function f))
+                  (g (ensure-function g)))
+              (lambda (&rest arguments)
+                (declare (dynamic-extent arguments))
+                (multiple-value-call f (apply g arguments)))))
           more-functions
           :initial-value function))
 

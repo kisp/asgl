@@ -83,9 +83,9 @@ Examples:
   (let ((gflag (gensym "FLAG+")))
     `(let ((,gflag t))
        (unwind-protect (multiple-value-prog1 ,protected-form (setf ,gflag nil))
-	 (let ,(and abort-flag `((,abort-flag ,gflag)))
-	   ,@(loop for (cleanup-kind . forms) in clauses
-		   collect (ecase cleanup-kind
-			     (:normal `(when (not ,gflag) ,@forms))
-			     (:abort  `(when ,gflag ,@forms))
-			     (:always `(progn ,@forms)))))))))
+         (let ,(and abort-flag `((,abort-flag ,gflag)))
+           ,@(loop for (cleanup-kind . forms) in clauses
+                   collect (ecase cleanup-kind
+                             (:normal `(when (not ,gflag) ,@forms))
+                             (:abort  `(when ,gflag ,@forms))
+                             (:always `(progn ,@forms)))))))))
