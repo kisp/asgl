@@ -4,7 +4,11 @@
 
 (load "~/.emacs")
 
+;; (setq debug-on-error t)
+
 (defvar dont-indent nil)
+
+(setq find-file-hook (remove 'vc-find-file-hook find-file-hook))
 
 (defun cleanup-file (file)
   (message "Opening %s..." file)
