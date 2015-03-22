@@ -1,4 +1,4 @@
-# -*- indent-tabs: t -*-
+# -*- indent-tabs:t; dont-indent:t -*-
 all: test-gr1
 
 # ref
