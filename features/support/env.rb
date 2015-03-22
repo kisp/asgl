@@ -11,7 +11,7 @@ end
 
 RSpec::Matchers.define :be_meql do |expected|
   match do |actual|
-    actual.meql(expected)
+    actual == expected
   end
   failure_message do |actual|
     "but got #{actual.inspect}"
@@ -20,7 +20,7 @@ end
 
 RSpec::Matchers.define :be_meql_verbose do |expected|
   match do |actual|
-    actual.meql(expected)
+    actual == expected
   end
   failure_message do |actual|
     "which evals to #{expected}\nbut got #{actual.inspect}"
@@ -29,28 +29,14 @@ end
 
 RSpec::Matchers.define :be_included_with_meql do |expected|
   match do |actual|
-    expected.any? {|e| e.meql(actual) }
+    expected.include? actual
   end
   failure_message do |actual|
     "but got #{actual.inspect}"
   end
 end
 
-class Set
-  def meql(other)
-    result = other.is_a?(Set) &&
-             (self.size == other.size) &&
-             self.all? {|elem| other.any? {|q| q.meql(elem) } }
-    # p "meql of #{self} and #{other} is #{result}"
-    result
-  end
-end
-
 class String
-  def meql(other)
-    other.is_a?(String) &&
-      self == other
-  end
   def j2set
     case self
     when "YES"
@@ -72,18 +58,6 @@ class Array
       raise "contains duplicates: #{a}"
     end
     a.to_set
-  end
-end
-
-class TrueClass
-  def meql(other)
-    other == true
-  end
-end
-
-class FalseClass
-  def meql(other)
-    other == false
   end
 end
 
