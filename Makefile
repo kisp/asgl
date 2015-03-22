@@ -1,4 +1,7 @@
 # -*- indent-tabs:t; dont-indent:t -*-
+
+source-files = $(shell cat tools/source-files.txt)
+
 all: test-gr1
 
 # ref
@@ -82,6 +85,10 @@ data/iccma15_testcases: data/iccma15_testcases.tar.xz
 	tar xf data/iccma15_testcases.tar.xz
 	touch data/iccma15_testcases
 
+# tags
+TAGS: $(source-files)
+	etags $(source-files)
+
 # clean
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean common/early/clean
 	rm -f bin/asgl
@@ -90,6 +97,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean common/ea
 	rm -rf gecode tmp
 	rm -rf data/iccma15_solutions data/iccma15_testcases
 	rm -f cover.data
+	rm -f TAGS
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 include common/early/make.mk
