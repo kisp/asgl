@@ -1,6 +1,9 @@
+#include "../asgl_config.h"
 #include <gecode/int.hh>
 #include <gecode/search.hh>
+#ifdef HAVE_GECODE_GIST_HH
 #include <gecode/gist.hh>
+#endif
 
 namespace v1 {
   class Foo : public Gecode::Space
