@@ -89,3 +89,5 @@ rm data/iccma15_solutions/real_9.EE-CO
 rm data/iccma15_solutions/real_9.EE-GR
 rm data/iccma15_solutions/real_9.EE-PR
 rm data/iccma15_solutions/real_9.EE-ST
+
+cp -v data/real-ee-gr-solutions/real* data/iccma15_solutions

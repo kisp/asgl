@@ -80,6 +80,7 @@ gecode: support/gecode-patched-headers.tgz
 
 data/iccma15_solutions: data/iccma15_testcases \
 			data/iccma15_solutions.tar.xz \
+			data/real-ee-gr-solutions \
 			support/fixes.sh
 	rm -rf data/iccma15_solutions
 	tar xf data/iccma15_solutions.tar.xz
@@ -90,6 +91,11 @@ data/iccma15_testcases: data/iccma15_testcases.tar.xz
 	rm -rf data/iccma15_testcases
 	tar xf data/iccma15_testcases.tar.xz
 	touch data/iccma15_testcases
+
+data/real-ee-gr-solutions: data/real-ee-gr-solutions.tar.xz
+	rm -rf data/real-ee-gr-solutions
+	tar -C data -xf data/real-ee-gr-solutions.tar.xz
+	touch data/real-ee-gr-solutions
 
 # tags
 TAGS: $(source-files)
@@ -102,7 +108,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c
 	rm -f gr1/*.o gr1/gr1 gr1/gr1.c gr1/gr1.data gr1/gr1.eclh
 	rm -rf gecode tmp
-	rm -rf data/iccma15_solutions data/iccma15_testcases
+	rm -rf data/iccma15_solutions data/iccma15_testcases data/real-ee-gr-solutions
 	rm -f cover.data
 	rm -f TAGS
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi

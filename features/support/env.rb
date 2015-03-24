@@ -82,6 +82,8 @@ end
 
 def copy_to_tmp_auba(path)
   raise "tmp/aruba does not exit" unless File.exist?("tmp/aruba")
-  system("cp #{path} tmp/aruba")
-  raise "cp of #{path} to tmp/aruba failed" unless $?.success?
+  begin
+    FileUtils.copy(path, "tmp/aruba")
+  rescue Exception
+  end
 end
