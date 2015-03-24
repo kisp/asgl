@@ -26,6 +26,9 @@ v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a
 	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/early/libearly.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
+v1/Foo.o: v1/Foo.cpp v1/Foo.h
+	g++ -O2 -Wall -Werror -fPIC -c v1/Foo.cpp -o v1/Foo.o
+
 install-v1: v1/v1
 	cp v1/v1 bin/asgl
 
@@ -44,13 +47,13 @@ common/early/libmyfoo.a: common/early/myfoo.o common/early/slurp.o \
 	  common/early/count_args.o
 
 common/early/myfoo.o: common/early/myfoo.cpp common/early/myfoo.h
-	g++ -O2 -Wall -fPIC -c common/early/myfoo.cpp -o common/early/myfoo.o
+	g++ -O2 -Wall -Werror -fPIC -c common/early/myfoo.cpp -o common/early/myfoo.o
 
 common/early/slurp.o: common/early/slurp.cpp common/early/myfoo.h
-	g++ -O2 -Wall -fPIC -c common/early/slurp.cpp -o common/early/slurp.o
+	g++ -O2 -Wall -Werror -fPIC -c common/early/slurp.cpp -o common/early/slurp.o
 
 common/early/count_args.o: common/early/count_args.cpp common/early/myfoo.h
-	g++ -O2 -Wall -fPIC -c common/early/count_args.cpp -o common/early/count_args.o
+	g++ -O2 -Wall -Werror -fPIC -c common/early/count_args.cpp -o common/early/count_args.o
 
 
 # gecode

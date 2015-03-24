@@ -19,8 +19,6 @@ int count_args(char *buffer, long size) {
   char *pe = p + size + 1;
   int cs = 0;
   int res = 1;
-  char *sss;
-  cl_object mys;
   int arg_count = 0;
   %% write init;
   %% write exec;
