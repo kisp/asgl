@@ -24,7 +24,8 @@ directory designated by PATHSPEC does actually exist."
 
 ;;; config
 (defun asgl-home ()
-  (let ((var (ext:getenv "ASGL_HOME")))
+  (let ((var (or (ext:getenv "ASGL_HOME")
+                 #.(ext:getenv "ASGL_HOME_PREC"))))
     (unless var
       (error "ASGL_HOME is not set"))
     (let ((home (probe-file var)))

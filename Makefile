@@ -91,7 +91,52 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	rm -rf data/iccma15_solutions data/iccma15_testcases data/real-ee-gr-solutions
 	rm -f cover.data
 	rm -f TAGS
+	rm -fr dist build bin/ragel
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
+
+# dist
+.PHONY: dist
+dist:
+	make clean | tail
+	mkdir -p dist/asgl
+	git ls-files | xargs -I% install -D % dist/asgl/%
+	rm -r dist/asgl/bin/libexec
+	bash scripts/generate-make-mk.sh
+	find -name make.mk | xargs -I% install -D % dist/asgl/%
+	make common/early/myfoo.cpp
+	make common/early/count_args.cpp
+	ls -1 common/early/myfoo.cpp common/early/count_args.cpp | \
+	  xargs -I% install -D % dist/asgl/%
+	make bin/ragel
+	make build
+	ls -1 bin/ragel build | xargs -I% install -D % dist/asgl/%
+	echo DIST PREPARED
+#(cd dist/asgl && ./build )
+	( cd dist && tar -cf asgl.tar.gz asgl/* )
+	du -h dist/asgl.tar.gz
+
+bin/ragel:
+	echo '#!/bin/sh' >>bin/ragel
+	echo 'echo Ragel SHOULD NOT BE CALLED' >>bin/ragel
+	echo 'echo Ragel files were pre-compiled for the dist,' >>bin/ragel
+	echo 'echo so Ragel should not be needed.' >>bin/ragel
+	echo 'exit 1' >>bin/ragel
+	chmod +x bin/ragel
+
+build:
+	echo '#!/bin/bash' >>build
+	echo 'set -e' >>build
+	echo 'echo will start build...' >>build
+	echo 'export ASGL_HOME_PREC=`pwd`' >>build
+	echo 'export PATH=`pwd`/bin:$$PATH' >>build
+	echo 'make install-v1' >>build
+	echo 'make check' >>build
+	echo 'echo BUILD FINISHED SUCCESSFULLY!' >>build
+	echo 'echo You can start the solver with ./bin/asgl' >>build
+	chmod +x build
+
+check:
+	timeout 5s ./bin/asgl || echo '***FAILURE*** Cannot start ASGL. Looks like the build did not finish successfully.'
 
 include common/early/make.mk
 include lib/myam/make.mk
