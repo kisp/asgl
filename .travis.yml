@@ -3,7 +3,6 @@ language: lisp
 
 env:
   matrix:
-    - VARIANT=ref CUKE_ARGS="--tags ~@slow"
     - VARIANT=v1 CUKE_ARGS="--tags ~@slow"
     - VARIANT=ref
     - VARIANT=v1
