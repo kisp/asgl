@@ -1,10 +1,9 @@
 (in-package :asdf)
 
 (defsystem :early
-  :depends-on ()
+  :depends-on (:asgl-config)
   :components
   ((:file "package")
-   (:file "asgl-config" :depends-on ("package"))
    (:file "utils" :depends-on ("package" "cover"))
    (:file "graph" :depends-on ("utils" "cover"))
    (:file "apx" :depends-on ("graph" "cover"))

@@ -8,10 +8,10 @@ fi
 
 bash scripts/generate-make-mk.sh
 
-make clean
-bash scripts/generate-make-mk.sh
-make install-ref
-make test-ref
+# make clean
+# bash scripts/generate-make-mk.sh
+# make install-ref
+# make test-ref
 
 make clean
 bash scripts/generate-make-mk.sh

@@ -1,6 +1,9 @@
 ;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; Coding:utf-8 -*-
 
-(in-package #:early)
+(defpackage #:asgl-config
+  (:use #:cl))
+
+(in-package #:asgl-config)
 
 (ffi:clines "#include \"../../asgl_config.h\"")
 
@@ -20,12 +23,12 @@ res = 1;
 (when (HAVE-GECODE-GIST-HH)
   (push :gist *features*))
 
-(defun ENABLE_COVER ()
+(defun ENABLE-COVER ()
   (zerop
    (ffi:c-inline () () :int
                  "{
 int res;
-#ifdef HAVE_GECODE_GIST_HH
+#ifdef ENABLE_COVER
 res = 0;
 #else
 res = 1;
@@ -33,5 +36,5 @@ res = 1;
 @(return 0) = res;
 }")))
 
-(when (ENABLE_COVER)
+(when (ENABLE-COVER)
   (push :cover *features*))

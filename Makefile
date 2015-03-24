@@ -15,19 +15,21 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
-v1/v1.o: gecode v1/v1.lisp common/early/early.fas
+v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early.fas
 	rm -f v1/v1.o
 	ecl -norc \
+	  -load common/asgl-config/asgl-config.fas \
 	  -load common/early/early.fas \
 	  -load lisp-scripts/compile-foo.lisp
 
-v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a common/early/early.fas
+v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a common/asgl-config/libasgl-config.a \
+	  common/asgl-config/asgl-config.fas
 	ecl -norc -eval '(require "cmp")' \
-	  -load common/early/early.fas \
-	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/early/libearly.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -load common/asgl-config/asgl-config.fas \
+	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
-v1/Foo.o: v1/Foo.cpp v1/Foo.h
+v1/Foo.o: v1/Foo.cpp v1/Foo.h asgl_config.h
 	g++ -O2 -Wall -Werror -fPIC -c v1/Foo.cpp -o v1/Foo.o
 
 install-v1: v1/v1
@@ -88,7 +90,7 @@ TAGS: $(source-files)
 
 # clean
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
-	  common/early/clean
+	  common/early/clean common/asgl-config/clean
 	rm -f bin/asgl
 	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c
 	rm -rf gecode tmp
@@ -96,8 +98,8 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	rm -f cover.data
 	rm -f TAGS
 	rm -fr dist build bin/ragel
-	rm -f common/early/asgl-config.c common/early/asgl-config.data \
-	  common/early/asgl-config.eclh
+	rm -f common/asgl-config/asgl-config.c common/asgl-config/asgl-config.data \
+	  common/asgl-config/asgl-config.eclh
 	rm -f asgl_config.h config.log config.status configure
 	rm -rf autom4te.cache
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
@@ -149,6 +151,9 @@ build:
 check:
 	timeout 5s ./bin/asgl || echo '***FAILURE*** Cannot start ASGL. Looks like the build did not finish successfully.'
 
+common/asgl-config/asgl-config.o: asgl_config.h
+
+include common/asgl-config/make.mk
 include common/early/make.mk
 include lib/myam/make.mk
 include lib/alexandria/make.mk

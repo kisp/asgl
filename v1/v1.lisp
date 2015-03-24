@@ -536,6 +536,7 @@ res = 7;
           ((:dc :ds) (dc-ds graph task semantic hash a)))
         (terpri)))))
 
+#+cover
 (defvar *cover-file*
   (merge-pathnames "cover.data" (asgl-home)))
 
@@ -548,6 +549,7 @@ res = 7;
                           (format t "ERROR: ~A~%" c)
                           (ext:quit 1)))
   (format *error-output* "~S~%" ext:*command-args*)
+  #+cover
   (when (probe-file *cover-file*)
     (cover:load-points *cover-file*))
   (unwind-protect
@@ -562,7 +564,10 @@ res = 7;
          ((equal "--cover-report" (second ext:*command-args*))
           (cover:report :out *error-output*)
           (terpri *error-output*))
+         ((equal "--repl" (second ext:*command-args*))
+          (si:top-level))
          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
+    #+cover
     (cover:save-points *cover-file*)))
 
 (eval-when (:compile-toplevel :execute)
