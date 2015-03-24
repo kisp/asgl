@@ -46,6 +46,7 @@ function dist {
     sudo tar -C / -xjf "gecode.tar.bz2"
     rm gecode.tar.bz2
     sudo rm /usr/local/lib/libgecodegist*
+    sudo rm /usr/local/include/gecode/gist.hh
 
     curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "http://178.62.230.106/packages/ecl-13.5.1-amd64.tgz"
     md5sum ecl.tar.gz
