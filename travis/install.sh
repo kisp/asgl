@@ -51,6 +51,9 @@ function dist {
     cd ./user
     tar xf ../asgl.tar.gz
     cd ./asgl
+    echo ===========================
+    echo will run ./build in `pwd`
+    echo ===========================    
     ./build
 }
 
