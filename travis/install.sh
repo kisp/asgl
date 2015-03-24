@@ -49,7 +49,7 @@ function dist {
     rm -r dist
     mkdir user
     cd ./user
-    tar xf ../dist/asgl.tar.gz
+    tar xf ../asgl.tar.gz
     cd ./asgl
     ./build
 }
