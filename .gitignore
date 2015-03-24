@@ -18,3 +18,8 @@ v1/v1
 v1/v1.c
 TAGS
 data/real-ee-gr-solutions
+configure
+config.status
+config.log
+autom4te.cache
+asgl_config.h
