@@ -96,6 +96,8 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	rm -f cover.data
 	rm -f TAGS
 	rm -fr dist build bin/ragel
+	rm -f common/early/asgl-config.c common/early/asgl-config.data \
+	  common/early/asgl-config.eclh
 	rm -f asgl_config.h config.log config.status configure
 	rm -rf autom4te.cache
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
