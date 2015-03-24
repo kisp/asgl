@@ -113,6 +113,8 @@ dist:
 	make bin/ragel
 	make build
 	ls -1 bin/ragel build | xargs -I% install -D % dist/asgl/%
+	autoconf
+	install autoconf dist/asgl/autoconf
 	echo DIST PREPARED
 #(cd dist/asgl && ./build )
 	( cd dist && tar -cf asgl.tar.gz asgl/* )
