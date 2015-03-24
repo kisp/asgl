@@ -21,9 +21,10 @@ v1/v1.o: gecode v1/v1.lisp common/early/early.fas
 	  -load common/early/early.fas \
 	  -load lisp-scripts/compile-foo.lisp
 
-v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a
+v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a common/early/early.fas
 	ecl -norc -eval '(require "cmp")' \
-	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/early/libearly.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" "-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -load common/early/early.fas \
+	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/early/libearly.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 v1/Foo.o: v1/Foo.cpp v1/Foo.h

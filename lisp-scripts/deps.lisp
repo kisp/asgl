@@ -84,17 +84,25 @@
    (mappend #'system-rules systems)
    (lambda (a b) (declare (ignore b)) (first a))))
 
-(defun component-rules (component)
+(defun component-dependencies (component)
   (let ((components (asdf/component:module-components
                      (asdf/component:component-parent component))))
-    (let ((dependencies
-           (mapcar (lambda (name)
-                     (find name components
-                           :key #'asdf/component:component-name
-                           :test #'equal))
-                   (asdf/component:component-sideway-dependencies component))))
-      (assert (every #'identity dependencies))
-      (mapcar (lambda (dependency) (cons dependency component)) dependencies))))
+    (mapcar (lambda (name)
+              (find name components
+                    :key #'asdf/component:component-name
+                    :test #'equal))
+            (asdf/component:component-sideway-dependencies component))))
+
+(defun component-deep-dependencies (component)
+  (remove-duplicates
+   (cons component
+         (mappend #'component-deep-dependencies
+                  (component-dependencies component)))))
+
+(defun component-rules (component)
+  (let ((dependencies (component-dependencies component)))
+    (assert (every #'identity dependencies))
+    (mapcar (lambda (dependency) (cons dependency component)) dependencies)))
 
 (defun sort-components (components)
   (topological-sort
@@ -250,7 +258,11 @@
 (defun %o-rule (component sorted-components)
   (let* ((pathname (component-pathname component))
          (o-pathname (o-pathname pathname))
-         (loads (items-upto sorted-components component))
+         (loads (let ((dependencies
+                        (component-deep-dependencies component)))
+                  (remove-if-not
+                   (lambda (x) (member x dependencies))
+                   (items-upto sorted-components component))))
          (system (asdf/component:component-system component))
          (system-dependencies
           (items-upto

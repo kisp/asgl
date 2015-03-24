@@ -3,8 +3,8 @@ AC_INIT
 CFLAGS="-std=iso9899:1990"
 
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(gecode/gist.hh)
-AC_CHECK_HEADER(gmp.h)
+AC_CHECK_HEADERS([gecode/gist.hh])
+AC_CHECK_HEADERS([gmp.h])
 AC_LANG_POP
 
 if test x"$ac_cv_header_gmp_h" != x"yes" ; then
