@@ -2,8 +2,20 @@
 
 set -e
 
-export ASGL_HOME=`pwd`
+function standard {
+    export ASGL_HOME=`pwd`
 
-make test-$VARIANT
-./bin/asgl --cover-report
-make clean | tail
+    make test-$VARIANT
+    ./bin/asgl --cover-report
+    make clean | tail
+}
+
+function dist {
+    echo dist
+}
+
+if [ "$VARIANT" == "dist" ]; then
+    dist
+else
+    standard
+fi
