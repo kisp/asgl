@@ -78,9 +78,12 @@ gecode: support/gecode-patched-headers.tgz
 	tar xfz support/gecode-patched-headers.tgz
 	touch gecode
 
-data/iccma15_solutions: data/iccma15_solutions.tar.xz
+data/iccma15_solutions: data/iccma15_testcases \
+			data/iccma15_solutions.tar.xz \
+			support/fixes.sh
 	rm -rf data/iccma15_solutions
 	tar xf data/iccma15_solutions.tar.xz
+	bash support/fixes.sh
 	touch data/iccma15_solutions
 
 data/iccma15_testcases: data/iccma15_testcases.tar.xz
