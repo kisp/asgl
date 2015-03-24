@@ -11,7 +11,11 @@ function standard {
 }
 
 function dist {
-    echo dist
+    cd ./user/asgl
+    echo ===========================
+    echo will run ./build in `pwd`
+    echo ===========================
+    ./build
 }
 
 if [ "$VARIANT" == "dist" ]; then

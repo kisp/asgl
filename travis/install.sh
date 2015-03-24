@@ -58,11 +58,6 @@ function dist {
     mkdir user
     cd ./user
     tar xf ../asgl.tar.gz
-    cd ./asgl
-    echo ===========================
-    echo will run ./build in `pwd`
-    echo ===========================    
-    ./build
 }
 
 if [ "$VARIANT" == "dist" ]; then
