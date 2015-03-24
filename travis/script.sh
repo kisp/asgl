@@ -6,7 +6,11 @@ function standard {
     export ASGL_HOME=`pwd`
 
     make test-$VARIANT
-    ./bin/asgl --cover-report
+
+    if [ -n "$ASGL_COVER" ]; then
+        ./bin/asgl --cover-report
+    fi
+
     make clean | tail
 }
 
