@@ -3,9 +3,9 @@ language: lisp
 
 env:
   matrix:
-    #- VARIANT=v1 CUKE_ARGS="--tags ~@slow"
-    #- VARIANT=ref
-    #- VARIANT=v1
+    - VARIANT=v1 CUKE_ARGS="--tags ~@slow"
+    - VARIANT=ref
+    - VARIANT=v1
     - VARIANT=dist
 
 install:

@@ -34,6 +34,10 @@ function standard {
 
     bash scripts/generate-make-mk.sh
 
+    autoconf
+
+    ./configure
+
     make install-$VARIANT
 }
 
