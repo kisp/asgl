@@ -38,6 +38,11 @@ function standard {
 }
 
 function dist {
+    curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "http://178.62.230.106/packages/ecl-13.5.1-amd64.tgz"
+    md5sum ecl.tar.gz
+    sudo tar -C / -xzf "ecl.tar.gz"
+    rm ecl.tar.gz
+
     bash scripts/generate-make-mk.sh
     make dist
 }
