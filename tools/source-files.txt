@@ -11,11 +11,7 @@ common/early/myfoo.rl
 common/early/package.lisp
 common/early/slurp.cpp
 common/early/utils.lisp
-gr1/Sp.cpp
-gr1/Sp.h
-gr1/gr1.lisp
 lisp-scripts/compile-foo.lisp
-lisp-scripts/compile-gr1.lisp
 lisp-scripts/deps.lisp
 scripts/clean.sh
 scripts/generate-make-mk.sh
