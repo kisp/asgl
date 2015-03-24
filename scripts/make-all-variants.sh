@@ -19,9 +19,4 @@ make install-v1
 make test-v1
 
 make clean
-bash scripts/generate-make-mk.sh
-make install-gr1
-make test-gr1
-
-make clean
 echo DONE
