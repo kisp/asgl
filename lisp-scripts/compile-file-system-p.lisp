@@ -6,7 +6,7 @@
   (let ((source pathname)
         (o-pathname (make-pathname :type "o" :defaults pathname)))
     (multiple-value-bind (fasl warnings-p failure-p)
-        (compile-file "v1/v1.lisp" :system-p t)
+        (compile-file source :system-p t)
       (declare (ignore fasl))
       (handler-case
           (progn
