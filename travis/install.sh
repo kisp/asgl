@@ -34,5 +34,3 @@ export ASGL_HOME=`pwd`
 bash scripts/generate-make-mk.sh
 
 make install-$VARIANT
-
-make test-$VARIANT
