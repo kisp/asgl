@@ -19,3 +19,19 @@ res = 1;
 
 (when (HAVE-GECODE-GIST-HH)
   (push :gist *features*))
+
+(defun ENABLE_COVER ()
+  (zerop
+   (ffi:c-inline () () :int
+                 "{
+int res;
+#ifdef HAVE_GECODE_GIST_HH
+res = 0;
+#else
+res = 1;
+#endif
+@(return 0) = res;
+}")))
+
+(when (ENABLE_COVER)
+  (push :cover *features*))
