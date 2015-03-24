@@ -129,9 +129,10 @@ bin/ragel:
 build:
 	echo '#!/bin/bash' >>build
 	echo 'set -e' >>build
-	echo 'echo will start build...' >>build
+	echo 'echo WILL START BUILD...' >>build
 	echo 'export ASGL_HOME_PREC=`pwd`' >>build
 	echo 'export PATH=`pwd`/bin:$$PATH' >>build
+	echo './configure' >>build
 	echo 'make install-v1' >>build
 	echo 'make check' >>build
 	echo 'echo BUILD FINISHED SUCCESSFULLY!' >>build
