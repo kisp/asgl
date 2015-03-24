@@ -39,7 +39,7 @@ function standard {
 
 function dist {
     sudo apt-get update
-    sudo apt-get install libgmp-dev
+    #sudo apt-get install libgmp-dev
 
     curl --no-progress-bar --retry 10 -o "gecode.tar.bz2" -L "http://178.62.230.106/packages/gecode-4.3.3-complete-amd64.tar.bz2"
     md5sum gecode.tar.bz2
