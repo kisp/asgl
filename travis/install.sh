@@ -38,7 +38,7 @@ function standard {
 }
 
 function dist {
-    echo dist
+    make dist
 }
 
 if [ "$VARIANT" == "dist" ]; then
