@@ -545,6 +545,7 @@ Gecode::Gist::dfs(foo,o);
 
 (defun main ()
   (setq *debugger-hook* (lambda (c old)
+                          (declare (ignore old))
                           (ext:dump-c-backtrace 32)
                           (terpri *error-output*)
                           (print-error-log *error-output* c)
