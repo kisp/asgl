@@ -16,6 +16,7 @@ function dist {
     echo will run ./build in `pwd`
     echo ===========================
     ./build
+    ldd bin/asgl
 }
 
 if [ "$VARIANT" == "dist" ]; then
