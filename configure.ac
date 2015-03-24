@@ -4,9 +4,12 @@ CFLAGS="-std=iso9899:1990"
 
 AC_LANG_PUSH([C++])
 
+AC_ARG_VAR(ASGL_COVER, Settings this to yes has same effect as --enable-cover)
+
 AC_ARG_ENABLE([cover], AS_HELP_STRING([--enable-cover], [Enable feature cover]))
 
 AS_IF([test "x$enableval" = "xyes"], [AC_DEFINE([ENABLE_COVER])])
+AS_IF([test "x$ASGL_COVER" = "xyes"], [AC_DEFINE([ENABLE_COVER])])
 
 AC_ARG_WITH([gist],
     AS_HELP_STRING([--without-gist], [Ignore presence of gist and disable it]))
