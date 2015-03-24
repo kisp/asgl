@@ -250,14 +250,24 @@ Gecode::Search::Statistics s = dfs->statistics();
       (dfs-statistics dfs)))))
 
 (defun dfs-search-gist (space)
-  (ffi:c-inline (space) (:pointer-void) :void
-                "
+  (let ((status
+          (ffi:c-inline (space) (:pointer-void) :int
+                        "
+int res = 0;
+#ifdef HAVE_GECODE_GIST_HH
 v1::Foo* foo = ((v1::Foo*)(#0));
 Gecode::Gist::Print<v1::Foo> p(\"Print solution\");
 Gecode::Gist::Options o;
 o.inspect.click(&p);
 Gecode::Gist::dfs(foo,o);
-")
+res = 1;
+#else
+res = 7;
+#endif
+@(return 0) = res;
+")))
+    (unless (eql 1 status)
+      (error "Perhaps gist is not enabled? (status is ~S)" status)))
   (delete-foo space))
 
 (defvar *space*)
