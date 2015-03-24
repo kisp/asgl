@@ -38,6 +38,7 @@ function standard {
 }
 
 function dist {
+    bash scripts/generate-make-mk.sh
     make dist
 }
 
