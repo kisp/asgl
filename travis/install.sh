@@ -45,6 +45,13 @@ function dist {
 
     bash scripts/generate-make-mk.sh
     make dist
+    mv dist/asgl.tar.gz .
+    rm -r dist
+    mkdir user
+    cd ./user
+    tar xf ../dist/asgl.tar.gz
+    cd ./asgl
+    ./build
 }
 
 if [ "$VARIANT" == "dist" ]; then
