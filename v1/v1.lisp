@@ -611,7 +611,7 @@ res = 7;
 
 (myam:deftest test.3
   (check-extensions
-   "EE-ST" "[[a2x],[a1]]"
+   "EE-ST" "[[a2],[a1]]"
    '("arg(a1)."
      "att(a1, a2)."
      "arg(a2)."
