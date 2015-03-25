@@ -9,12 +9,14 @@
           (sb-ext:run-program
            "timeout"
            (list timeout
-                 "./bin/asgl" "-fo" "apx" "-f" (namestring input-file) "-p" (string problem))
+                 "./bin/asgl" "-fo" "apx" "-f"
+                 (namestring input-file) "-p" (string problem))
            :search t
            :output nil)))
-    (if (zerop (sb-ext:process-exit-code process))
-        (- (get-internal-real-time) start)
-        :timeout)))
+    (let ((end (get-internal-real-time))
+          (exit-code (sb-ext:process-exit-code process)))
+      (values (- end start)
+              exit-code))))
 
 (defun read-version (version)
   (let* ((first-dot (position #\. version))
@@ -49,7 +51,7 @@
     (with-open-file (output (timings-file-name version timeout repeats)
                             :direction :output
                             :if-exists :error)
-      (format output "    file problem time~%")
+      (format output "    file problem time exit-status~%")
       (let ((count 0))
         (dolist (file (benchmark-files))
           (format t ";benchmarking ~A~%" file)
@@ -60,12 +62,14 @@
                                :ee-co :se-co
                                :ee-st :se-st
                                :ee-pr :se-pr))
-              (let ((time (run-benchmark file problem :timeout timeout)))
-                (format output "~D ~A ~A ~A~%"
+              (multiple-value-bind (time exit-status)
+                  (run-benchmark file problem :timeout timeout)
+                (format output "~D ~A ~A ~A ~A~%"
                         (incf count)
                         (file-namestring file)
                         problem
-                        (if (eql time :timeout) "NA" time))))))))))
+                        time
+                        exit-status)))))))))
 
 (defvar *end* (get-universal-time))
 (format t ";done benchmarking (~A)~%"
