@@ -540,6 +540,83 @@ res = 7;
 (defvar *cover-file*
   (merge-pathnames "cover.data" (asgl-home)))
 
+(myam:defsuite* :check)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (setq myam:*default-compile-at* :definition-time))
+
+(defun seql (a b)
+  (assert (alexandria:setp a))
+  (assert (alexandria:setp b))
+  (alexandria:set-equal a b :test #'alexandria:set-equal))
+
+(defun read-extensions (stream)
+  (let ((*readtable* (copy-readtable nil)))
+    (set-macro-character
+     #\,
+     (lambda (stream char)
+       (declare (ignore stream char))
+       (values)))
+    (set-macro-character
+     #\[
+     (lambda (stream char)
+       (declare (ignore char))
+       (read-delimited-list #\] stream t)))
+    (set-macro-character #\] (get-macro-character #\)))
+    (read stream)))
+
+(defun read-extensions-from-string (string)
+  (with-input-from-string (input string)
+    (read-extensions input)))
+
+(defmacro with-tmp-file ((pathname name) &body body)
+  (check-type pathname symbol)
+  `(let ((,pathname (merge-pathnames ,name (early:asgl-home))))
+     (unwind-protect
+          (progn ,@body)
+       (when (probe-file ,pathname)
+         (delete-file ,pathname)))))
+
+(defun check-extensions (problem expexted lines)
+  (let ((*default-pathname-defaults*
+         (early:asgl-home)))
+    (with-tmp-file (pathname "tmp.apx")
+      (with-open-file (output pathname :direction :output)
+        (dolist (line lines)
+          (write-line line output)))
+      (let ((result
+             (with-output-to-string (*standard-output*)
+               (main% :fo "apx" :p problem :f pathname))))
+        (myam:is
+         (seql (read-extensions-from-string
+                expexted)
+               (read-extensions-from-string
+                result)))))))
+
+(myam:deftest test.1
+  (check-extensions
+   "EE-CO" "[[],[a1],[a2]]"
+   '("arg(a1)."
+     "att(a1, a2)."
+     "arg(a2)."
+     "att(a2,a1).")))
+
+(myam:deftest test.2
+  (check-extensions
+   "EE-GR" "[[]]"
+   '("arg(a1)."
+     "att(a1, a2)."
+     "arg(a2)."
+     "att(a2,a1).")))
+
+(myam:deftest test.3
+  (check-extensions
+   "EE-ST" "[[a2],[a1]]"
+   '("arg(a1)."
+     "att(a1, a2)."
+     "arg(a2)."
+     "att(a2,a1).")))
+
 (defun main ()
   (setq *debugger-hook* (lambda (c old)
                           (declare (ignore old))
@@ -568,6 +645,14 @@ res = 7;
           (terpri *error-output*))
          ((equal "--repl" (second ext:*command-args*))
           (si:top-level))
+         ((equal "--check" (second ext:*command-args*))
+          (if (myam:run! :check)
+              (format t "~&SELF-CHECK PASSED SUCCESSFULLY~%")
+              (progn
+                (format t "~&**********************************~%")
+                (format t "~&SELF-CHECK FAILED something is wrong~%")
+                (format t "~&**********************************~%")
+                (quit 1))))
          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
     #+cover
     (cover:save-points *cover-file*)))

@@ -15,18 +15,23 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
-v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early.fas
+v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early.fas \
+	  lib/myam/myam.fas lib/alexandria/alexandria.fas lib/arnesi-list-match/arnesi-list-match.fas
 	rm -f v1/v1.o
 	ecl -norc \
 	  -load common/asgl-config/asgl-config.fas \
 	  -load common/early/early.fas \
+	  -load lib/alexandria/alexandria.fas \
+	  -load lib/arnesi-list-match/arnesi-list-match.fas \
+	  -load lib/myam/myam.fas \
 	  -load lisp-scripts/compile-foo.lisp
 
 v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a common/asgl-config/libasgl-config.a \
-	  common/asgl-config/asgl-config.fas
+	  common/asgl-config/asgl-config.fas lib/myam/libmyam.a lib/alexandria/libalexandria.a \
+	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
 	  -load common/asgl-config/asgl-config.fas \
-	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 v1/Foo.o: v1/Foo.cpp v1/Foo.h asgl_config.h
@@ -150,6 +155,7 @@ build:
 
 check:
 	timeout 5s ./bin/asgl || echo '***FAILURE*** Cannot start ASGL. Looks like the build did not finish successfully.'
+	timeout 10s ./bin/asgl --check || echo '***FAILURE*** Simple checks failed. Looks like the build did not finish successfully.'
 
 common/asgl-config/asgl-config.o: asgl_config.h
 
