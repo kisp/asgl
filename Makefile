@@ -155,7 +155,7 @@ build:
 
 check:
 	timeout 5s ./bin/asgl
-	timeout 10s ./bin/asgl
+	timeout 10s ./bin/asgl --check
 
 common/asgl-config/asgl-config.o: asgl_config.h
 
