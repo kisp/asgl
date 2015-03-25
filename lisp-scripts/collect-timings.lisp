@@ -69,7 +69,8 @@
                         (file-namestring file)
                         problem
                         time
-                        exit-status)))))))))
+                        exit-status)
+                (finish-output output)))))))))
 
 (defvar *end* (get-universal-time))
 (format t ";done benchmarking (~A)~%"
