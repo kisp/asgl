@@ -154,8 +154,8 @@ build:
 	chmod +x build
 
 check:
-	timeout 5s ./bin/asgl || echo '***FAILURE*** Cannot start ASGL. Looks like the build did not finish successfully.'
-	timeout 10s ./bin/asgl --check || echo '***FAILURE*** Simple checks failed. Looks like the build did not finish successfully.'
+	timeout 5s ./bin/asgl
+	timeout 10s ./bin/asgl
 
 common/asgl-config/asgl-config.o: asgl_config.h
 
