@@ -63,6 +63,9 @@ EOF
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
     ls `pwd`/tmpecl/lib
+    env PATH=`pwd`/tmpecl/bin:$PATH \
+        LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
+        ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13.5.1
     echo env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
         ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13.5.1 \
