@@ -24,6 +24,8 @@ export ECL_R_SYS_DIR=`pwd`/local/lib/ecl-13.5.1
 
 echo DEPENDENCIES installed to local
 export PATH=`pwd`/local/bin:$PATH
+export C_INCLUDE_PATH=`pwd`/local/include
+export CPLUS_INCLUDE_PATH=$C_INCLUDE_PATH
 
 echo BEGIN BUILDING ASGL
 export ASGL_HOME_PREC=`pwd`
