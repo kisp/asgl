@@ -50,7 +50,7 @@ function dist {
     mkdir tmpecl
     tar --strip-components=2 -C tmpecl -xf ecl.tar.gz
     rm ecl.tar.gz
-    bash PATH=`pwd`/tmpecl/bin:$PATH scripts/generate-make-mk.sh
+    env PATH=`pwd`/tmpecl/bin:$PATH bash scripts/generate-make-mk.sh
     rm -r tmpecl
 
     make dist
