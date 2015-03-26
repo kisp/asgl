@@ -46,6 +46,12 @@ echo BEGIN BUILDING ASGL
 export ASGL_HOME_PREC=`pwd`
 ./configure
 make LD_LIBRARY_PATH=`pwd`/local/lib install-v1
+mv bin/asgl bin/asgl_kernel
+echo '#!/bin/bash' >bin/asgl
+echo "export LD_LIBRARY_PATH=`pwd`/local/lib:$LD_LIBRARY_PATH" >>bin/asgl
+echo 'exec asgl_kernel "$@"' >>bin/asgl
+cat bin/asgl
+chmod +x bin/asgl
 
 export PATH=`pwd`/bin:$PATH
 make check
