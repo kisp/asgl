@@ -36,6 +36,7 @@ curl --no-progress-bar --retry 10 -o "gecode.tar.bz2" -L "http://178.62.230.106/
 md5sum gecode.tar.bz2
 tar --strip-components=2 -C local -xf gecode.tar.bz2
 rm gecode.tar.bz2
+rm -f local/include/gecode/gist.hh
 
 echo DEPENDENCIES installed to local
 export PATH=`pwd`/local/bin:$PATH
