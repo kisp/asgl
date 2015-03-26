@@ -62,6 +62,8 @@ exec ecl_r -dir "$ECL_R_SYS_DIR" "$@"
 EOF
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
+    ls -l `pwd`/tmpecl/lib
+    ls -ld `pwd`/tmpecl/lib/ecl-13.5.1
     if [ -d `pwd`/tmpecl/lib/ecl-13.5.1 ]; then
         echo xxx does not exist
         exit 33
