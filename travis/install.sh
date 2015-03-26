@@ -61,6 +61,7 @@ exec ecl_r -dir "$ECL_R_SYS_DIR" "$@"
 EOF
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
+    ls `pwd`/tmpecl/lib
     env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
         ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13* \
