@@ -107,6 +107,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	  common/asgl-config/asgl-config.eclh
 	rm -f asgl_config.h config.log config.status configure
 	rm -rf autom4te.cache
+	rm -f ecl-13.5.1.tgz gecode-4.3.3.tar.gz
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 # dist
