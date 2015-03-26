@@ -20,7 +20,7 @@ if [ ! -d  "$ECL_R_INCLUDE_DIR" ]; then
   echo ECL_R_INCLUDE_DIR not set or does not exist
   exit 7
 fi
-exec ecl_r -dir "$ECL_R_SYS_DIR" -eval "(require 'cmp)" -eval '(setq c::*ecl-include-directory* (probe-file "'$ECL_R_INCLUDE_DIR'"))' "$@"
+exec ecl_r -dir "$ECL_R_SYS_DIR" -eval "(require 'cmp)" -eval '(setq c::*ecl-include-directory* (namestring (probe-file "'$ECL_R_INCLUDE_DIR'")))' "$@"
 EOF
 chmod +x local/bin/ecl
 rm ecl.tar.gz
