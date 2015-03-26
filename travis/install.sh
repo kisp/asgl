@@ -49,6 +49,16 @@ function dist {
     md5sum ecl.tar.gz
     mkdir tmpecl
     tar --strip-components=2 -C tmpecl -xf ecl.tar.gz
+    mv tmpecl/bin/ecl tmpecl/bin/ecl_r
+    cat tmpecl/bin/ecl<<EOF
+#!/bin/bash
+if [ ! -d  $ECL_R_SYS_DIR ]; then
+  echo ECL_R_SYS_DIR not set or does not exist
+  exit 7
+fi
+exec ecl_r -dir "$ECL_R_SYS_DIR" $*
+EOF
+    chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
     env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
