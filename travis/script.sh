@@ -22,7 +22,7 @@ function dist {
     ./build
     file bin/asgl
     file bin/asgl_kernel
-    ldd LD_LIBRARY_PATH=`pwd`/local/lib:$LD_LIBRARY_PATH bin/asgl_kernel
+    env LD_LIBRARY_PATH=`pwd`/local/lib:$LD_LIBRARY_PATH ldd bin/asgl_kernel
 }
 
 if [ "$VARIANT" == "dist" ]; then
