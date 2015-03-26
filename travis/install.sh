@@ -45,19 +45,14 @@ function dist {
     sudo apt-get update
     sudo apt-get install libgmp-dev
 
-    curl --no-progress-bar --retry 10 -o "gecode.tar.bz2" -L "http://178.62.230.106/packages/gecode-4.3.3-complete-amd64.tar.bz2"
-    md5sum gecode.tar.bz2
-    sudo tar -C / -xjf "gecode.tar.bz2"
-    rm gecode.tar.bz2
-    sudo rm /usr/local/lib/libgecodegist*
-    sudo rm /usr/local/include/gecode/gist.hh
-
     curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "http://178.62.230.106/packages/ecl-13.5.1-amd64.tgz"
     md5sum ecl.tar.gz
-    sudo tar -C / -xzf "ecl.tar.gz"
+    mkdir tmpecl
+    tar --strip-components=2 -C tmpecl -xf ecl.tar.gz
     rm ecl.tar.gz
+    bash PATH=`pwd`/tmpecl/bin:$PATH scripts/generate-make-mk.sh
+    rm -r tmpecl
 
-    bash scripts/generate-make-mk.sh
     make dist
     mv dist/asgl.tar.gz .
     rm -r dist
