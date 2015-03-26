@@ -4,11 +4,33 @@ set -e
 
 echo STARTING BUILD
 
-export ASGL_HOME_PREC=`pwd`
-export PATH=`pwd`/bin:$PATH
+mkdir local
 
+curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "http://178.62.230.106/packages/ecl-13.5.1-amd64.tgz"
+md5sum ecl.tar.gz
+tar --strip-components=2 -C local -xf ecl.tar.gz
+mv local/bin/ecl local/bin/ecl_r
+cat >local/bin/ecl<<'EOF'
+#!/bin/bash
+if [ ! -d  "$ECL_R_SYS_DIR" ]; then
+  echo ECL_R_SYS_DIR not set or does not exist
+  exit 7
+fi
+exec ecl_r -dir "$ECL_R_SYS_DIR" "$@"
+EOF
+chmod +x local/bin/ecl
+rm ecl.tar.gz
+export ECL_R_SYS_DIR=`pwd`/local/lib/ecl-13.5.1
+
+echo DEPENDENCIES installed to local
+export PATH=`pwd`/local/bin:$PATH
+
+echo BEGIN BUILDING ASGL
+export ASGL_HOME_PREC=`pwd`
 ./configure
 make install-v1
+
+export PATH=`pwd`/bin:$PATH
 make check
 
 echo BUILD FINISHED SUCCESSFULLY!
