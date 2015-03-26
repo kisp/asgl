@@ -36,7 +36,7 @@ export CPLUS_INCLUDE_PATH=$C_INCLUDE_PATH
 echo BEGIN BUILDING ASGL
 export ASGL_HOME_PREC=`pwd`
 ./configure
-make install-v1
+make LD_LIBRARY_PATH=`pwd`/local/lib install-v1
 
 export PATH=`pwd`/bin:$PATH
 make check
