@@ -42,7 +42,7 @@ function standard {
 }
 
 function dist {
-    #sudo apt-get update
+    sudo apt-get update
     sudo apt-get install libgmp-dev
 
     curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "http://178.62.230.106/packages/ecl-13.5.1-amd64.tgz"

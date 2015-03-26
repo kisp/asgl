@@ -3,10 +3,10 @@ language: lisp
 
 env:
   matrix:
-    #- VARIANT=v1 CUKE_ARGS="--tags ~@slow"
-    #- VARIANT=ref
-    #- VARIANT=v1
-    #- VARIANT=v1 ASGL_COVER=yes
+    - VARIANT=v1 CUKE_ARGS="--tags ~@slow"
+    - VARIANT=ref
+    - VARIANT=v1
+    - VARIANT=v1 ASGL_COVER=yes
     - VARIANT=dist
 
 install:
