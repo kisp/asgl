@@ -26,12 +26,22 @@ AS_IF([test "x$have_gist" = "xyes"],
 ])
 
 AC_CHECK_HEADERS([gmp.h])
-AC_LANG_POP
-
 if test x"$ac_cv_header_gmp_h" != x"yes" ; then
     AC_MSG_ERROR([Please install libgmp. Could be `apt-get install libgmp-dev'.])
 fi
 
+AC_CHECK_HEADERS([ecl/ecl.h])
+if test "x$ac_cv_header_ecl_ecl_h" != x"yes" ; then
+    AC_MSG_ERROR([Cannot find header ecl/ecl.h. This is unexpected.])
+fi
+
+AC_CHECK_HEADERS([gecode/int.hh])
+if test "x$ac_cv_header_gecode_int_hh" != x"yes" ; then
+    AC_MSG_ERROR([Cannot find header gecode/int.hh. This is unexpected.])
+fi
+
 cp confdefs.h asgl_config.h
+
+AC_LANG_POP
 
 AC_OUTPUT
