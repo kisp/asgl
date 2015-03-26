@@ -62,6 +62,9 @@ exec ecl_r -dir "$ECL_R_SYS_DIR" "$@"
 EOF
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
+    if [ -d `pwd`/tmpecl/lib/ecl-13.5.1 ]; then
+        exit xxx does not exist
+    fi
     ls `pwd`/tmpecl/lib
     env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
