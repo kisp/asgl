@@ -127,6 +127,13 @@ dist:
 	ls -1 bin/ragel build | xargs -I% install -D % dist/asgl/%
 	autoconf
 	install configure dist/asgl/configure
+	mkdir dist/asgl/third-party
+	curl --no-progress-bar --retry 10 -o "ecl-13.5.1.tgz" -L "http://178.62.230.106/tarballs/ecl-13.5.1.tgz"
+	install ecl-13.5.1.tgz dist/asgl/third-party
+	curl --no-progress-bar --retry 10 -o "gecode-4.3.3.tar.gz" -L "http://178.62.230.106/tarballs/gecode-4.3.3.tar.gz"
+	install gecode-4.3.3.tar.gz dist/asgl/third-party
+	rm -rf dist/asgl/data
+	rm -rf dist/asgl/timings
 	echo DIST PREPARED
 #(cd dist/asgl && ./build )
 	( cd dist && tar -cf asgl.tar.gz asgl/* )

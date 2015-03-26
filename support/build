@@ -2,46 +2,38 @@
 
 set -e
 
+START_TIME=`date`
+
 echo STARTING BUILD
 
 mkdir local
+LPREFIX=`pwd`/local
+mkdir depbuild
 
-curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "http://178.62.230.106/packages/ecl-13.5.1-amd64.tgz"
-md5sum ecl.tar.gz
-tar --strip-components=2 -C local -xf ecl.tar.gz
-mv local/bin/ecl local/bin/ecl_r
-cat >local/bin/ecl<<'EOF'
-#!/bin/bash
-if [ ! -d  "$ECL_R_SYS_DIR" ]; then
-  echo ECL_R_SYS_DIR not set or does not exist
-  exit 7
-fi
-if [ ! -d  "$ECL_R_INCLUDE_DIR" ]; then
-  echo ECL_R_INCLUDE_DIR not set or does not exist
-  exit 7
-fi
-if [ ! -d  "$ECL_R_LIBRARY_DIR" ]; then
-  echo ECL_R_LIBRARY_DIR not set or does not exist
-  exit 7
-fi
-exec ecl_r -dir "$ECL_R_SYS_DIR" -eval "(require 'cmp)" -eval '(setq c::*ecl-include-directory* (namestring (probe-file "'$ECL_R_INCLUDE_DIR'")))' -eval '(setq c::*ecl-library-directory* (namestring (probe-file "'$ECL_R_LIBRARY_DIR'")))'  "$@"
-EOF
-chmod +x local/bin/ecl
-rm ecl.tar.gz
-export ECL_R_SYS_DIR=`pwd`/local/lib/ecl-13.5.1
-export ECL_R_INCLUDE_DIR=`pwd`/local/include
-export ECL_R_LIBRARY_DIR=`pwd`/local/lib
+tar -C depbuild -xf third-party/ecl-13.5.1.tgz
+tar -C depbuild -xf third-party/gecode-4.3.3.tar.gz
 
-curl --no-progress-bar --retry 10 -o "gecode.tar.bz2" -L "http://178.62.230.106/packages/gecode-4.3.3-complete-amd64.tar.bz2"
-md5sum gecode.tar.bz2
-tar --strip-components=2 -C local -xf gecode.tar.bz2
-rm gecode.tar.bz2
-rm -f local/include/gecode/gist.hh
+cd depbuild/ecl-13.5.1
+env CFLAGS="-O0" CXXFLAGS="-O0" ./configure --enable-threads --with-cxx --with-dffi --enable-unicode --prefix=$LPREFIX
+make
+make install
+cd ../..
+
+cd depbuild/gecode-4.3.3
+env CFLAGS="-O0" CXXFLAGS="-O0" ./configure --disable-gist --disable-qt --disable-examples --disable-flatzinc --disable-float-vars --disable-set-vars --prefix=$LPREFIX
+make
+make install
+cd ../..
 
 echo DEPENDENCIES installed to local
 export PATH=`pwd`/local/bin:$PATH
 export C_INCLUDE_PATH=`pwd`/local/include
 export CPLUS_INCLUDE_PATH=$C_INCLUDE_PATH
+if [ `which ecl` != `pwd`/local/bin/ecl ]; then
+    echo ecl not found at expected location. which ecl reports
+    which ecl
+    exit 1
+fi
 
 echo BEGIN BUILDING ASGL
 export ASGL_HOME_PREC=`pwd`
@@ -50,7 +42,8 @@ make LD_LIBRARY_PATH=`pwd`/local/lib install-v1
 mv bin/asgl bin/asgl_kernel
 echo '#!/bin/bash' >bin/asgl
 echo "export LD_LIBRARY_PATH=`pwd`/local/lib:$LD_LIBRARY_PATH" >>bin/asgl
-echo 'exec asgl_kernel "$@"' >>bin/asgl
+echo "DIR=`pwd`/bin" >>bin/asgl
+echo 'exec "$DIR/asgl_kernel" "$@"' >>bin/asgl
 cat bin/asgl
 chmod +x bin/asgl
 
@@ -59,3 +52,7 @@ make check
 
 echo BUILD FINISHED SUCCESSFULLY!
 echo You can start the solver with ./bin/asgl
+
+END_TIME=`date`
+echo Build was started at $START_TIME
+echo Build finished at $END_TIME
