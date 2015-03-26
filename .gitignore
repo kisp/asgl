@@ -23,3 +23,8 @@ config.status
 config.log
 autom4te.cache
 asgl_config.h
+bin/ragel
+build
+dist
+ecl-13.5.1.tgz
+gecode-4.3.3.tar.gz
