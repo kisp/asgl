@@ -50,7 +50,7 @@ function dist {
     mkdir tmpecl
     tar --strip-components=2 -C tmpecl -xf ecl.tar.gz
     mv tmpecl/bin/ecl tmpecl/bin/ecl_r
-    cat >tmpecl/bin/ecl<<EOF
+    cat >tmpecl/bin/ecl<<'EOF'
 #!/bin/bash
 set -x
 echo WILL SHOW ENV
