@@ -20,12 +20,17 @@ if [ ! -d  "$ECL_R_INCLUDE_DIR" ]; then
   echo ECL_R_INCLUDE_DIR not set or does not exist
   exit 7
 fi
-exec ecl_r -dir "$ECL_R_SYS_DIR" -eval "(require 'cmp)" -eval '(setq c::*ecl-include-directory* (namestring (probe-file "'$ECL_R_INCLUDE_DIR'")))' -eval '(setq c::*ecl-library-directory* nil)' "$@"
+if [ ! -d  "$ECL_R_LIBRARY_DIR" ]; then
+  echo ECL_R_LIBRARY_DIR not set or does not exist
+  exit 7
+fi
+exec ecl_r -dir "$ECL_R_SYS_DIR" -eval "(require 'cmp)" -eval '(setq c::*ecl-include-directory* (namestring (probe-file "'$ECL_R_INCLUDE_DIR'")))' -eval '(setq c::*ecl-library-directory* (namestring (probe-file "'$ECL_R_LIBRARY_DIR'")))'  "$@"
 EOF
 chmod +x local/bin/ecl
 rm ecl.tar.gz
 export ECL_R_SYS_DIR=`pwd`/local/lib/ecl-13.5.1
 export ECL_R_INCLUDE_DIR=`pwd`/local/include
+export ECL_R_LIBRARY_DIR=`pwd`/local/lib
 
 curl --no-progress-bar --retry 10 -o "gecode.tar.bz2" -L "http://178.62.230.106/packages/gecode-4.3.3-complete-amd64.tar.bz2"
 md5sum gecode.tar.bz2
