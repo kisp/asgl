@@ -22,6 +22,12 @@ chmod +x local/bin/ecl
 rm ecl.tar.gz
 export ECL_R_SYS_DIR=`pwd`/local/lib/ecl-13.5.1
 
+curl --no-progress-bar --retry 10 -o "gecode.tar.bz2" -L "http://178.62.230.106/packages/gecode-4.3.3-complete-amd64.tar.bz2"
+md5sum gecode.tar.bz2
+tar --strip-components=2 -C local -xf gecode.tar.bz2
+rm gecode.tar.bz2
+
+
 echo DEPENDENCIES installed to local
 export PATH=`pwd`/local/bin:$PATH
 export C_INCLUDE_PATH=`pwd`/local/include
