@@ -56,7 +56,7 @@ if [ ! -d  $ECL_R_SYS_DIR ]; then
   echo ECL_R_SYS_DIR not set or does not exist
   exit 7
 fi
-exec ecl_r -dir "$ECL_R_SYS_DIR" $*
+exec ecl_r -dir "$ECL_R_SYS_DIR" $@
 EOF
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
