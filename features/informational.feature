@@ -1,23 +1,22 @@
+@notref
 Feature: informational
 
   As a user of asgl
   I want to be able to query useful information about the solver
 
-  @notref
   Scenario: print information
      When I run `asgl`
      Then the exit status should be 0
      And the output should contain "Kilian Sprotte"
      And the output should contain "ASGL"
-     And the output should contain "v0.0.1"
+     And the output should contain "version 0.0.2"
 
   Scenario: print formats
      When I run `asgl --formats`
      Then the exit status should be 0
      And the output should be a set of strings
-     And the output should be eql to "[apx, tgf]"
+     And the output should be eql to "[apx]"
 
-  @notref
   Scenario: print problems
      When I run `asgl --problems`
      Then the exit status should be 0

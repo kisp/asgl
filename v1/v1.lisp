@@ -678,12 +678,13 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL v0.0.1")
+          (write-line "ASGL version 0.0.2")
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
          ((equal "--formats" (second ext:*command-args*))
-          (write-line "[apx, tgf]"))
+          (write-line "[apx]"))
          ((equal "--problems" (second ext:*command-args*))
           (write-line "[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]"))
+         #+cover
          ((equal "--cover-report" (second ext:*command-args*))
           (cover:report :out *error-output*)
           (terpri *error-output*))
