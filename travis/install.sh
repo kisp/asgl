@@ -68,6 +68,9 @@ fi
 echo ecl_r -dir "$ECL_R_SYS_DIR" "$@"
 exec ecl_r -dir "$ECL_R_SYS_DIR" "$@"
 EOF
+    echo xxxxxx==================================
+    cat tmpecl/bin/ecl
+    echo xxxxxx==================================
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
 
