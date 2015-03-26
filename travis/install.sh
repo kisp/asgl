@@ -63,7 +63,8 @@ EOF
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
     if [ -d `pwd`/tmpecl/lib/ecl-13.5.1 ]; then
-        exit xxx does not exist
+        echo xxx does not exist
+        exit 33
     fi
     ls `pwd`/tmpecl/lib
     env PATH=`pwd`/tmpecl/bin:$PATH \
