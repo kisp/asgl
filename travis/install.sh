@@ -52,6 +52,7 @@ function dist {
     mv tmpecl/bin/ecl tmpecl/bin/ecl_r
     cat >tmpecl/bin/ecl<<EOF
 #!/bin/bash
+echo it is: "$ECL_R_SYS_DIR"
 if [ ! -d  "$ECL_R_SYS_DIR" ]; then
   echo ECL_R_SYS_DIR not set or does not exist
   exit 7
