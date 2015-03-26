@@ -52,9 +52,13 @@ function dist {
     mv tmpecl/bin/ecl tmpecl/bin/ecl_r
     cat >tmpecl/bin/ecl<<EOF
 #!/bin/bash
+set -x
 echo WILL SHOW ENV
 env
 echo END SHOW END
+echo ========================================
+echo $LD_LIBRARY_PATH
+echo ========================================
 echo LD_LIBRARY_PATH is: "$LD_LIBRARY_PATH"
 echo it is: "$ECL_R_SYS_DIR"
 if [ ! -d  "$ECL_R_SYS_DIR" ]; then
