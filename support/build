@@ -32,7 +32,6 @@ md5sum gecode.tar.bz2
 tar --strip-components=2 -C local -xf gecode.tar.bz2
 rm gecode.tar.bz2
 
-
 echo DEPENDENCIES installed to local
 export PATH=`pwd`/local/bin:$PATH
 export C_INCLUDE_PATH=`pwd`/local/include
