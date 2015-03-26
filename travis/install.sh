@@ -50,7 +50,7 @@ function dist {
     mkdir tmpecl
     tar --strip-components=2 -C tmpecl -xf ecl.tar.gz
     mv tmpecl/bin/ecl tmpecl/bin/ecl_r
-    cat tmpecl/bin/ecl<<EOF
+    cat >tmpecl/bin/ecl<<EOF
 #!/bin/bash
 if [ ! -d  $ECL_R_SYS_DIR ]; then
   echo ECL_R_SYS_DIR not set or does not exist
