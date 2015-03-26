@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+echo WILL START BUILD...
+export ASGL_HOME_PREC=`pwd`
+export PATH=`pwd`/bin:$PATH
+./configure
+make install-v1
+make check
+echo BUILD FINISHED SUCCESSFULLY!
+echo You can start the solver with ./bin/asgl

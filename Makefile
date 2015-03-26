@@ -140,17 +140,8 @@ bin/ragel:
 	echo 'exit 1' >>bin/ragel
 	chmod +x bin/ragel
 
-build:
-	echo '#!/bin/bash' >>build
-	echo 'set -e' >>build
-	echo 'echo WILL START BUILD...' >>build
-	echo 'export ASGL_HOME_PREC=`pwd`' >>build
-	echo 'export PATH=`pwd`/bin:$$PATH' >>build
-	echo './configure' >>build
-	echo 'make install-v1' >>build
-	echo 'make check' >>build
-	echo 'echo BUILD FINISHED SUCCESSFULLY!' >>build
-	echo 'echo You can start the solver with ./bin/asgl' >>build
+build: support/build
+	cp support/build build
 	chmod +x build
 
 check:
