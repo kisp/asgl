@@ -56,13 +56,14 @@ if [ ! -d  "$ECL_R_SYS_DIR" ]; then
   echo ECL_R_SYS_DIR not set or does not exist
   exit 7
 fi
-echo ecl_r -dir "$ECL_R_SYS_DIR" $@
-exec ecl_r -dir "$ECL_R_SYS_DIR" $@
+echo ecl_r -dir "$ECL_R_SYS_DIR" "$@"
+exec ecl_r -dir "$ECL_R_SYS_DIR" "$@"
 EOF
     chmod +x tmpecl/bin/ecl
     rm ecl.tar.gz
     env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
+        ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13* \
         bash scripts/generate-make-mk.sh
     rm -r tmpecl
 
