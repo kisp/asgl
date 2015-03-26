@@ -37,7 +37,7 @@ fi
 
 echo BEGIN BUILDING ASGL
 export ASGL_HOME_PREC=`pwd`
-./configure
+./configure --without-gist
 make LD_LIBRARY_PATH=`pwd`/local/lib install-v1
 mv bin/asgl bin/asgl_kernel
 echo '#!/bin/bash' >bin/asgl
