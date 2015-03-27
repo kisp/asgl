@@ -177,6 +177,15 @@
 (defun o-pathname (pathname)
   (make-pathname :type "o" :defaults pathname))
 
+(defun c-pathname (pathname)
+  (make-pathname :type "c" :defaults pathname))
+
+(defun data-pathname (pathname)
+  (make-pathname :type "data" :defaults pathname))
+
+(defun eclh-pathname (pathname)
+  (make-pathname :type "eclh" :defaults pathname))
+
 (defun lib-pathname (system)
   (make-pathname
    :name (format nil "lib~A" (asdf/component:component-name system))
@@ -293,6 +302,12 @@
                         (fas-pathname system)
                         (make-mk-pathname system))
                   (mapcar #'o-pathname
+                          (mapcar #'component-pathname sorted-components))
+                  (mapcar #'c-pathname
+                          (mapcar #'component-pathname sorted-components))
+                  (mapcar #'data-pathname
+                          (mapcar #'component-pathname sorted-components))
+                  (mapcar #'eclh-pathname
                           (mapcar #'component-pathname sorted-components)))))
     (format-rule clean-target
                  nil

@@ -2,8 +2,11 @@
 
 (in-package :cl-user)
 
+(require 'cmp)
+
 (defun compile-file-system-p (pathname)
-  (let ((source pathname)
+  (let ((c::*delete-files* nil)
+        (source pathname)
         (o-pathname (make-pathname :type "o" :defaults pathname)))
     (multiple-value-bind (fasl warnings-p failure-p)
         (compile-file source :system-p t)
