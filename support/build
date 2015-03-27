@@ -16,7 +16,8 @@ tar -C depbuild -xf third-party/gecode-4.3.3.tar.gz
 cd depbuild/ecl-13.5.1
 ECLFLAGS="-O2 -march=native -pipe -fomit-frame-pointer"
 env CFLAGS="$ECLFLAGS" CXXFLAGS="$ECLFLAGS" ./configure --enable-threads \
-    --with-cxx --with-dffi --enable-unicode --prefix=$LPREFIX
+    --with-cxx --with-dffi=included --enable-boehm=included --enable-libatomic=included \
+    --enable-unicode --prefix=$LPREFIX
 make
 make install
 cd ../..
