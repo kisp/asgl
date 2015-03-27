@@ -5,6 +5,7 @@ set -e
 function standard {
     export ASGL_HOME=`pwd`
 
+    make check
     make test-$VARIANT
 
     if [ -n "$ASGL_COVER" ]; then
