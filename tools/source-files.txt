@@ -1,5 +1,6 @@
 .travis.yml
 Makefile
+common/asgl-config/asgl-config.lisp
 common/early/apx.lisp
 common/early/count_args.rl
 common/early/cover.lisp

@@ -90,13 +90,13 @@ directory designated by PATHSPEC does actually exist."
   (format eout "~A~%" e)
   (format eout "Backtrace: ~%")
   (loop for x from (- (si::ihs-top) 2) downto 1
-        do
-           (format eout "~A~%" (si::ihs-fun x))
-           (format eout " Args:~%")
-           (let ((env (si::decode-ihs-env (si::ihs-env x))))
-             (dolist (ip env)
-               (format eout "      ~A= ~A~%" (car ip) (cdr ip))))
-           (format eout "~%"))
+     do
+       (format eout "~A~%" (si::ihs-fun x))
+       (format eout " Args:~%")
+       (let ((env (si::decode-ihs-env (si::ihs-env x))))
+         (dolist (ip env)
+           (format eout "      ~A= ~A~%" (car ip) (cdr ip))))
+       (format eout "~%"))
   (format eout "~%"))
 
 (eval-when (:compile-toplevel :execute)

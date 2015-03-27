@@ -268,7 +268,7 @@
   (let* ((pathname (component-pathname component))
          (o-pathname (o-pathname pathname))
          (loads (let ((dependencies
-                        (component-deep-dependencies component)))
+                       (component-deep-dependencies component)))
                   (remove-if-not
                    (lambda (x) (member x dependencies))
                    (items-upto sorted-components component))))

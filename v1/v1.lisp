@@ -251,8 +251,8 @@ Gecode::Search::Statistics s = dfs->statistics();
 
 (defun dfs-search-gist (space)
   (let ((status
-          (ffi:c-inline (space) (:pointer-void) :int
-                        "
+         (ffi:c-inline (space) (:pointer-void) :int
+                       "
 int res = 0;
 #ifdef HAVE_GECODE_GIST_HH
 v1::Foo* foo = ((v1::Foo*)(#0));
