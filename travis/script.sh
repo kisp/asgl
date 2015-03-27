@@ -24,6 +24,7 @@ function dist {
     file bin/asgl_kernel
     env LD_LIBRARY_PATH=`pwd`/local/lib:$LD_LIBRARY_PATH ldd bin/asgl_kernel
     cd ../..
+    export ASGL_HOME=`pwd`
     make test-dist
 }
 
