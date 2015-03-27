@@ -5,11 +5,19 @@ CFLAGS="-std=iso9899:1990"
 AC_LANG_PUSH([C++])
 
 AC_ARG_VAR(ASGL_COVER, Settings this to yes has same effect as --enable-cover)
-
 AC_ARG_ENABLE([cover], AS_HELP_STRING([--enable-cover], [Enable feature cover]))
-
 AS_IF([test "x$enableval" = "xyes"], [AC_DEFINE([ENABLE_COVER])])
 AS_IF([test "x$ASGL_COVER" = "xyes"], [AC_DEFINE([ENABLE_COVER])])
+
+AC_ARG_VAR(ASGL_TIMING, Settings this to yes has same effect as --enable-timing)
+AC_ARG_ENABLE([timing], AS_HELP_STRING([--enable-timing], [Enable feature timing]))
+AS_IF([test "x$enableval" = "xyes"], [AC_DEFINE([ENABLE_TIMING])])
+AS_IF([test "x$ASGL_TIMING" = "xyes"], [AC_DEFINE([ENABLE_TIMING])])
+
+AC_ARG_VAR(ASGL_LOGGING, Settings this to yes has same effect as --enable-logging)
+AC_ARG_ENABLE([logging], AS_HELP_STRING([--enable-logging], [Enable feature logging]))
+AS_IF([test "x$enableval" = "xyes"], [AC_DEFINE([ENABLE_LOGGING])])
+AS_IF([test "x$ASGL_LOGGING" = "xyes"], [AC_DEFINE([ENABLE_LOGGING])])
 
 AC_ARG_WITH([gist],
     AS_HELP_STRING([--without-gist], [Ignore presence of gist and disable it]))

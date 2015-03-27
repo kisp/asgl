@@ -40,8 +40,9 @@ directory designated by PATHSPEC does actually exist."
      (if it ,then ,else)))
 
 ;;; timing
-(defvar *with-timing* t)
+(defvar *with-timing* #+timing t #-timing nil)
 
+#+timing
 (defun call-with-timing (form thunk)
   (if (not *with-timing*)
       (funcall thunk)
@@ -64,21 +65,24 @@ directory designated by PATHSPEC does actually exist."
               (format *error-output* " (aborted by a non-local toc)~%")))))))
 
 (defmacro with-timing (form)
-  `(call-with-timing ',form (lambda () ,form)))
+  #+timing
+  `(call-with-timing ',form (lambda () ,form))
+  #-timing
+  form)
 
 ;;; logging
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defconstant *with-logging* nil))
+(defvar *with-logging* #+logging t #-logging nil)
 
 (defmacro log* (&rest args)
-  (when *with-logging*
-    `(progn
-       (fresh-line *error-output*)
-       (write-string "[log] " *error-output*)
-       (format *error-output* ,@args)
-       (terpri *error-output*)
-       nil)))
-
+  #+logging
+  `(when *with-logging*
+     (fresh-line *error-output*)
+     (write-string "[log] " *error-output*)
+     (format *error-output* ,@args)
+     (terpri *error-output*)
+     nil)
+  #-logging
+  nil)
 
 ;;; backtrace
 (defun print-error-log (eout e)

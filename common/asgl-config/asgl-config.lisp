@@ -38,3 +38,35 @@ res = 1;
 
 (when (ENABLE-COVER)
   (push :cover *features*))
+
+(defun ENABLE-TIMING ()
+  (zerop
+   (ffi:c-inline () () :int
+                 "{
+int res;
+#ifdef ENABLE_TIMING
+res = 0;
+#else
+res = 1;
+#endif
+@(return 0) = res;
+}")))
+
+(when (ENABLE-TIMING)
+  (push :timing *features*))
+
+(defun ENABLE-LOGGING ()
+  (zerop
+   (ffi:c-inline () () :int
+                 "{
+int res;
+#ifdef ENABLE_LOGGING
+res = 0;
+#else
+res = 1;
+#endif
+@(return 0) = res;
+}")))
+
+(when (ENABLE-LOGGING)
+  (push :logging *features*))

@@ -671,7 +671,7 @@ res = 7;
                             (print-error-log *error-output* c)
                             (format t "ERROR: ~A~%" c)
                             (ext:quit 1))))
-  (format *error-output* "~S~%" ext:*command-args*)
+  (log* "~S" ext:*command-args*)
   #+cover
   (when (probe-file *cover-file*)
     (cover:load-points *cover-file*))
