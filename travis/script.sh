@@ -23,6 +23,8 @@ function dist {
     file bin/asgl
     file bin/asgl_kernel
     env LD_LIBRARY_PATH=`pwd`/local/lib:$LD_LIBRARY_PATH ldd bin/asgl_kernel
+    cd ../..
+    make test-dist
 }
 
 if [ "$VARIANT" == "dist" ]; then

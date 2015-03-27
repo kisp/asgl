@@ -43,6 +43,10 @@ install-v1: v1/v1
 test-v1: install-v1 data/iccma15_solutions data/iccma15_testcases
 	bundle exec cucumber ${CUKE_ARGS}
 
+test-dist: data/iccma15_solutions data/iccma15_testcases
+	cp user/asgl/bin/asgl bin/asgl
+	bundle exec cucumber ${CUKE_ARGS}
+
 common/early/myfoo.cpp: common/early/myfoo.rl
 	ragel -G2 common/early/myfoo.rl -o common/early/myfoo.cpp
 
