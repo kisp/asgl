@@ -137,7 +137,7 @@ dist:
 	rm -rf dist/asgl/timings
 	echo DIST PREPARED
 #(cd dist/asgl && ./build )
-	( cd dist && tar -cfz asgl.tar.gz asgl/* )
+	( cd dist && tar -czf asgl.tar.gz asgl/* )
 	du -h dist/asgl.tar.gz
 
 bin/ragel:
