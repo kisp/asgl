@@ -15,6 +15,17 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
+v1/v1.fas: v1/v1.o
+	rm -f v1/v1.fas
+	ecl -norc \
+	  -eval "(require 'cmp)" \
+	  -eval "(defvar *lisp-files* nil)" \
+	  -eval '(push "v1/v1.o" *lisp-files*)' \
+	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
+	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/Foo.o"))' \
+	  -eval '(quit)'
+	test -f v1/v1.fas
+
 v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early.fas \
 	  lib/myam/myam.fas lib/alexandria/alexandria.fas lib/arnesi-list-match/arnesi-list-match.fas
 	rm -f v1/v1.o
