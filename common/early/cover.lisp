@@ -3,9 +3,14 @@
 (defpackage :cover
   (:use :cl)
   (:shadow #:defun #+nil #:defmacro)
-  (:export #:annotate #:report #:reset #:forget
-           #:forget-all #:*line-limit*
-           #:save-points #:load-points))
+  (:export #:annotate
+           #+cover #:report
+           #+cover #:reset
+           #+cover #:forget
+           #+cover #:forget-all
+           #+cover #:*line-limit*
+           #+cover #:save-points
+           #+cover #:load-points))
 
 (in-package :cover)
 
@@ -36,6 +41,7 @@
 |  SOFTWARE.                                                                 |
 |----------------------------------------------------------------------------|#
 
+#+cover
 (defstruct (point (:conc-name nil)
                   (:type list))
   (hit 0)
@@ -44,13 +50,19 @@
   (name nil)
   (subs nil))
 
+#+cover
 (defvar *count* 0)
+#+cover
 (defvar *hit* 1)
+#+cover
 (defvar *points* nil)
 
+#+cover
 (defvar *annotating* nil)
+#+cover
 (defvar *testing* nil)
 
+#+cover
 (cl:defun save-points (pathname)
   (let ((pathname (merge-pathnames pathname)))
     (macrolet ((frob (x)
@@ -65,30 +77,36 @@
           (frob *points*))
         t))))
 
+#+cover
 (cl:defun load-points (pathname)
   (let ((pathname (merge-pathnames pathname))
         (*load-verbose* nil))
     (format *error-output* ";;; Load cover data ~A~%" pathname)
     (load pathname)))
 
+#+cover
 (cl:defun forget (&rest ids)
   (forget1 ids *points*)
   t)
 
+#+cover
 (cl:defun forget1 (names ps)
   (dolist (p ps)
     (when (member (id p) names)
       (setf (status p) :forgotten))
     (forget1 names (subs p))))
 
+#+cover
 (cl:defun forget-all ()
   (setq *points* nil)
   (setq *hit* 1)
   (setq *count* 0)
   t)
 
+#+cover
 (cl:defun reset () (incf *hit*) t)
 
+#+cover
 (cl:defun add-top-point (p)
   (setq p (copy-tree p))
   (let ((old (find (fn-name p) *points*
@@ -100,6 +118,7 @@
                    (nconc *points*
                           (list p)))))))
 
+#+cover
 (cl:defun record-hit (p)
   (unless (= (hit p) *hit*)
     (setf (hit p) *hit*)
@@ -108,6 +127,7 @@
           (setf (hit old) *hit*)
           (add-point p)))))
 
+#+cover
 (cl:defun locate (name)
   (find name
         (if (not (cdr name))
@@ -116,6 +136,7 @@
               (if p (subs p))))
         :key #'name :test #'equal))
 
+#+cover
 (cl:defun add-point (p)
   (let ((sup (locate (cdr (name p)))))
     (when sup
@@ -126,10 +147,13 @@
       (dolist (p (subs p))
         (setf (id p) (incf *count*))))))
 
+#+cover
 (defvar *line-limit* 75)
 
+#+cover
 (declaim (special *depth* *all* *out* *done*))
 
+#+cover
 (cl:defun report
     (&key (fn nil)
        (out *standard-output*)
@@ -152,12 +176,14 @@
                  fn))))
   (values))
 
+#+cover
 (cl:defun fn-name (p)
   (let ((form (cadr (car (name p)))))
     (and (consp form)
          (consp (cdr form))
          (cadr form))))
 
+#+cover
 (cl:defun report1 (ps *all* *out*)
   (let ((*depth* 0) (*done* t))
     (mapc #'report2 ps)
@@ -165,6 +191,7 @@
       (format *out*
               "~%;All points exercised."))))
 
+#+cover
 (cl:defun report2 (p)
   (case (status p)
     (:forgotten nil)
@@ -177,11 +204,13 @@
            ((reportable p)
             (report3 p))))))
 
+#+cover
 (cl:defun reportable (p)
   (and (eq (status p) :show)
        (or *all*
            (not (= (hit p) *hit*)))))
 
+#+cover
 (cl:defun reportable-subs (p)
   (and (not (eq (status p) :forgotten))
        (or *all* (not (reportable p)))
@@ -190,6 +219,7 @@
                      (reportable-subs s)))
              (subs p))))
 
+#+cover
 (cl:defun report3 (p)
   (setq *done* nil)
   (let* ((*print-pretty* nil)
@@ -206,9 +236,14 @@
     (format *out* "~%~A  <~S>" m (id p))))
 
 (cl:defmacro annotate (t-or-nil)
+  #-cover (declare (ignore t-or-nil))
+  #+cover
   `(eval-when (eval load compile)
-     (annotate1 ,t-or-nil)))
+     (annotate1 ,t-or-nil))
+  #-cover
+  nil)
 
+#+cover
 (cl:defun annotate1 (flag)
   (shadowing-import
    (set-difference '(defun #+nil defmacro)
@@ -217,6 +252,7 @@
     (format *error-output* "Coverage annotation applied.~%"))
   (setq *annotating* (not (null flag))))
 
+#+cover
 (cl:defmacro defun (n argl &body b)
   (process 'defun 'cl:defun n argl b))
 
@@ -224,6 +260,7 @@
 (cl:defmacro defmacro (n a &body b)
   (process 'defmacro 'cl:defmacro n a b))
 
+#+cover
 (cl:defun parse-body (body)
   (let ((decls nil))
     (when (stringp (car body))
@@ -235,6 +272,7 @@
        (push (pop body) decls))
     (values (nreverse decls) body)))
 
+#+cover
 (defvar *check*
   '((or . c-or) (and . c-and)
     (if . c-if) (when . c-when)
@@ -242,6 +280,7 @@
     (cond . c-cond) (case . c-case)
     (typecase . c-typecase)))
 
+#+cover
 (cl:defun process (cdef def fn argl b)
   (if (not (or *annotating*
                (find fn
@@ -262,16 +301,20 @@
                                     name)
                         name b)))))))
 
+#+cover
 (defvar *fix*
   '((c-or . or) (c-and . and) (c-if . if)
     (c-when . when) (c-unless . unless)
     (c-cond . cond) (c-case . case)
     (c-typecase . typecase)))
 
+#+cover
 (declaim (special *subs* *sup*))
 
+#+cover
 (cl:defmacro sup-mac () nil)
 
+#+cover
 (cl:defmacro def (name args form)
   `(cl:defmacro ,name (&whole w ,@ args
                        &environment env)
@@ -285,12 +328,15 @@
        (setf (subs p) (nreverse *subs*))
        (c0 p *sup* (list form)))))
 
+#+cover
 (cl:defmacro c (body &rest msg)
   (c1 `(list ,body) msg :show))
 
+#+cover
 (cl:defmacro c-hide (b)
   (c1 `(list ,b) (list :reach b) :hidden))
 
+#+cover
 (eval-when (eval load compile)
 
   (cl:defun c1 (b m s)
@@ -307,14 +353,17 @@
        (record-hit ',p)
        .,b)) )
 
+#+cover
 (def c-case (key &rest cs)
   `(case ,(c-hide key)
      .,(c-case0 cs)))
 
+#+cover
 (def c-typecase (key &rest cs)
   `(typecase ,(c-hide key)
      .,(c-case0 cs)))
 
+#+cover
 (cl:defun c-case0 (cs)
   (let ((stuff (mapcar #'c-case1 cs)))
     (when (not (member (caar (last cs))
@@ -324,30 +373,36 @@
                    `((t ,(c nil :select-none))))))
     stuff))
 
+#+cover
 (cl:defun c-case1 (clause)
   `(,(car clause)
      ,(c `(progn ., (cdr clause)) :select
          (car clause))))
 
+#+cover
 (def c-if (pred then &optional (else nil))
   `(if ,(c-hide pred)
        ,(c then :non-null pred)
        ,(c else :null pred)))
 
+#+cover
 (def c-when (pred &rest actions)
   `(if ,(c-hide pred)
        ,(c `(progn ., actions)
            :non-null pred)
        ,(c nil :null pred)))
 
+#+cover
 (def c-unless (pred &rest actions)
   `(if (not ,(c-hide pred))
        ,(c `(progn ., actions) :null pred)
        ,(c nil :non-null pred)))
 
+#+cover
 (def c-cond (&rest cs)
   (c-cond0 (gensym) cs))
 
+#+cover
 (cl:defun c-cond0 (var cs)
   (cond ((null cs) (c nil :all-null))
         ((eq (caar cs) t)
@@ -369,8 +424,10 @@
                   ,(c-cond0 var
                             (cdr cs)))))))
 
+#+cover
 (def c-or (&rest ps) (c-or0 ps))
 
+#+cover
 (cl:defun c-or0 (ps)
   (if (null (cdr ps))
       (c (car ps) :eval-all (car ps))
@@ -381,18 +438,22 @@
                    (car ps))
                ,(c-or0 (cdr ps)))))))
 
+#+cover
 (def c-and (&rest ps)
   `(cond .,(maplist #'c-and0
                     (or ps (list t)))))
 
+#+cover
 (cl:defun c-and0 (ps)
   (if (null (cdr ps))
       `(t ,(c (car ps) :eval-all (car ps)))
       `((not ,(c-hide (car ps)))
         ,(c nil :first-null (car ps)))))
 
+#+cover
 (deftype c-and (&rest b) `(and ., b))
 
+#+cover
 (deftype c-or (&rest b) `(or ., b))
 
 #|----------------------------------------------------------------------------|
