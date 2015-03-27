@@ -14,13 +14,18 @@ tar -C depbuild -xf third-party/ecl-13.5.1.tgz
 tar -C depbuild -xf third-party/gecode-4.3.3.tar.gz
 
 cd depbuild/ecl-13.5.1
-env CFLAGS="-O0" CXXFLAGS="-O0" ./configure --enable-threads --with-cxx --with-dffi --enable-unicode --prefix=$LPREFIX
+ECLFLAGS="-O2 -march=native -pipe -fomit-frame-pointer"
+env CFLAGS="$ECLFLAGS" CXXFLAGS="$ECLFLAGS" ./configure --enable-threads \
+    --with-cxx --with-dffi --enable-unicode --prefix=$LPREFIX
 make
 make install
 cd ../..
 
 cd depbuild/gecode-4.3.3
-env CFLAGS="-O0" CXXFLAGS="-O0" ./configure --disable-gist --disable-qt --disable-examples --disable-flatzinc --disable-float-vars --disable-set-vars --prefix=$LPREFIX
+GECODEFLAGS="-O3 -march=native -pipe -fomit-frame-pointer"
+env CFLAGS="$GECODEFLAGS" CXXFLAGS="$GECODEFLAGS" ./configure --disable-gist \
+    --disable-qt --disable-examples --disable-flatzinc --disable-float-vars \
+    --disable-set-vars --prefix=$LPREFIX
 make
 make install
 cd ../..
