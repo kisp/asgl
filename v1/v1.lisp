@@ -678,7 +678,7 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL version 0.0.2")
+          (write-line "ASGL version 0.0.3")
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
          ((equal "--formats" (second ext:*command-args*))
           (write-line "[apx]"))
