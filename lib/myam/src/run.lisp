@@ -43,7 +43,7 @@
 an EXPLAIN method is implemented. A symbol will be treated as naming a
 class, which is instantiated with no initargs.")
 
-(defvar *run-with-dribble-output* nil
+(defvar *run-with-dribble-output* t
   "Whether RUN should output information while running tests.")
 
 (defun default-explainer ()
@@ -185,6 +185,7 @@ run."))
 the status of the tests."))
 
 (defmethod %run ((test test-case))
+  #+nil
   (let ((*package* (runtime-package test)))
     (format *test-dribble* "~&; ~S: " (name test)))
   (run-resolving-dependencies test))

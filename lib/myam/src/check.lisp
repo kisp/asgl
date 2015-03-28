@@ -125,6 +125,22 @@ when appropiate."))
   (:method ((o t)) nil)
   (:method ((o test-skipped)) t))
 
+(defvar *column* 0)
+
+(defun write-dot ()
+  (when (> *column* 70)
+    (terpri *standard-output*)
+    (setq *column* 0))
+  (write-char #\. *standard-output*)
+  (incf *column*))
+
+(defvar *dribble-count* 0)
+(declaim (inline dribble-dot))
+(defun dribble-dot ()
+  (when (zerop (mod *dribble-count* 1000))
+    (write-dot))
+  (incf *dribble-count*))
+
 (defun add-result (result-type &rest make-instance-args)
   "Create a TEST-RESULT object of type RESULT-TYPE passing it the
   initialize args MAKE-INSTANCE-ARGS and adds the resulting
@@ -133,6 +149,8 @@ when appropiate."))
     (let ((result (apply #'make-instance result-type
                          (append make-instance-args
                                  (list :test-case current-test)))))
+      (dribble-dot)
+      #+nil
       (etypecase result
         (test-passed  (force-output-char *test-dribble* #\.))
         (unexpected-test-failure (force-output-char *test-dribble* #\X))
