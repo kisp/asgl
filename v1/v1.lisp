@@ -633,7 +633,7 @@ res = 7;
 
 (defun make-graph-input (input)
   (typecase input
-    (pathname (make-instance 'apx-input :pathname input))
+    ((or pathname string) (make-instance 'apx-input :pathname input))
     (vector (make-instance 'vector-input :vector input))))
 
 (defmethod read-graph-input ((input apx-input))
@@ -943,7 +943,7 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL version 0.0.4")
+          (write-line "ASGL version 0.0.5")
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
          ((equal "--formats" (second ext:*command-args*))
           (write-line "[apx]"))
