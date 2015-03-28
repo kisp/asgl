@@ -12,23 +12,51 @@
   (is (set-equal expected result :test #'set-equal)
       "expected ~S~%but got ~S" expected result))
 
-(defun check-solutions (semantic graph expected)
-  (let ((solutions (funcall semantic graph)))
+(defun check-semantic (graph expected all-fn one-fn dc-fn ds-fn)
+  (let ((solutions (funcall all-fn graph)))
     (is (setp solutions :test #'set-equal)
         "solutions are not a set under set-equal:~%~S" solutions)
-    (xteql expected solutions)))
+    (xteql expected solutions)
+    ;; one
+    (multiple-value-bind (extension exists-p)
+        (funcall one-fn graph)
+      (is (eql (not (null solutions)) exists-p))
+      (if exists-p
+          (is (member extension solutions :test #'set-equal))
+          (is (null extension))))
+    (dotimes (a (early:order graph))
+      (is (eql (not (null (some (lambda (solution) (member a solution)) solutions)))
+               (funcall dc-fn graph a)))
+      (is (eql (every (lambda (solution) (member a solution)) solutions)
+               (funcall ds-fn graph a))))))
 
 (defun check-complete (expected graph)
-  (check-solutions #'cl-user::complete-all (early:make-graph-from-adj graph) expected))
+  (check-semantic (early:make-graph-from-adj graph) expected
+                  #'cl-user::$$complete-all
+                  #'cl-user::$$complete-one
+                  #'cl-user::$$complete-dc
+                  #'cl-user::$$complete-ds))
 
 (defun check-grounded (expected graph)
-  (check-solutions #'cl-user::grounded-all (early:make-graph-from-adj graph) expected))
+  (check-semantic (early:make-graph-from-adj graph) expected
+                  #'cl-user::$$grounded-all
+                  #'cl-user::$$grounded-one
+                  #'cl-user::$$grounded-dc
+                  #'cl-user::$$grounded-ds))
 
 (defun check-preferred (expected graph)
-  (check-solutions #'cl-user::preferred-all (early:make-graph-from-adj graph) expected))
+  (check-semantic (early:make-graph-from-adj graph) expected
+                  #'cl-user::$$preferred-all
+                  #'cl-user::$$preferred-one
+                  #'cl-user::$$preferred-dc
+                  #'cl-user::$$preferred-ds))
 
 (defun check-stable (expected graph)
-  (check-solutions #'cl-user::stable-all (early:make-graph-from-adj graph) expected))
+  (check-semantic (early:make-graph-from-adj graph) expected
+                  #'cl-user::$$stable-all
+                  #'cl-user::$$stable-one
+                  #'cl-user::$$stable-dc
+                  #'cl-user::$$stable-ds))
 
 (defun seql (a b)
   (assert (alexandria:setp a))

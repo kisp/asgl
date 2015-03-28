@@ -12,6 +12,9 @@
 ;;;; which prints a human readable summary (number passed, number
 ;;;; failed, what failed and why, etc.) of a list of test results.
 
+(defun safe-subseq (sequence start end)
+  (subseq sequence start (min end (length sequence))))
+
 (defgeneric explain (explainer results &optional stream recursive-depth))
 
 (defmethod explain ((exp detailed-text-explainer) results
@@ -33,8 +36,8 @@
       (terpri stream)
       (terpri stream)
       (when failed
-        (output "Failure Details:~%")
-        (dolist (f (reverse failed))
+        (output "Failure Details (limited to max 10):~%")
+        (dolist (f (safe-subseq failed 0 10))
           (output "--------------------------------~%")
           (output "~A ~@{[~A]~}: ~%"
                   (name (test-case f))

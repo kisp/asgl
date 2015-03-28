@@ -169,7 +169,7 @@ build: support/build
 
 check:
 	timeout 5s ./bin/asgl
-	timeout 2m ./bin/asgl --check
+	timeout 15m ./bin/asgl --check
 
 common/asgl-config/asgl-config.o: asgl_config.h
 

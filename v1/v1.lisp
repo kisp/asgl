@@ -220,13 +220,14 @@ default: @(return 0) = 100; break;
                 "{ @(return 0) = ((Gecode::DFS<v1::Foo>*)(#0))->next(); }"))
 
 (defun dfs-statistics (dfs)
-  (ffi:c-inline (dfs) (:pointer-void)
-                (values :unsigned-long-long
-                        :unsigned-long-long
-                        :unsigned-long-long
-                        :unsigned-long-long
-                        :unsigned-long-long)
-                "
+  (multiple-value-bind (fail node depth restart nogood)
+      (ffi:c-inline (dfs) (:pointer-void)
+          (values :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long)
+        "
 Gecode::DFS<v1::Foo>* dfs = (Gecode::DFS<v1::Foo>*)(#0);
 
 Gecode::Search::Statistics s = dfs->statistics();
@@ -237,7 +238,10 @@ Gecode::Search::Statistics s = dfs->statistics();
 @(return 3) = s.restart;
 @(return 4) = s.nogood;
 
-"))
+")
+    (values :fail fail :node node
+            :depth depth :restart restart
+            :nogood nogood)))
 
 (defun dfs-search-all (space)
   (let ((dfs (make-dfs space)))
@@ -514,16 +518,41 @@ res = 7;
            do (write-char #\,))))
   (when (eql task :ee) (write-char #\])))
 
+(defun dc-ds1 (graph task semantic arg-index)
+  (flet ((contains-arg-p (extension)
+           (member arg-index extension)))
+    (let ((extensions (all-for-semantic graph semantic)))
+      (ecase task
+        (:ds (every #'contains-arg-p extensions))
+        (:dc (not (null (some #'contains-arg-p extensions))))))))
+
 (defun dc-ds (graph task semantic hash arg)
   (let ((arg-index (gethash arg hash)))
-    (flet ((contains-arg-p (extension)
-             (member arg-index extension)))
-      (let ((extensions (all-for-semantic graph semantic)))
-        (if (ecase task
-              (:ds (every #'contains-arg-p extensions))
-              (:dc (some #'contains-arg-p extensions)))
-            (write-string "YES")
-            (write-string "NO"))))))
+    (if (dc-ds1 graph task semantic arg-index)
+        (write-string "YES")
+        (write-string "NO"))))
+
+(defun $$complete-all (graph) (complete-all graph))
+(defun $$stable-all (graph) (stable-all graph))
+(defun $$preferred-all (graph) (preferred-all graph))
+(defun $$grounded-all (graph) (grounded-all graph))
+
+(defun $$complete-one (graph) (values (first (complete-all graph)) t))
+(defun $$stable-one (graph) (let ((solutions (stable-all graph)))
+                              (when solutions
+                                (values (first solutions) t))))
+(defun $$preferred-one (graph) (values (first (preferred-all graph)) t))
+(defun $$grounded-one (graph) (values (first (grounded-all graph)) t))
+
+(defun $$complete-dc (graph a) (dc-ds1 graph :dc :co a))
+(defun $$stable-dc (graph a) (dc-ds1 graph :dc :st a))
+(defun $$preferred-dc (graph a) (dc-ds1 graph :dc :pr a))
+(defun $$grounded-dc (graph a) (dc-ds1 graph :dc :gr a))
+
+(defun $$complete-ds (graph a) (dc-ds1 graph :ds :co a))
+(defun $$stable-ds (graph a) (dc-ds1 graph :ds :st a))
+(defun $$preferred-ds (graph a) (dc-ds1 graph :ds :pr a))
+(defun $$grounded-ds (graph a) (dc-ds1 graph :ds :gr a))
 
 (defun main% (&key (fo "apx") f p a)
   (assert (equal fo "apx"))
@@ -577,6 +606,7 @@ res = 7;
             (load "tests-grounded.lisp")
             (load "tests-stable.lisp")
             (load "tests-preferred.lisp"))
+          (format t "Running self-check... This will take around 5 min.~%")
           (if (myam:run! :tests)
               (format t "~&SELF-CHECK PASSED SUCCESSFULLY~%")
               (progn
