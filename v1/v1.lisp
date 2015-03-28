@@ -690,17 +690,19 @@ res = 7;
                                :space space))
        (ds-task (make-instance 'ds-engine-grounded
                                :space space))))
-    (t (etypecase task
-         (ee-task (make-instance 'ee-engine
-                                 :gecode-engine (cl-user::make-dfs space)
-                                 :engine-vector vector))
-         (se-task (make-instance 'se-engine
-                                 :gecode-engine (cl-user::make-dfs space)
-                                 :engine-vector vector))
-         (dc-task (make-instance 'dc-engine
-                                 :gecode-engine (cl-user::make-dfs space)))
-         (ds-task (make-instance 'ds-engine
-                                 :gecode-engine (cl-user::make-dfs space)))))))
+    (t (prog1
+           (etypecase task
+             (ee-task (make-instance 'ee-engine
+                                     :gecode-engine (cl-user::make-dfs space)
+                                     :engine-vector vector))
+             (se-task (make-instance 'se-engine
+                                     :gecode-engine (cl-user::make-dfs space)
+                                     :engine-vector vector))
+             (dc-task (make-instance 'dc-engine
+                                     :gecode-engine (cl-user::make-dfs space)))
+             (ds-task (make-instance 'ds-engine
+                                     :gecode-engine (cl-user::make-dfs space))))
+         (cl-user::delete-foo space)))))
 
 (defclass se-engine-grounded ()
   ((engine-vector :reader engine-vector :initarg :engine-vector)
@@ -741,6 +743,7 @@ res = 7;
               (setq first-time nil)
               (write-char #\,))
        do (cl-user::space-print-in solution engine-vector)
+       do (cl-user::delete-foo solution)
        do (terpri))
     (write-line "]")
     nil))
@@ -751,7 +754,8 @@ res = 7;
     (loop
        for solution = (cl-user::dfs-next gecode-engine)
        until (si:null-pointer-p solution)
-       collect (cl-user::space-collect-in solution engine-vector))))
+       collect (cl-user::space-collect-in solution engine-vector)
+         do (cl-user::delete-foo solution))))
 
 (defmethod drive-search-and-print (task (engine se-engine))
   (let ((gecode-engine (gecode-engine engine))
@@ -759,7 +763,9 @@ res = 7;
     (let ((space (cl-user::dfs-next gecode-engine)))
       (if (si:null-pointer-p space)
           (write-string "NO")
-          (cl-user::space-print-in space engine-vector)))
+          (progn
+            (cl-user::space-print-in space engine-vector)
+            (cl-user::delete-foo space))))
     (terpri)
     nil))
 
@@ -769,7 +775,9 @@ res = 7;
     (let ((space (cl-user::dfs-next gecode-engine)))
       (if (si:null-pointer-p space)
           (values nil nil)
-          (values (cl-user::space-collect-in space engine-vector)
+          (values (prog1
+                      (cl-user::space-collect-in space engine-vector)
+                    (cl-user::delete-foo space))
                   t)))))
 
 (defmethod drive-search-and-print (task (engine dc-engine))
@@ -777,7 +785,9 @@ res = 7;
     (let ((space (cl-user::dfs-next gecode-engine)))
       (if (si:null-pointer-p space)
           (write-string "NO")
-          (write-string "YES")))
+          (progn
+            (write-string "YES")
+            (cl-user::delete-foo space))))
     (terpri)
     nil))
 
@@ -786,14 +796,18 @@ res = 7;
     (let ((space (cl-user::dfs-next gecode-engine)))
       (if (si:null-pointer-p space)
           nil
-          t))))
+          (prog1
+              t
+            (cl-user::delete-foo space))))))
 
 (defmethod drive-search-and-print (task (engine ds-engine))
   (let ((gecode-engine (gecode-engine engine)))
     (let ((space (cl-user::dfs-next gecode-engine)))
       (if (si:null-pointer-p space)
           (write-string "YES")
-          (write-string "NO")))
+          (progn
+            (write-string "NO")
+            (cl-user::delete-foo space))))
     (terpri)
     nil))
 
@@ -802,25 +816,32 @@ res = 7;
     (let ((space (cl-user::dfs-next gecode-engine)))
       (if (si:null-pointer-p space)
           t
-          nil))))
+          (prog1
+              nil
+            (cl-user::delete-foo space))))))
 
 (defmethod drive-search-and-print (task (engine se-engine-grounded))
   (let ((space (engine-space engine))
         (engine-vector (engine-vector engine)))
     (cl-user::space-status space)
-    (cl-user::space-print-in space engine-vector)))
+    (cl-user::space-print-in space engine-vector)
+    (cl-user::delete-foo space)))
 
 (defmethod drive-search-and-collect (task (engine se-engine-grounded))
   (let ((space (engine-space engine))
         (engine-vector (engine-vector engine)))
     (cl-user::space-status space)
-    (values (cl-user::space-collect-in space engine-vector) t)))
+    (multiple-value-prog1
+        (values (cl-user::space-collect-in space engine-vector) t)
+      (cl-user::delete-foo space))))
 
 (defmethod drive-search-and-collect (task (engine ee-engine-grounded))
   (let ((space (engine-space engine))
         (engine-vector (engine-vector engine)))
     (cl-user::space-status space)
-    (list (cl-user::space-collect-in space engine-vector))))
+    (prog1
+        (list (cl-user::space-collect-in space engine-vector))
+      (cl-user::delete-foo space))))
 
 (defmethod drive-search-and-print :before (task (engine ee-engine-grounded))
   (write-string "["))
@@ -838,6 +859,7 @@ res = 7;
       (if (eql :failed status)
           (write-string "YES")
           (write-string "NO"))
+      (cl-user::delete-foo space)
       (terpri))))
 
 (defmethod drive-search-and-collect (task (engine dc-engine-grounded))
@@ -847,9 +869,11 @@ res = 7;
     (cl-user::post-must-be-false space (task-arg task))
     (let ((status (cl-user::space-status space)))
       (log* "space status is ~S" status)
-      (if (eql :failed status)
-          t
-          nil))))
+      (prog1
+          (if (eql :failed status)
+              t
+              nil)
+        (cl-user::delete-foo space)))))
 
 (defmethod drive-search-and-print (task (engine ds-engine-grounded))
   (let ((space (engine-space engine)))
@@ -861,6 +885,7 @@ res = 7;
       (if (eql :failed status)
           (write-string "YES")
           (write-string "NO"))
+      (cl-user::delete-foo space)
       (terpri))))
 
 (defmethod drive-search-and-collect (task (engine ds-engine-grounded))
@@ -870,9 +895,11 @@ res = 7;
     (cl-user::post-must-be-false space (task-arg task))
     (let ((status (cl-user::space-status space)))
       (log* "space status is ~S" status)
-      (if (eql :failed status)
-          t
-          nil))))
+      (prog1
+          (if (eql :failed status)
+              t
+              nil)
+        (cl-user::delete-foo space)))))
 
 (in-package :cl-user)
 
@@ -943,7 +970,7 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL version 0.0.5")
+          (write-line "ASGL version 0.0.6")
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
          ((equal "--formats" (second ext:*command-args*))
           (write-line "[apx]"))
