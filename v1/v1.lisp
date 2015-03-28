@@ -755,7 +755,7 @@ res = 7;
        for solution = (cl-user::dfs-next gecode-engine)
        until (si:null-pointer-p solution)
        collect (cl-user::space-collect-in solution engine-vector)
-         do (cl-user::delete-foo solution))))
+       do (cl-user::delete-foo solution))))
 
 (defmethod drive-search-and-print (task (engine se-engine))
   (let ((gecode-engine (gecode-engine engine))
