@@ -199,6 +199,24 @@ default: @(return 0) = 100; break;
     (loop for i from 0 below (vars-size vars)
        collect (vars-nth vars i))))
 
+(defun space-print-in (space vector)
+  (write-string "[")
+  (loop with first-time = t
+     for tail on (space-to-list space)
+     for i upfrom 0
+     do (when (eql 1 (car tail))
+          (if first-time
+              (setq first-time nil)
+              (write-string ","))
+          (write-string (aref vector i))))
+  (write-string "]"))
+
+(defun space-collect-in (space vector)
+  (loop for tail on (space-to-list space)
+     for i upfrom 0
+     when (eql 1 (car tail))
+     collect (aref vector i)))
+
 (defun space-vars (space)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = (void*)(((v1::Foo*)(#0))->getVars());}"))
@@ -222,12 +240,12 @@ default: @(return 0) = 100; break;
 (defun dfs-statistics (dfs)
   (multiple-value-bind (fail node depth restart nogood)
       (ffi:c-inline (dfs) (:pointer-void)
-          (values :unsigned-long-long
-                  :unsigned-long-long
-                  :unsigned-long-long
-                  :unsigned-long-long
-                  :unsigned-long-long)
-        "
+                    (values :unsigned-long-long
+                            :unsigned-long-long
+                            :unsigned-long-long
+                            :unsigned-long-long
+                            :unsigned-long-long)
+                    "
 Gecode::DFS<v1::Foo>* dfs = (Gecode::DFS<v1::Foo>*)(#0);
 
 Gecode::Search::Statistics s = dfs->statistics();
@@ -532,38 +550,377 @@ res = 7;
         (write-string "YES")
         (write-string "NO"))))
 
-(defun $$complete-all (graph) (complete-all graph))
-(defun $$stable-all (graph) (stable-all graph))
+(defpackage :oo
+  (:use :cl :early)
+  (:export #:print-answer
+           #:collect-answer
+           #:make-semantic
+           #:make-task
+           #:make-graph-input))
+
+(in-package :oo)
+
+(defclass graph-input () ())
+(defclass task () ())
+(defclass semantic () ())
+
+(defclass complete (semantic) ())
+(defclass grounded (complete) ())
+(defclass preferred (complete) ())
+(defclass stable (preferred) ())
+
+(defclass d-task (task)
+  ((hash :accessor task-hash :initform nil)
+   (arg-name :reader task-arg-name :initarg :arg-name)))
+
+(defclass ee-task (task) ())
+(defclass se-task (task) ())
+(defclass dc-task (d-task) ())
+(defclass ds-task (d-task) ())
+
+(defmethod (setf task-hash) (value (task task)))
+
+(defmethod task-arg ((task d-task))
+  (gethash (task-arg-name task) (task-hash task)))
+
+(defclass apx-input (graph-input)
+  ((pathname :reader apx-pathname :initarg :pathname)))
+
+(defclass vector-input (graph-input)
+  ((vector :reader graph-input-vector :initarg :vector)))
+
+(defmethod print-answer ((input graph-input)
+                         (task task)
+                         (semantic semantic))
+  (multiple-value-bind (graph vector hash)
+      (read-graph-input input)
+    (setf (task-hash task) hash)
+    (let ((space (make-initial-space graph task semantic)))
+      (cl-user::with-post-env-setup (space)
+        (constrain-space space graph task semantic)
+        (constrain-arg space task semantic))
+      (branch-space space task semantic)
+      (let ((engine (make-search-engine space task semantic vector)))
+        (drive-search-and-print task engine)))))
+
+(defmethod collect-answer ((input graph-input)
+                           (task task)
+                           (semantic semantic))
+  (multiple-value-bind (graph vector hash)
+      (read-graph-input input)
+    (setf (task-hash task) hash)
+    (let ((space (make-initial-space graph task semantic)))
+      (cl-user::with-post-env-setup (space)
+        (constrain-space space graph task semantic)
+        (constrain-arg space task semantic))
+      (branch-space space task semantic)
+      (let ((engine (make-search-engine space task semantic vector)))
+        (drive-search-and-collect task engine)))))
+
+(defun make-semantic (semantic)
+  (ecase semantic
+    (:co (make-instance 'complete))
+    (:gr (make-instance 'grounded))
+    (:st (make-instance 'stable))
+    (:pr (make-instance 'preferred))))
+
+(defun make-task (task &optional arg)
+  (ecase task
+    (:ee (make-instance 'ee-task))
+    (:se (make-instance 'se-task))
+    (:dc (make-instance 'dc-task :arg-name arg))
+    (:ds (make-instance 'ds-task :arg-name arg))))
+
+(defun make-graph-input (input)
+  (typecase input
+    (pathname (make-instance 'apx-input :pathname input))
+    (vector (make-instance 'vector-input :vector input))))
+
+(defmethod read-graph-input ((input apx-input))
+  (read-apx-file (apx-pathname input)))
+
+(defmethod read-graph-input ((input vector-input))
+  (let* ((graph (graph-input-vector input))
+         (items (alexandria:iota (order graph))))
+    (values graph
+            (make-array (order graph) :initial-contents items)
+            (alexandria:alist-hash-table
+             (mapcar #'cons items items)))))
+
+(defmethod make-initial-space (graph (task task) (semantic semantic))
+  (cl-user::make-foo (order graph)))
+
+(defmethod constrain-space (space graph task (semantic complete))
+  (cl-user::constrain-complete graph))
+
+(defmethod constrain-space :after (space graph task (semantic stable))
+  (cl-user::constrain-stable graph))
+
+(defmethod constrain-arg (space task semantic)
+  (log* "constrain arg is noop for ~A" task))
+
+(defmethod constrain-arg (space (task ds-task) semantic)
+  (log* "constrain arg not to be in")
+  (log* "task arg is ~S" (task-arg task))
+  (cl-user::post-must-be-false space (task-arg task)))
+
+(defmethod constrain-arg (space (task dc-task) semantic)
+  (log* "constrain arg to be in")
+  (log* "task arg is ~S" (task-arg task))
+  (cl-user::post-must-be-true space (task-arg task)))
+
+(defmethod constrain-arg :around (space task (semantic grounded))
+  (log* "constrain arg is a noop for grounded"))
+
+(defmethod branch-space (space task semantic)
+  (log* "post branching is NOOP for now"))
+
+(defmethod make-search-engine (space task semantic vector)
+  (log* "make dfs engine")
+  (typecase semantic
+    (grounded
+     (etypecase task
+       (ee-task (make-instance 'ee-engine-grounded
+                               :space space
+                               :engine-vector vector))
+       (se-task (make-instance 'se-engine-grounded
+                               :space space
+                               :engine-vector vector))
+       (dc-task (make-instance 'dc-engine-grounded
+                               :space space))
+       (ds-task (make-instance 'ds-engine-grounded
+                               :space space))))
+    (t (etypecase task
+         (ee-task (make-instance 'ee-engine
+                                 :gecode-engine (cl-user::make-dfs space)
+                                 :engine-vector vector))
+         (se-task (make-instance 'se-engine
+                                 :gecode-engine (cl-user::make-dfs space)
+                                 :engine-vector vector))
+         (dc-task (make-instance 'dc-engine
+                                 :gecode-engine (cl-user::make-dfs space)))
+         (ds-task (make-instance 'ds-engine
+                                 :gecode-engine (cl-user::make-dfs space)))))))
+
+(defclass se-engine-grounded ()
+  ((engine-vector :reader engine-vector :initarg :engine-vector)
+   (space :reader engine-space :initarg :space)))
+
+(defclass ee-engine-grounded (se-engine-grounded)
+  ())
+
+(defclass dc-engine-grounded ()
+  ((space :reader engine-space :initarg :space)))
+
+(defclass ds-engine-grounded ()
+  ((space :reader engine-space :initarg :space)))
+
+(defclass ee-engine ()
+  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
+   (engine-vector :reader engine-vector :initarg :engine-vector)))
+
+(defclass se-engine ()
+  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
+   (engine-vector :reader engine-vector :initarg :engine-vector)))
+
+(defclass dc-engine ()
+  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)))
+
+(defclass ds-engine ()
+  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)))
+
+(defmethod drive-search-and-print (task (engine ee-engine))
+  (let ((gecode-engine (gecode-engine engine))
+        (engine-vector (engine-vector engine)))
+    (write-line "[")
+    (loop
+       with first-time = t
+       for solution = (cl-user::dfs-next gecode-engine)
+       until (si:null-pointer-p solution)
+       do (if first-time
+              (setq first-time nil)
+              (write-char #\,))
+       do (cl-user::space-print-in solution engine-vector)
+       do (terpri))
+    (write-line "]")
+    nil))
+
+(defmethod drive-search-and-collect (task (engine ee-engine))
+  (let ((gecode-engine (gecode-engine engine))
+        (engine-vector (engine-vector engine)))
+    (loop
+       for solution = (cl-user::dfs-next gecode-engine)
+       until (si:null-pointer-p solution)
+       collect (cl-user::space-collect-in solution engine-vector))))
+
+(defmethod drive-search-and-print (task (engine se-engine))
+  (let ((gecode-engine (gecode-engine engine))
+        (engine-vector (engine-vector engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
+      (if (si:null-pointer-p space)
+          (write-string "NO")
+          (cl-user::space-print-in space engine-vector)))
+    (terpri)
+    nil))
+
+(defmethod drive-search-and-collect (task (engine se-engine))
+  (let ((gecode-engine (gecode-engine engine))
+        (engine-vector (engine-vector engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
+      (if (si:null-pointer-p space)
+          (values nil nil)
+          (values (cl-user::space-collect-in space engine-vector)
+                  t)))))
+
+(defmethod drive-search-and-print (task (engine dc-engine))
+  (let ((gecode-engine (gecode-engine engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
+      (if (si:null-pointer-p space)
+          (write-string "NO")
+          (write-string "YES")))
+    (terpri)
+    nil))
+
+(defmethod drive-search-and-collect (task (engine dc-engine))
+  (let ((gecode-engine (gecode-engine engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
+      (if (si:null-pointer-p space)
+          nil
+          t))))
+
+(defmethod drive-search-and-print (task (engine ds-engine))
+  (let ((gecode-engine (gecode-engine engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
+      (if (si:null-pointer-p space)
+          (write-string "YES")
+          (write-string "NO")))
+    (terpri)
+    nil))
+
+(defmethod drive-search-and-collect (task (engine ds-engine))
+  (let ((gecode-engine (gecode-engine engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
+      (if (si:null-pointer-p space)
+          t
+          nil))))
+
+(defmethod drive-search-and-print (task (engine se-engine-grounded))
+  (let ((space (engine-space engine))
+        (engine-vector (engine-vector engine)))
+    (cl-user::space-status space)
+    (cl-user::space-print-in space engine-vector)))
+
+(defmethod drive-search-and-collect (task (engine se-engine-grounded))
+  (let ((space (engine-space engine))
+        (engine-vector (engine-vector engine)))
+    (cl-user::space-status space)
+    (values (cl-user::space-collect-in space engine-vector) t)))
+
+(defmethod drive-search-and-collect (task (engine ee-engine-grounded))
+  (let ((space (engine-space engine))
+        (engine-vector (engine-vector engine)))
+    (cl-user::space-status space)
+    (list (cl-user::space-collect-in space engine-vector))))
+
+(defmethod drive-search-and-print :before (task (engine ee-engine-grounded))
+  (write-string "["))
+
+(defmethod drive-search-and-print :after (task (engine ee-engine-grounded))
+  (write-string "]"))
+
+(defmethod drive-search-and-print (task (engine dc-engine-grounded))
+  (let ((space (engine-space engine)))
+    (cl-user::space-status space)
+    (log* "arg is ~S" (task-arg task))
+    (cl-user::post-must-be-false space (task-arg task))
+    (let ((status (cl-user::space-status space)))
+      (log* "space status is ~S" status)
+      (if (eql :failed status)
+          (write-string "YES")
+          (write-string "NO"))
+      (terpri))))
+
+(defmethod drive-search-and-collect (task (engine dc-engine-grounded))
+  (let ((space (engine-space engine)))
+    (cl-user::space-status space)
+    (log* "arg is ~S" (task-arg task))
+    (cl-user::post-must-be-false space (task-arg task))
+    (let ((status (cl-user::space-status space)))
+      (log* "space status is ~S" status)
+      (if (eql :failed status)
+          t
+          nil))))
+
+(defmethod drive-search-and-print (task (engine ds-engine-grounded))
+  (let ((space (engine-space engine)))
+    (cl-user::space-status space)
+    (log* "arg is ~S" (task-arg task))
+    (cl-user::post-must-be-false space (task-arg task))
+    (let ((status (cl-user::space-status space)))
+      (log* "space status is ~S" status)
+      (if (eql :failed status)
+          (write-string "YES")
+          (write-string "NO"))
+      (terpri))))
+
+(defmethod drive-search-and-collect (task (engine ds-engine-grounded))
+  (let ((space (engine-space engine)))
+    (cl-user::space-status space)
+    (log* "arg is ~S" (task-arg task))
+    (cl-user::post-must-be-false space (task-arg task))
+    (let ((status (cl-user::space-status space)))
+      (log* "space status is ~S" status)
+      (if (eql :failed status)
+          t
+          nil))))
+
+(in-package :cl-user)
+
+(macrolet ((frob (name semantic task)
+             `(defun ,name ,(if (eql 2 (length task))
+                                '(graph a)
+                                '(graph))
+                (oo:collect-answer (oo:make-graph-input graph)
+                                   (oo:make-task ,@task)
+                                   (oo:make-semantic ,semantic)))))
+  ;; all
+  (frob $$complete-all :co (:ee))
+  (frob $$stable-all :st (:ee))
+  (frob $$grounded-all :gr (:ee))
+  ;; one
+  (frob $$complete-one :co (:se))
+  (frob $$stable-one :st (:se))
+  (frob $$grounded-one :gr (:se))
+  ;; dc
+  (frob $$complete-dc :co (:dc a))
+  (frob $$stable-dc :st (:dc a))
+  (frob $$grounded-dc :gr (:dc a))
+  ;; ds
+  (frob $$complete-ds :co (:ds a))
+  (frob $$stable-ds :st (:ds a))
+  (frob $$grounded-ds :gr (:ds a)))
+
 (defun $$preferred-all (graph) (preferred-all graph))
-(defun $$grounded-all (graph) (grounded-all graph))
-
-(defun $$complete-one (graph) (values (first (complete-all graph)) t))
-(defun $$stable-one (graph) (let ((solutions (stable-all graph)))
-                              (when solutions
-                                (values (first solutions) t))))
 (defun $$preferred-one (graph) (values (first (preferred-all graph)) t))
-(defun $$grounded-one (graph) (values (first (grounded-all graph)) t))
-
-(defun $$complete-dc (graph a) (dc-ds1 graph :dc :co a))
-(defun $$stable-dc (graph a) (dc-ds1 graph :dc :st a))
 (defun $$preferred-dc (graph a) (dc-ds1 graph :dc :pr a))
-(defun $$grounded-dc (graph a) (dc-ds1 graph :dc :gr a))
-
-(defun $$complete-ds (graph a) (dc-ds1 graph :ds :co a))
-(defun $$stable-ds (graph a) (dc-ds1 graph :ds :st a))
 (defun $$preferred-ds (graph a) (dc-ds1 graph :ds :pr a))
-(defun $$grounded-ds (graph a) (dc-ds1 graph :ds :gr a))
 
 (defun main% (&key (fo "apx") f p a)
   (assert (equal fo "apx"))
   (multiple-value-bind (task semantic) (parse-problem p)
-    (let ((*print-case* :downcase))
-      (multiple-value-bind (graph vector hash)
-          (read-apx-file f)
-        (ecase task
-          ((:ee :se) (ee-se graph task semantic vector))
-          ((:dc :ds) (dc-ds graph task semantic hash a)))
-        (terpri)))))
+    (cond
+      ((not (eql :pr semantic))
+       (oo:print-answer (oo:make-graph-input f)
+                        (oo:make-task task a)
+                        (oo:make-semantic semantic)))
+      (t
+       (let ((*print-case* :downcase))
+         (multiple-value-bind (graph vector hash)
+             (read-apx-file f)
+           (ecase task
+             ((:ee :se) (ee-se graph task semantic vector))
+             ((:dc :ds) (dc-ds graph task semantic hash a)))
+           (terpri)))))))
 
 #+cover
 (defvar *cover-file*
