@@ -3,9 +3,9 @@
 rep = function(d) { sprintf("file contains %d rows", nrow(d)) }
 
 ## timeout in ms
-timeout = 1000 * 9
+timeout = 1000 * 50
 ## num of random samples
-rsamp = 5
+rsamp = 30
 
 args <- commandArgs(trailingOnly = TRUE)
 inputFile = args[1]
@@ -23,6 +23,10 @@ rep(d)
 
 d = d[!grepl("^rdm1000", d$file),]
 sprintf("removing rdm1000 rows")
+rep(d)
+
+d = d[d$problem == "SE-PR",]
+sprintf("keeping SE-PR rows")
 rep(d)
 
 d = d[d$exit.status == 0,]
