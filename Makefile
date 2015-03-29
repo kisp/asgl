@@ -2,7 +2,7 @@
 
 source-files = $(shell cat tools/source-files.txt)
 
-all: test-v1
+all: install-v1
 
 # ref
 install-ref:
@@ -37,16 +37,19 @@ v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early
 	  -load lib/myam/myam.fas \
 	  -load lisp-scripts/compile-foo.lisp
 
-v1/v1: v1/v1.o v1/Foo.o common/early/libearly.a common/asgl-config/libasgl-config.a \
+v1/v1: v1/v1.o v1/Foo.o v1/PrBABSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
 	  common/asgl-config/asgl-config.fas lib/myam/libmyam.a lib/alexandria/libalexandria.a \
 	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
 	  -load common/asgl-config/asgl-config.fas \
-	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "-lgecodesearch" "-lgecodeint" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "v1/PrBABSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 v1/Foo.o: v1/Foo.cpp v1/Foo.h asgl_config.h
 	g++ -O2 -Wall -Werror -fPIC -c v1/Foo.cpp -o v1/Foo.o
+
+v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h asgl_config.h
+	g++ -O2 -Wall -Werror -fPIC -c v1/PrBABSpace.cpp -o v1/PrBABSpace.o
 
 install-v1: v1/v1
 	cp v1/v1 bin/asgl

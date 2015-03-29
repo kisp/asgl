@@ -1,3 +1,5 @@
+#ifndef MY_FOO_HEADER_
+#define MY_FOO_HEADER_
 #include "../asgl_config.h"
 #include <gecode/int.hh>
 #include <gecode/search.hh>
@@ -27,3 +29,4 @@ namespace v1 {
     void print(std::ostream&) const;
   };
 }
+#endif

@@ -20,3 +20,5 @@ scripts/make-all-variants.sh
 v1/Foo.cpp
 v1/Foo.h
 v1/v1.lisp
+v1/PrBABSpace.cpp
+v1/PrBABSpace.h

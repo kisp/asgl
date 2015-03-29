@@ -5,6 +5,7 @@
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
 
 (ffi:clines "#include \"Foo.h\"")
+(ffi:clines "#include \"PrBABSpace.h\"")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (use-package :early))
@@ -12,8 +13,11 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
-(defun make-foo (x)
-  (ffi:c-inline (x) (:int) :pointer-void "{ @(return 0) = new v1::Foo(#0); }"))
+(defun make-foo (n)
+  (ffi:c-inline (n) (:int) :pointer-void "{ @(return 0) = new v1::Foo(#0); }"))
+
+(defun make-pr-bab-space (n)
+  (ffi:c-inline (n) (:int) :pointer-void "{ @(return 0) = new v1::PrBABSpace(#0); }"))
 
 (defun expr-or (space boolvars)
   "Return a new boolvar that is constrained to be the OR of boolvars."
@@ -236,6 +240,14 @@ default: @(return 0) = 100; break;
 (defun dfs-next (dfs)
   (ffi:c-inline (dfs) (:pointer-void) :pointer-void
                 "{ @(return 0) = ((Gecode::DFS<v1::Foo>*)(#0))->next(); }"))
+
+(defun make-bab (space)
+  (ffi:c-inline (space) (:pointer-void) :pointer-void
+                "{ @(return 0) = new Gecode::BAB<v1::Foo>(((v1::Foo*)(#0)));}"))
+
+(defun bab-next (bab)
+  (ffi:c-inline (bab) (:pointer-void) :pointer-void
+                "{ @(return 0) = ((Gecode::BAB<v1::Foo>*)(#0))->next(); }"))
 
 (defun dfs-statistics (dfs)
   (multiple-value-bind (fail node depth restart nogood)
@@ -650,6 +662,9 @@ res = 7;
 (defmethod make-initial-space (graph (task task) (semantic semantic))
   (cl-user::make-foo (order graph)))
 
+(defmethod make-initial-space (graph (task se-task) (semantic preferred))
+  (cl-user::make-pr-bab-space (order graph)))
+
 (defmethod constrain-space (space graph task (semantic complete))
   (cl-user::constrain-complete graph))
 
@@ -695,9 +710,15 @@ res = 7;
              (ee-task (make-instance 'ee-engine
                                      :gecode-engine (cl-user::make-dfs space)
                                      :engine-vector vector))
-             (se-task (make-instance 'se-engine
-                                     :gecode-engine (cl-user::make-dfs space)
-                                     :engine-vector vector))
+             (se-task (typecase semantic
+                        (preferred
+                         (make-instance 'bab-engine
+                                        :gecode-engine (cl-user::make-bab space)
+                                        :engine-vector vector))
+                        (t
+                         (make-instance 'se-engine
+                                        :gecode-engine (cl-user::make-dfs space)
+                                        :engine-vector vector))))
              (dc-task (make-instance 'dc-engine
                                      :gecode-engine (cl-user::make-dfs space)))
              (ds-task (make-instance 'ds-engine
@@ -722,6 +743,10 @@ res = 7;
    (engine-vector :reader engine-vector :initarg :engine-vector)))
 
 (defclass se-engine ()
+  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
+   (engine-vector :reader engine-vector :initarg :engine-vector)))
+
+(defclass bab-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)))
 
@@ -779,6 +804,21 @@ res = 7;
                       (cl-user::space-collect-in space engine-vector)
                     (cl-user::delete-foo space))
                   t)))))
+
+(defmethod drive-search-and-print (task (engine bab-engine))
+  (let ((gecode-engine (gecode-engine engine))
+        (engine-vector (engine-vector engine)))
+    (let ((space (loop for prev-solution = nil then solution
+                    for solution = (cl-user::bab-next gecode-engine)
+                    until (si:null-pointer-p solution)
+                    finally (return prev-solution))))
+      (if (null space)
+          (write-string "NO")
+          (progn
+            (cl-user::space-print-in space engine-vector)
+            (cl-user::delete-foo space))))
+    (terpri)
+    nil))
 
 (defmethod drive-search-and-print (task (engine dc-engine))
   (let ((gecode-engine (gecode-engine engine)))
@@ -936,7 +976,9 @@ res = 7;
   (assert (equal fo "apx"))
   (multiple-value-bind (task semantic) (parse-problem p)
     (cond
-      ((not (eql :pr semantic))
+      ((or (not (eql :pr semantic))
+           (and (eql :pr semantic)
+                (eql :se task)))
        (oo:print-answer (oo:make-graph-input f)
                         (oo:make-task task a)
                         (oo:make-semantic semantic)))
