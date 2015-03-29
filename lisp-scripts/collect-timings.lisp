@@ -3,6 +3,7 @@
 (defvar *start*)
 (defvar *end*)
 (defvar *count*)
+(defvar *asgl*)
 
 (defstruct benchmark input-file problem)
 
@@ -43,7 +44,7 @@
            (sb-ext:run-program
             "timeout"
             (list timeout
-                  "./bin/asgl" "-fo" "apx" "-f"
+                  *asgl* "-fo" "apx" "-f"
                   (namestring input-file) "-p" (string problem))
             :search t
             :output nil)))
@@ -75,9 +76,10 @@
           (mod dur 60)))
 
 
-(defun echo-start-benchmarking ()
+(defun echo-start-benchmarking (args)
   (setq *start* (get-universal-time))
   (format t ";start benchmarking~%")
+  (format t "~S~%" args)
   (sb-int:format-universal-time t *start*)
   (terpri))
 
@@ -114,27 +116,31 @@
 
 (defun main ()
   (let ((args (cdr sb-ext:*posix-argv*)))
-    (destructuring-bind #1=(&key help
-                                 (timeout "10s")
-                                 (version "0.0.0")
-                                 (results-file (timings-file-name version timeout))
-                                 overwrite-results
-                                 benchmarks-list
-                                 (benchmarks-dir "data/iccma15_testcases/"))
+    (destructuring-bind #1=(&rest
+                            args
+                            &key help
+                            (timeout "10s")
+                            (version "0.0.0")
+                            (results-file (timings-file-name version timeout))
+                            overwrite-results
+                            benchmarks-list
+                            (benchmarks-dir "data/iccma15_testcases/")
+                            (asgl "./bin/asgl"))
       (adopt-keywords args)
       (cond
         ((or (null args) help)
          (format t "Usage: collect-timings ~S~%" '#1#)
          (sb-ext:exit :code 1))
         (t
-         (echo-start-benchmarking)
+         (echo-start-benchmarking args)
          (with-open-file (output results-file
                                  :direction :output
                                  :if-exists (if overwrite-results
                                                 :supersede
                                                 :error))
            (format output "    file problem time exit-status~%")
-           (let ((*count* 0))
+           (let ((*count* 0)
+                 (*asgl* asgl))
              (dolist (benchmark (if benchmarks-list
                                     (benchmarks-from-list
                                      benchmarks-list
