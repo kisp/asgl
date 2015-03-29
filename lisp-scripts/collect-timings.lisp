@@ -6,13 +6,13 @@
 (defun run-benchmark (input-file problem &key (timeout "1s"))
   (let* ((start (get-internal-real-time))
          (process
-          (sb-ext:run-program
-           "timeout"
-           (list timeout
-                 "./bin/asgl" "-fo" "apx" "-f"
-                 (namestring input-file) "-p" (string problem))
-           :search t
-           :output nil)))
+           (sb-ext:run-program
+            "timeout"
+            (list timeout
+                  "./bin/asgl" "-fo" "apx" "-f"
+                  (namestring input-file) "-p" (string problem))
+            :search t
+            :output nil)))
     (let ((end (get-internal-real-time))
           (exit-code (sb-ext:process-exit-code process)))
       (values (- end start)
