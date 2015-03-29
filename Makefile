@@ -115,7 +115,7 @@ TAGS: $(source-files)
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	  common/early/clean common/asgl-config/clean
 	rm -f bin/asgl
-	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c
+	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c v1/PrBABSpace.o
 	rm -rf gecode tmp
 	rm -rf data/iccma15_solutions data/iccma15_testcases data/real-ee-gr-solutions
 	rm -f cover.data
