@@ -497,7 +497,6 @@ res = 7;
              (!!expr-or!! parents)))))))
 
 (defun complete-all (graph &key gist)
-  (clear-graph-caches)
   (let* ((order (order graph))
          (space (with-timing (make-foo order))))
     (with-post-env-setup (space)
@@ -507,7 +506,6 @@ res = 7;
 
 (defun grounded-all (graph &key gist)
   (when gist (error "gist does not make sense here"))
-  (clear-graph-caches)
   (let* ((order (order graph))
          (space (with-timing (make-foo order))))
     (with-post-env-setup (space)
@@ -522,7 +520,6 @@ res = 7;
    :test #'subsetp))
 
 (defun stable-all (graph &key gist)
-  (clear-graph-caches)
   (let* ((order (order graph))
          (space (with-timing (make-foo order))))
     (with-post-env-setup (space)

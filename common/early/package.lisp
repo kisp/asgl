@@ -23,7 +23,6 @@
   ;; graph
   (:export
    #:make-graph-from-adj
-   #:clear-graph-caches
    #:order
    #:do-edges
    #:do-parents

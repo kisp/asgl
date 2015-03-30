@@ -63,9 +63,6 @@
          ,setter))))
 
 ;;; api
-(defun clear-graph-caches ()
-  )
-
 (defun order (graph)
   (%%order graph))
 
