@@ -1,5 +1,21 @@
 ;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; -*-
 
+;;; ASGL an abstract argumentation solver in ECL and GECODE.
+;;; Copyright (C) 2015  Kilian Sprotte
+
+;;; This program is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+
+;;; This program is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 (in-package :cl-user)
 
 (declaim (optimize (debug 3) (safety 3) (speed 0)))
@@ -1027,7 +1043,12 @@ res = 7;
        (cond
          ((null (cdr ext:*command-args*))
           (write-line "ASGL version 0.0.7")
-          (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>"))
+          (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
+          (terpri)
+          (write-line "Copyright (C) 2015  Kilian Sprotte")
+          (write-line "This program comes with ABSOLUTELY NO WARRANTY.")
+          (write-line "This is free software, and you are welcome to redistribute it")
+          (write-line "under certain conditions."))
          ((equal "--formats" (second ext:*command-args*))
           (write-line "[apx]"))
          ((equal "--problems" (second ext:*command-args*))

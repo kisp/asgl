@@ -1,4 +1,19 @@
 # -*- indent-tabs:t; dont-indent:t -*-
+# ASGL an abstract argumentation solver in ECL and GECODE.
+# Copyright (C) 2015  Kilian Sprotte
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 source-files = $(shell cat tools/source-files.txt)
 
@@ -152,7 +167,8 @@ dist:
 	curl --no-progress-bar --retry 10 -o "gecode-4.3.3.tar.gz" -L "http://178.62.230.106/tarballs/gecode-4.3.3.tar.gz"
 	install gecode-4.3.3.tar.gz dist/asgl/third-party
 	rm -rf dist/asgl/data
-	rm -rf dist/asgl/timings
+	rm -rf dist/asgl/timings dist/asgl/features dist/asgl/tools dist/asgl/travis
+	rm -f dist/asgl/Gemfile dist/asgl/Gemfile.lock dist/asgl/v1/unused.lisp
 	echo DIST PREPARED
 #(cd dist/asgl && ./build )
 	( cd dist && tar -czf asgl.tar.gz asgl/* )
