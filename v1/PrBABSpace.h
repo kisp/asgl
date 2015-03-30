@@ -4,6 +4,7 @@
 #include <gecode/int.hh>
 #include <gecode/search.hh>
 #include <gecode/minimodel.hh>
+#include <gecode/set.hh>
 #include "Foo.h"
 #ifdef HAVE_GECODE_GIST_HH
 #include <gecode/gist.hh>
@@ -14,6 +15,7 @@ namespace v1 {
   {
   protected:
     Gecode::IntVar card;
+    Gecode::SetVar ext;
 
   public:
     PrBABSpace(int x);
