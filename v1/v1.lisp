@@ -176,6 +176,10 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
   (ffi:c-inline (foo) (:pointer-void) :void
                 "{ delete ((v1::Foo*)#0); }"))
 
+(defun foo-branch/l/int-var-degree-max/int-val-min (foo)
+  (ffi:c-inline (foo) (:pointer-void) :void
+                "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_min(); }"))
+
 (defun space-status (space)
   (let ((status
          (ffi:c-inline (space) (:pointer-void) :int
@@ -704,7 +708,7 @@ res = 7;
   (log* "constrain arg is a noop for grounded"))
 
 (defmethod branch-space (space task semantic)
-  (log* "post branching is NOOP for now"))
+  (cl-user::foo-branch/l/int-var-degree-max/int-val-min space))
 
 (defmethod make-search-engine (space task semantic vector)
   (log* "make dfs engine")

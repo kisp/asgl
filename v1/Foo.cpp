@@ -20,7 +20,9 @@ namespace v1 {
 
   Foo::Foo(int _n) : l(*this, _n, 0, 1) {
     n = _n;
+  }
 
+  void Foo::branch__l__int_var_degree_max__int_val_min() {
     Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MIN());
   }
 

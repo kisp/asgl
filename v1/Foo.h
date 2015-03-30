@@ -43,6 +43,8 @@ namespace v1 {
     Gecode::BoolVarArray* getVars();
 
     void print(std::ostream&) const;
+
+    void branch__l__int_var_degree_max__int_val_min();
   };
 }
 #endif
