@@ -997,6 +997,7 @@ res = 7;
   (frob $$complete-one :co (:se))
   (frob $$stable-one :st (:se))
   (frob $$grounded-one :gr (:se))
+  (frob $$preferred-one :pr (:se))
   ;; dc
   (frob $$complete-dc :co (:dc a))
   (frob $$stable-dc :st (:dc a))
@@ -1007,7 +1008,6 @@ res = 7;
   (frob $$grounded-ds :gr (:ds a)))
 
 (defun $$preferred-all (graph) (preferred-all graph))
-(defun $$preferred-one (graph) (values (first (preferred-all graph)) t))
 (defun $$preferred-dc (graph a) (dc-ds1 graph :dc :pr a))
 (defun $$preferred-ds (graph a) (dc-ds1 graph :ds :pr a))
 
