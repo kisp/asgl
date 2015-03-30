@@ -23,8 +23,15 @@ tb = mapply(function(time,error) {if (error) NA else time }, b$time, failed)
 
 print(cbind(problem = a[,"problem"],data.frame(ta = ta),data.frame(tb = tb)))
 
+f = 100
+ta = ceiling(ta/f)*f
+tb = ceiling(tb/f)*f
+
 summary(ta)
 summary(tb)
 
-#t.test(ta, tb, paired=TRUE)
+ta = log(ta)
+tb = log(tb)
+
+t.test(ta, tb, paired=TRUE)
 wilcox.test(ta, tb, paired=TRUE)
