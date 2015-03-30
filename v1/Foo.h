@@ -44,7 +44,8 @@ namespace v1 {
 
     void print(std::ostream&) const;
 
-    void branch__l__int_var_degree_max__int_val_min();
+    virtual void branch__l__int_var_degree_max__int_val_min();
+    virtual void branch__l__int_var_degree_max__int_val_max();
   };
 }
 #endif

@@ -26,6 +26,10 @@ namespace v1 {
     Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MIN());
   }
 
+  void Foo::branch__l__int_var_degree_max__int_val_max() {
+    Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MAX());
+  }
+
   Foo::Foo(bool share, Foo& s) : Gecode::Space(share, s) {
     l.update(*this, share, s.l);
   }

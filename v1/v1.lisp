@@ -180,6 +180,10 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
   (ffi:c-inline (foo) (:pointer-void) :void
                 "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_min(); }"))
 
+(defun foo-branch/l/int-var-degree-max/int-val-max (foo)
+  (ffi:c-inline (foo) (:pointer-void) :void
+                "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_max(); }"))
+
 (defun space-status (space)
   (let ((status
          (ffi:c-inline (space) (:pointer-void) :int
@@ -709,6 +713,9 @@ res = 7;
 
 (defmethod branch-space (space task semantic)
   (cl-user::foo-branch/l/int-var-degree-max/int-val-min space))
+
+(defmethod branch-space (space (task se-task) (semantic preferred))
+  (cl-user::foo-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod make-search-engine (space task semantic vector)
   (log* "make dfs engine")

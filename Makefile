@@ -63,7 +63,7 @@ v1/v1: v1/v1.o v1/Foo.o v1/PrBABSpace.o common/early/libearly.a common/asgl-conf
 v1/Foo.o: v1/Foo.cpp v1/Foo.h asgl_config.h
 	g++ -O2 -Wall -Werror -fPIC -c v1/Foo.cpp -o v1/Foo.o
 
-v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h asgl_config.h
+v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h v1/Foo.h asgl_config.h
 	g++ -O2 -Wall -Werror -fPIC -c v1/PrBABSpace.cpp -o v1/PrBABSpace.o
 
 install-v1: v1/v1
