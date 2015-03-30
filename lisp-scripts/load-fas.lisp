@@ -3,9 +3,13 @@
 (load "lib/alexandria/alexandria.fas")
 (load "lib/arnesi-list-match/arnesi-list-match.fas")
 (load "lib/myam/myam.fas")
-(ffi:load-foreign-library "/nix/store/j33r7j9xbn8wlz6kfpcinh49nhhw7d1i-gecode-4.3.3/lib/libgecodesearch.so.40")
-(ffi:load-foreign-library "/nix/store/j33r7j9xbn8wlz6kfpcinh49nhhw7d1i-gecode-4.3.3/lib/libgecodeint.so.40")
-(ffi:load-foreign-library "/nix/store/j33r7j9xbn8wlz6kfpcinh49nhhw7d1i-gecode-4.3.3/lib/libgecodekernel.so.40")
-(ffi:load-foreign-library "/nix/store/j33r7j9xbn8wlz6kfpcinh49nhhw7d1i-gecode-4.3.3/lib/libgecodesupport.so.40")
-(ffi:load-foreign-library "/nix/store/j33r7j9xbn8wlz6kfpcinh49nhhw7d1i-gecode-4.3.3/lib/libgecodegist.so.40")
+(let ((lib-dir "/nix/store/n8s5yghc01vvs9lmlkkn1k0mg6g7zyb8-gecode-4.3.3/lib/"))
+  (dolist (lib '("libgecodesearch.so.40"
+                 "libgecodeint.so.40"
+                 "libgecodeset.so.40"
+                 "libgecodeminimodel.so.40"
+                 "libgecodekernel.so.40"
+                 "libgecodesupport.so.40"
+                 "libgecodegist.so.40"))
+    (ffi:load-foreign-library (merge-pathnames lib lib-dir))))
 (load "v1/v1.fas")

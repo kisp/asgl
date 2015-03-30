@@ -30,14 +30,14 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
-v1/v1.fas: v1/v1.o
+v1/v1.fas: v1/v1.o v1/Foo.o v1/PrBABSpace.o
 	rm -f v1/v1.fas
 	ecl -norc \
 	  -eval "(require 'cmp)" \
 	  -eval "(defvar *lisp-files* nil)" \
 	  -eval '(push "v1/v1.o" *lisp-files*)' \
 	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
-	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/Foo.o"))' \
+	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/Foo.o" "v1/PrBABSpace.o"))' \
 	  -eval '(quit)'
 	test -f v1/v1.fas
 
@@ -51,6 +51,7 @@ v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early
 	  -load lib/arnesi-list-match/arnesi-list-match.fas \
 	  -load lib/myam/myam.fas \
 	  -load lisp-scripts/compile-foo.lisp
+	test -f v1/v1.o
 
 v1/v1: v1/v1.o v1/Foo.o v1/PrBABSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
 	  common/asgl-config/asgl-config.fas lib/myam/libmyam.a lib/alexandria/libalexandria.a \
