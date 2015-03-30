@@ -502,6 +502,7 @@ res = 7;
          (space (with-timing (make-foo order))))
     (with-post-env-setup (space)
       (constrain-complete graph))
+    (foo-branch/l/int-var-degree-max/int-val-min space)
     (dfs-search-gist-or-list-ins space gist)))
 
 (defun grounded-all (graph &key gist)
