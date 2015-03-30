@@ -6,7 +6,8 @@
 solver implemented in
 [Embeddable Common Lisp (ECL)](http://cliki.net/ecl) and
 [GECODE](http://www.gecode.org/), a toolkit for developing
-constraint-based systems and applications.
+constraint-based systems and applications. Its interface conforms to
+[ICCMA15](http://argumentationcompetition.org/2015/rules.html).
 
     Copyright (C) 2015  Kilian Sprotte
     This program comes with ABSOLUTELY NO WARRANTY.
