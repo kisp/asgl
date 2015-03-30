@@ -1,12 +1,12 @@
 [![Build Status](https://travis-ci.org/kisp/asgl.svg?branch=master)](https://travis-ci.org/kisp/asgl)
 
-# asgl
+# ASGL
 
 [ASGL](https://github.com/kisp/asgl#asgl) is an abstract argumentation
 solver implemented in
 [Embeddable Common Lisp (ECL)](http://cliki.net/ecl) and
 [GECODE](http://www.gecode.org/), a toolkit for developing
-constraint-based systems and applications. Its interface conforms to
+constraint-based systems and applications. The interface conforms to
 [ICCMA15](http://argumentationcompetition.org/2015/rules.html).
 
     Copyright (C) 2015  Kilian Sprotte
