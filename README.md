@@ -3,7 +3,8 @@
 # asgl
 
 [ASGL](https://github.com/kisp/asgl#asgl) is an abstract argumentation
-solver implemented in Embeddable Common Lisp (ECL) and GECODE, a
+solver implemented in Embeddable Common Lisp
+([ECL](http://cliki.net/ecl)) and [GECODE](http://www.gecode.org/), a
 toolkit for developing constraint-based systems and applications.
 
     Copyright (C) 2015  Kilian Sprotte
