@@ -26,7 +26,7 @@ cd depbuild/gecode-4.3.3
 GECODEFLAGS="-O3 -march=native -pipe -fomit-frame-pointer"
 env CFLAGS="$GECODEFLAGS" CXXFLAGS="$GECODEFLAGS" ./configure --disable-gist \
     --disable-qt --disable-examples --disable-flatzinc --disable-float-vars \
-    --disable-set-vars --prefix=$LPREFIX
+    --prefix=$LPREFIX
 make
 make install
 cd ../..
