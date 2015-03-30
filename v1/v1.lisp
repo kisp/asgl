@@ -820,6 +820,20 @@ res = 7;
     (terpri)
     nil))
 
+(defmethod drive-search-and-collect (task (engine bab-engine))
+  (let ((gecode-engine (gecode-engine engine))
+        (engine-vector (engine-vector engine)))
+    (let ((space (loop for prev-solution = nil then solution
+                    for solution = (cl-user::bab-next gecode-engine)
+                    until (si:null-pointer-p solution)
+                    finally (return prev-solution))))
+      (if (null space)
+          (values nil nil)
+          (values (prog1
+                      (cl-user::space-collect-in space engine-vector)
+                    (cl-user::delete-foo space))
+                  t)))))
+
 (defmethod drive-search-and-print (task (engine dc-engine))
   (let ((gecode-engine (gecode-engine engine)))
     (let ((space (cl-user::dfs-next gecode-engine)))
