@@ -833,7 +833,11 @@ res = 7;
 (defmethod drive-search-and-print (task (engine bab-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine)))
-    (let ((space (loop for prev-solution = nil then solution
+    (let ((space (loop
+                    for prev-solution = nil then
+                      (progn (when prev-solution
+                               (delete-foo prev-solution))
+                             solution)
                     for solution = (cl-user::bab-next gecode-engine)
                     until (si:null-pointer-p solution)
                     finally (return prev-solution))))
