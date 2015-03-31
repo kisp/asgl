@@ -1228,7 +1228,7 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL version 0.1.2")
+          (write-line "ASGL version 0.1.3")
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
           (terpri)
           (write-line "Copyright (C) 2015  Kilian Sprotte")

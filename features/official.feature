@@ -660,7 +660,7 @@ Feature: official
     | rdm200_2                    |
     #| rdm200_30                   |
     | rdm200_31                   |
-    | rdm200_32                   |
+    #| rdm200_32                   |
     | rdm200_33                   |
     | rdm200_34                   |
     | rdm200_35                   |
