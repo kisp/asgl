@@ -38,6 +38,7 @@ namespace v1 {
     PrBABSpace(bool share, PrBABSpace& s);
     Gecode::Space* copy(bool share);
     virtual void constrain(const Gecode::Space& _b);
+    void constrain_not_subset(const PrBABSpace& b);
   };
 }
 #endif

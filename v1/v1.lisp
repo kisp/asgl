@@ -172,9 +172,33 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
 
 "))
 
+(defun constrain-not-subset (space other)
+  (ffi:c-inline (space other) (:pointer-void :pointer-void) :void
+                "
+v1::PrBABSpace* s = ((v1::PrBABSpace*)(#0));
+v1::PrBABSpace* o = ((v1::PrBABSpace*)(#1));
+
+s->constrain_not_subset(*o);
+
+"))
+
+(defun constrain-set-greater (space other)
+  (ffi:c-inline (space other) (:pointer-void :pointer-void) :void
+                "
+v1::PrBABSpace* s = ((v1::PrBABSpace*)(#0));
+v1::PrBABSpace* o = ((v1::PrBABSpace*)(#1));
+
+s->constrain(*o);
+
+"))
+
 (defun delete-foo (foo)
   (ffi:c-inline (foo) (:pointer-void) :void
                 "{ delete ((v1::Foo*)#0); }"))
+
+(defun clone-foo (foo)
+  (ffi:c-inline (foo) (:pointer-void) :pointer-void
+                "{ @(return 0) = ((v1::Foo*)#0)->clone(); }"))
 
 (defun foo-branch/l/int-var-degree-max/int-val-min (foo)
   (ffi:c-inline (foo) (:pointer-void) :void
@@ -269,9 +293,23 @@ default: @(return 0) = 100; break;
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = new Gecode::BAB<v1::Foo>(((v1::Foo*)(#0)));}"))
 
+(defun delete-bab (bab)
+  (ffi:c-inline (bab) (:pointer-void) :void
+                "{ delete ((Gecode::BAB<v1::Foo>*)#0); }"))
+
 (defun bab-next (bab)
   (ffi:c-inline (bab) (:pointer-void) :pointer-void
                 "{ @(return 0) = ((Gecode::BAB<v1::Foo>*)(#0))->next(); }"))
+
+(defun bab-best (bab)
+  (loop
+     for prev-solution = nil then
+       (progn (when prev-solution
+                (delete-foo prev-solution))
+              solution)
+     for solution = (bab-next bab)
+     until (si:null-pointer-p solution)
+     finally (return prev-solution)))
 
 (defun dfs-statistics (dfs)
   (multiple-value-bind (fail node depth restart nogood)
@@ -590,7 +628,8 @@ res = 7;
            #:collect-answer
            #:make-semantic
            #:make-task
-           #:make-graph-input))
+           #:make-graph-input
+           #:translate-problem))
 
 (in-package :oo)
 
@@ -623,9 +662,7 @@ res = 7;
 (defclass vector-input (graph-input)
   ((vector :reader graph-input-vector :initarg :vector)))
 
-(defmethod print-answer ((input graph-input)
-                         (task task)
-                         (semantic semantic))
+(defun prepare-space (input task semantic)
   (multiple-value-bind (graph vector hash)
       (read-graph-input input)
     (setf (task-hash task) hash)
@@ -634,36 +671,39 @@ res = 7;
         (constrain-space space graph task semantic)
         (constrain-arg space task semantic))
       (branch-space space task semantic)
-      (let ((engine (make-search-engine space task semantic vector)))
-        (drive-search-and-print task engine)))))
+      (values space vector))))
+
+(defun build-engine (input task semantic)
+  (multiple-value-bind (space vector)
+      (prepare-space input task semantic)
+    (make-search-engine space task semantic vector)))
+
+(defmethod print-answer ((input graph-input)
+                         (task task)
+                         (semantic semantic))
+  (let ((engine (build-engine input task semantic)))
+    (drive-search-and-print task engine)))
 
 (defmethod collect-answer ((input graph-input)
                            (task task)
                            (semantic semantic))
-  (multiple-value-bind (graph vector hash)
-      (read-graph-input input)
-    (setf (task-hash task) hash)
-    (let ((space (make-initial-space graph task semantic)))
-      (cl-user::with-post-env-setup (space)
-        (constrain-space space graph task semantic)
-        (constrain-arg space task semantic))
-      (branch-space space task semantic)
-      (let ((engine (make-search-engine space task semantic vector)))
-        (drive-search-and-collect task engine)))))
+  (let ((engine (build-engine input task semantic)))
+    (drive-search-and-collect task engine)))
 
-(defun make-semantic (semantic)
-  (ecase semantic
-    (:co (make-instance 'complete))
-    (:gr (make-instance 'grounded))
-    (:st (make-instance 'stable))
-    (:pr (make-instance 'preferred))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun make-semantic (semantic)
+    (ecase semantic
+      (:co (make-instance 'complete))
+      (:gr (make-instance 'grounded))
+      (:st (make-instance 'stable))
+      (:pr (make-instance 'preferred))))
 
-(defun make-task (task &optional arg)
-  (ecase task
-    (:ee (make-instance 'ee-task))
-    (:se (make-instance 'se-task))
-    (:dc (make-instance 'dc-task :arg-name arg))
-    (:ds (make-instance 'ds-task :arg-name arg))))
+  (defun make-task (task &optional arg)
+    (ecase task
+      (:ee (make-instance 'ee-task))
+      (:se (make-instance 'se-task))
+      (:dc (make-instance 'dc-task :arg-name arg))
+      (:ds (make-instance 'ds-task :arg-name arg)))))
 
 (defun make-graph-input (input)
   (typecase input
@@ -685,6 +725,9 @@ res = 7;
   (cl-user::make-foo (order graph)))
 
 (defmethod make-initial-space (graph (task se-task) (semantic preferred))
+  (cl-user::make-pr-bab-space (order graph)))
+
+(defmethod make-initial-space (graph (task ee-task) (semantic preferred))
   (cl-user::make-pr-bab-space (order graph)))
 
 (defmethod constrain-space (space graph task (semantic complete))
@@ -715,8 +758,14 @@ res = 7;
 (defmethod branch-space (space (task se-task) (semantic preferred))
   (cl-user::foo-branch/l/int-var-degree-max/int-val-max space))
 
+(defmethod branch-space (space (task ee-task) (semantic preferred))
+  (cl-user::foo-branch/l/int-var-degree-max/int-val-max space))
+
+(defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
+  (make-instance 'preferred-all-engine
+                 :sub-engine (make-search-engine space task (make-semantic :co) vector)))
+
 (defmethod make-search-engine (space task semantic vector)
-  (log* "make dfs engine")
   (typecase semantic
     (grounded
      (etypecase task
@@ -732,9 +781,17 @@ res = 7;
                                :space space))))
     (t (prog1
            (etypecase task
-             (ee-task (make-instance 'ee-engine
-                                     :gecode-engine (cl-user::make-dfs space)
-                                     :engine-vector vector))
+             (ee-task (typecase semantic
+                        (preferred
+                         (make-instance 'multi-bab-engine
+                                        :gecode-engine (cl-user::make-bab space)
+                                        :engine-vector vector
+                                        :space (progn
+                                                 (cl-user::space-status space)
+                                                 (cl-user::clone-foo space))))
+                        (t (make-instance 'ee-engine
+                                          :gecode-engine (cl-user::make-dfs space)
+                                          :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
                          (make-instance 'bab-engine
@@ -775,11 +832,37 @@ res = 7;
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)))
 
+(defclass multi-bab-engine ()
+  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
+   (engine-vector :reader engine-vector :initarg :engine-vector)
+   (space :reader engine-space :initarg :space)))
+
 (defclass dc-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)))
 
 (defclass ds-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)))
+
+(defclass preferred-all-engine ()
+  ((sub-engine :reader sub-engine :initarg :sub-engine)))
+
+(defmethod drive-search-and-print (task (engine preferred-all-engine))
+  (write-line "[")
+  (loop
+     with first-time = t
+     for solution in (drive-search-and-collect task engine)
+     do (if first-time
+            (setq first-time nil)
+            (write-char #\,))
+     do (format t "[~{~A~^,~}]" solution)
+     do (terpri))
+  (write-line "]"))
+
+(defmethod drive-search-and-collect (task (engine preferred-all-engine))
+  (let ((complete-all (drive-search-and-collect task (sub-engine engine))))
+    (remove-duplicates
+     (sort complete-all #'< :key #'length)
+     :test #'subsetp)))
 
 (defmethod drive-search-and-print (task (engine ee-engine))
   (let ((gecode-engine (gecode-engine engine))
@@ -833,14 +916,7 @@ res = 7;
 (defmethod drive-search-and-print (task (engine bab-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine)))
-    (let ((space (loop
-                    for prev-solution = nil then
-                      (progn (when prev-solution
-                               (delete-foo prev-solution))
-                             solution)
-                    for solution = (cl-user::bab-next gecode-engine)
-                    until (si:null-pointer-p solution)
-                    finally (return prev-solution))))
+    (let ((space (cl-user::bab-best gecode-engine)))
       (if (null space)
           (write-string "NO")
           (progn
@@ -852,16 +928,60 @@ res = 7;
 (defmethod drive-search-and-collect (task (engine bab-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine)))
-    (let ((space (loop for prev-solution = nil then solution
-                    for solution = (cl-user::bab-next gecode-engine)
-                    until (si:null-pointer-p solution)
-                    finally (return prev-solution))))
+    (let ((space (cl-user::bab-best gecode-engine)))
       (if (null space)
           (values nil nil)
           (values (prog1
                       (cl-user::space-collect-in space engine-vector)
                     (cl-user::delete-foo space))
                   t)))))
+
+(defun step1 (bab fn first-time vector master)
+  (let ((next (cl-user::bab-best bab)))
+    (when next
+      (funcall fn next vector first-time)
+      (when first-time
+        (setq first-time nil))
+      (cl-user::constrain-not-subset master next)
+      (let ((status (prog1
+                        (cl-user::space-status master)
+                      (cl-user::delete-foo next))))
+        (ecase status
+          (:failed)
+          (:solved
+           (funcall fn master vector first-time))
+          (:branch
+           (let ((slave (cl-user::clone-foo master)))
+             (cl-user::delete-bab bab)
+             (step1 (prog1
+                        (cl-user::make-bab slave)
+                      (cl-user::delete-foo slave))
+                    fn first-time vector master))))))))
+
+(defun multi-bab-helper (engine fn)
+  (let ((gecode-engine (gecode-engine engine))
+        (engine-vector (engine-vector engine)))
+    (step1 gecode-engine fn t engine-vector (engine-space engine))))
+
+(defmethod drive-search-and-print (task (engine multi-bab-engine))
+  (write-line "[")
+  (multi-bab-helper
+   engine
+   (lambda (next vector first-time)
+     (unless first-time
+       (write-char #\,))
+     (cl-user::space-print-in next vector)
+     (terpri)))
+  (write-line "]"))
+
+(defmethod drive-search-and-collect (task (engine multi-bab-engine))
+  (let (list)
+    (multi-bab-helper
+     engine
+     (lambda (next vector first-time)
+       (declare (ignore first-time))
+       (push (cl-user::space-collect-in next vector) list)))
+    list))
 
 (defmethod drive-search-and-print (task (engine dc-engine))
   (let ((gecode-engine (gecode-engine engine)))
@@ -984,19 +1104,64 @@ res = 7;
               nil)
         (cl-user::delete-foo space)))))
 
+(macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
+             (declare (ignore arrow))
+             (let ((from-task-type (type-of (make-task from-task)))
+                   (from-semantic-type (type-of (make-semantic from-semantic)))
+                   (task-change (not (eql from-task to-task)))
+                   (semantic-change (not (eql from-semantic to-semantic))))
+               `(defmethod translate-problem ((task ,from-task-type)
+                                              (semantic ,from-semantic-type))
+                  (values ,(if task-change
+                               (if (subtypep from-task-type 'd-task)
+                                   `(make-task ,to-task (task-arg-name task))
+                                   `(make-task ,to-task))
+                               'task)
+                          ,(if semantic-change
+                               `(make-semantic ,to-semantic)
+                               'semantic))))))
+  (translate (:se :co) -> (:se :gr))
+  (translate (:ds :co) -> (:ds :gr))
+  (translate (:dc :pr) -> (:dc :co))
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; standard
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; co
+  (translate (:dc :co) -> (:dc :co))
+  (translate (:ee :co) -> (:ee :co))
+  ;; gr
+  (translate (:dc :gr) -> (:dc :gr))
+  (translate (:ds :gr) -> (:ds :gr))
+  (translate (:ee :gr) -> (:ee :gr))
+  (translate (:se :gr) -> (:se :gr))
+  ;; pr
+  (translate (:ds :pr) -> (:ds :pr))
+  (translate (:ee :pr) -> (:ee :pr))
+  (translate (:se :pr) -> (:se :pr))
+  ;; st
+  (translate (:dc :st) -> (:dc :st))
+  (translate (:ds :st) -> (:ds :st))
+  (translate (:ee :st) -> (:ee :st))
+  (translate (:se :st) -> (:se :st)))
+
 (in-package :cl-user)
 
 (macrolet ((frob (name semantic task)
              `(defun ,name ,(if (eql 2 (length task))
                                 '(graph a)
                                 '(graph))
-                (oo:collect-answer (oo:make-graph-input graph)
-                                   (oo:make-task ,@task)
-                                   (oo:make-semantic ,semantic)))))
+                (let ((task (oo:make-task ,@task))
+                      (semantic (oo:make-semantic ,semantic)))
+                  (multiple-value-bind (task semantic)
+                      (oo:translate-problem task semantic)
+                    (oo:collect-answer (oo:make-graph-input graph)
+                                       task
+                                       semantic))))))
   ;; all
   (frob $$complete-all :co (:ee))
   (frob $$stable-all :st (:ee))
   (frob $$grounded-all :gr (:ee))
+  (frob $$preferred-all :pr (:ee))
   ;; one
   (frob $$complete-one :co (:se))
   (frob $$stable-one :st (:se))
@@ -1006,13 +1171,12 @@ res = 7;
   (frob $$complete-dc :co (:dc a))
   (frob $$stable-dc :st (:dc a))
   (frob $$grounded-dc :gr (:dc a))
+  (frob $$preferred-dc :pr (:dc a))
   ;; ds
   (frob $$complete-ds :co (:ds a))
   (frob $$stable-ds :st (:ds a))
   (frob $$grounded-ds :gr (:ds a)))
 
-(defun $$preferred-all (graph) (preferred-all graph))
-(defun $$preferred-dc (graph a) (dc-ds1 graph :dc :pr a))
 (defun $$preferred-ds (graph a) (dc-ds1 graph :ds :pr a))
 
 (defun main% (&key (fo "apx") f p a)
@@ -1020,11 +1184,19 @@ res = 7;
   (multiple-value-bind (task semantic) (parse-problem p)
     (cond
       ((or (not (eql :pr semantic))
-           (and (eql :pr semantic)
-                (eql :se task)))
-       (oo:print-answer (oo:make-graph-input f)
-                        (oo:make-task task a)
-                        (oo:make-semantic semantic)))
+           (and #+nil(eql :pr semantic)
+                (eql :se task))
+           (and #+nil(eql :pr semantic)
+                (eql :ee task))
+           (and #+nil(eql :pr semantic)
+                (eql :dc task)))
+       (let ((task (oo:make-task task a))
+             (semantic (oo:make-semantic semantic)))
+         (multiple-value-bind (task semantic)
+             (oo:translate-problem task semantic)
+           (oo:print-answer (oo:make-graph-input f)
+                            task
+                            semantic))))
       (t
        (let ((*print-case* :downcase))
          (multiple-value-bind (graph vector hash)
@@ -1055,7 +1227,7 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL version 0.0.7")
+          (write-line "ASGL version 0.1.1")
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
           (terpri)
           (write-line "Copyright (C) 2015  Kilian Sprotte")

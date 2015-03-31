@@ -9,7 +9,7 @@ Feature: informational
      Then the exit status should be 0
      And the output should contain "Kilian Sprotte"
      And the output should contain "ASGL"
-     And the output should contain "version 0.0.7"
+     And the output should contain "version 0.1.1"
 
   Scenario: print formats
      When I run `asgl --formats`

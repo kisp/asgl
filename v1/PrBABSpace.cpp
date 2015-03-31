@@ -38,4 +38,8 @@ namespace v1 {
     rel(*this, ext >= b.ext);
     // rel(*this, ext != b.ext);
   }
+
+  void PrBABSpace::constrain_not_subset(const PrBABSpace& b) {
+    rel(*this, (ext - b.ext) != Gecode::IntSet::empty);
+  }
 }
