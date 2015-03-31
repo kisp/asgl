@@ -62,10 +62,10 @@ v1/v1: v1/v1.o v1/Foo.o v1/PrBABSpace.o common/early/libearly.a common/asgl-conf
 	  -eval '(quit)'
 
 v1/Foo.o: v1/Foo.cpp v1/Foo.h asgl_config.h
-	g++ -O2 -Wall -Werror -fPIC -c v1/Foo.cpp -o v1/Foo.o
+	g++ -march=native -O3 -Wall -Werror -fPIC -c v1/Foo.cpp -o v1/Foo.o
 
 v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h v1/Foo.h asgl_config.h
-	g++ -O2 -Wall -Werror -fPIC -c v1/PrBABSpace.cpp -o v1/PrBABSpace.o
+	g++ -march=native -O3 -Wall -Werror -fPIC -c v1/PrBABSpace.cpp -o v1/PrBABSpace.o
 
 install-v1: v1/v1
 	cp v1/v1 bin/asgl
@@ -89,13 +89,13 @@ common/early/libmyfoo.a: common/early/myfoo.o common/early/slurp.o \
 	  common/early/count_args.o
 
 common/early/myfoo.o: common/early/myfoo.cpp common/early/myfoo.h
-	g++ -O2 -Wall -Werror -fPIC -c common/early/myfoo.cpp -o common/early/myfoo.o
+	g++ -march=native -O3 -Wall -Werror -fPIC -c common/early/myfoo.cpp -o common/early/myfoo.o
 
 common/early/slurp.o: common/early/slurp.cpp common/early/myfoo.h
-	g++ -O2 -Wall -Werror -fPIC -c common/early/slurp.cpp -o common/early/slurp.o
+	g++ -march=native -O3 -Wall -Werror -fPIC -c common/early/slurp.cpp -o common/early/slurp.o
 
 common/early/count_args.o: common/early/count_args.cpp common/early/myfoo.h
-	g++ -O2 -Wall -Werror -fPIC -c common/early/count_args.cpp -o common/early/count_args.o
+	g++ -march=native -O3 -Wall -Werror -fPIC -c common/early/count_args.cpp -o common/early/count_args.o
 
 
 # gecode

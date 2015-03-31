@@ -20,7 +20,8 @@
 
 (in-package #:early)
 
-(declaim (optimize (debug 3) (safety 3) (speed 0)))
+#+nil(declaim (optimize (debug 3) (safety 3) (speed 0)))
+(declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))

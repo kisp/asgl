@@ -34,6 +34,7 @@ autoconf
 ./configure
 make install-v1
 make test-v1
+./bin/asgl --check
 
 make clean
 echo DONE

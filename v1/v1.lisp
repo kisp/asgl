@@ -18,7 +18,8 @@
 
 (in-package :cl-user)
 
-(declaim (optimize (debug 3) (safety 3) (speed 0)))
+#+nil(declaim (optimize (debug 3) (safety 3) (speed 0)))
+(declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
 
 (ffi:clines "#include \"Foo.h\"")
 (ffi:clines "#include \"PrBABSpace.h\"")
@@ -1227,7 +1228,7 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL version 0.1.1")
+          (write-line "ASGL version 0.1.2")
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
           (terpri)
           (write-line "Copyright (C) 2015  Kilian Sprotte")
