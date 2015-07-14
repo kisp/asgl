@@ -149,6 +149,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 .PHONY: dist
 dist:
 	make clean | tail
+	cp Makefile.in Makefile
 	mkdir -p dist/asgl
 	git ls-files | xargs -I% install -D % dist/asgl/%
 	rm -r dist/asgl/bin/libexec
