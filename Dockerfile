@@ -13,7 +13,7 @@ RUN curl --no-progress-bar --retry 10 -o "ecl-13.5.1.tgz" \
 ### gecode
 RUN tar xfz gecode-4.3.3.tar.gz
 
-ENV GECODEFLAGS "-O3 -march=native -pipe -fomit-frame-pointer"
+ENV GECODEFLAGS "-O3 -pipe -fomit-frame-pointer"
 
 RUN cd gecode-4.3.3 && env CFLAGS="$GECODEFLAGS" CXXFLAGS="$GECODEFLAGS" ./configure \
   --disable-gist --disable-qt --disable-examples --disable-flatzinc --disable-float-vars \
@@ -24,7 +24,7 @@ RUN cd gecode-4.3.3 && make && make install
 ### ecl
 RUN tar xfz ecl-13.5.1.tgz
 
-ENV ECLFLAGS "-O2 -march=native -pipe -fomit-frame-pointer"
+ENV ECLFLAGS "-O2 -pipe -fomit-frame-pointer"
 
 RUN cd ecl-13.5.1 && env CFLAGS="$ECLFLAGS" CXXFLAGS="$ECLFLAGS" ./configure \
   --enable-threads --with-cxx --with-dffi=included --enable-boehm=included \
