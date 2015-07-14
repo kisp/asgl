@@ -20,6 +20,7 @@ RUN cd gecode-4.3.3 && env CFLAGS="$GECODEFLAGS" CXXFLAGS="$GECODEFLAGS" ./confi
   --prefix=/usr/local
 
 RUN cd gecode-4.3.3 && make && make install
+RUN rm -rf gecode-4.3.3*
 
 ### ecl
 RUN tar xfz ecl-13.5.1.tgz
@@ -32,6 +33,7 @@ RUN cd ecl-13.5.1 && env CFLAGS="$ECLFLAGS" CXXFLAGS="$ECLFLAGS" ./configure \
   --enable-libatomic=included --enable-unicode --prefix=/usr/local
 
 RUN cd ecl-13.5.1 && make && make install
+RUN rm -rf ecl-13.5.1*
 
 ### asgl
 RUN git clone https://github.com/kisp/asgl.git
