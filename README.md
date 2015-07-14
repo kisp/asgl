@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/kisp/asgl.svg?branch=master)](https://travis-ci.org/kisp/asgl)
-
 [![Docker Build Status](http://hubstatus.container42.com/kisp/asgl)](https://registry.hub.docker.com/u/kisp/asgl)
 
 # ASGL
