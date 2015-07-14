@@ -1,3 +1,5 @@
+Makefile
+lisp-scripts/compile-foo.lisp
 tmp
 bin/asgl
 gecode

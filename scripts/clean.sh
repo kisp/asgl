@@ -19,4 +19,8 @@ set -e
 
 bash scripts/generate-make-mk.sh
 
+autoconf
+
+./configure
+
 make clean

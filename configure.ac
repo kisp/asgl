@@ -55,4 +55,8 @@ cp confdefs.h asgl_config.h
 
 AC_LANG_POP
 
+
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([lisp-scripts/compile-foo.lisp])
+
 AC_OUTPUT
