@@ -70,6 +70,8 @@ EOF
         ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13.5.1 \
         bash scripts/generate-make-mk.sh
 
+    cp Makefile.in Makefile
+
     env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
         ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13.5.1 \
