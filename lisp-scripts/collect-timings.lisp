@@ -7,19 +7,19 @@
 
 (defstruct benchmark input-file problem)
 
-(defun benchmark-files ()
-  (sort (directory "data/**/*.apx") #'string< :key #'file-namestring))
-
-(defun all-benchmarks ()
-  (let (list)
-    (dolist (file (benchmark-files))
-      (dolist (problem '(:ee-gr :se-gr
-                         :ee-co :se-co
-                         :ee-st :se-st
-                         :ee-pr :se-pr))
-        (let ((benchmark (make-benchmark :input-file file :problem problem)))
-          (push benchmark list))))
-    (nreverse list)))
+(defun all-benchmarks (directory)
+  (labels ((benchmark-files ()
+             (sort (directory (merge-pathnames "data/**/*.apx" directory))
+                   #'string< :key #'file-namestring)))
+    (let (list)
+      (dolist (file (benchmark-files))
+        (dolist (problem '(:ee-gr :se-gr
+                           :ee-co :se-co
+                           :ee-st :se-st
+                           :ee-pr :se-pr))
+          (let ((benchmark (make-benchmark :input-file file :problem problem)))
+            (push benchmark list))))
+      (nreverse list))))
 
 (defun benchmarks-from-list (benchmarks-list benchmarks-dir)
   (with-open-file (input benchmarks-list)
@@ -140,12 +140,11 @@
                                                 :error))
            (format output "    file problem time exit-status~%")
            (let ((*count* 0)
-                 (*asgl* asgl))
+                 (*asgl* asgl)
+                 (benchmarks-dir (merge-pathnames benchmarks-dir)))
              (dolist (benchmark (if benchmarks-list
-                                    (benchmarks-from-list
-                                     benchmarks-list
-                                     (merge-pathnames benchmarks-dir))
-                                    (all-benchmarks)))
+                                    (benchmarks-from-list benchmarks-list benchmarks-dir)
+                                    (all-benchmarks benchmarks-dir)))
                (run-and-output-benchmark benchmark timeout output))))
          (echo-done-benchmarking))))))
 
