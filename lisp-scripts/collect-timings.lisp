@@ -8,8 +8,9 @@
 (defstruct benchmark input-file problem)
 
 (defun all-benchmarks (directory)
+  (format t ";searching .apx files in ~S~%" directory)
   (labels ((benchmark-files ()
-             (sort (directory (merge-pathnames "data/**/*.apx" directory))
+             (sort (directory (merge-pathnames "**/*.apx" directory))
                    #'string< :key #'file-namestring)))
     (let (list)
       (dolist (file (benchmark-files))
