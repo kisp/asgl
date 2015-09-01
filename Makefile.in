@@ -124,10 +124,6 @@ data/real-ee-gr-solutions: data/real-ee-gr-solutions.tar.xz
 	tar -C data -xf data/real-ee-gr-solutions.tar.xz
 	touch data/real-ee-gr-solutions
 
-# tags
-TAGS: $(source-files)
-	etags $(source-files)
-
 # clean
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	  common/early/clean common/asgl-config/clean
