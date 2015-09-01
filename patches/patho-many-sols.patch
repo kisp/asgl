@@ -1,0 +1,66 @@
+diff --git a/ex.lisp b/ex.lisp
+new file mode 100644
+index 0000000..54e8301
+--- /dev/null
++++ b/ex.lisp
+@@ -0,0 +1,16 @@
++;;; in sbcl:
++
++(with-open-file (*standard-output* "/tmp/f.apx"
++                                   :direction :output
++                                   :if-exists :supersede)
++  (dotimes (i 13)
++    (format t "arg(a~A).~%" i)
++    (format t "arg(b~A).~%" i)
++    (format t "att(a~A,b~A).~%" i i)
++    (format t "att(b~A,a~A).~%" i i)))
++
++
++;; ulimit -Sv 200000
++
++;; ./bin/asgl -fo apx -f data/iccma15_testcases/rdm20_20.apx -p EE-CO
++
+diff --git a/v1/v1.lisp b/v1/v1.lisp
+index 812940c..93a20e0 100644
+--- a/v1/v1.lisp
++++ b/v1/v1.lisp
+@@ -242,12 +242,16 @@ Gecode::Search::Statistics s = dfs->statistics();
+ (defun dfs-search-all (space)
+   (let ((dfs (make-dfs space)))
+     (delete-foo space)
+-    (values
+-     (loop for solution = (dfs-next dfs)
+-        until (si:null-pointer-p solution)
+-        collect solution)
+-     (multiple-value-list
+-      (dfs-statistics dfs)))))
++    (let ((*print-length* nil))
++      (let ((count 0))
++        (loop for solution = (dfs-next dfs)
++              until (si:null-pointer-p solution)            
++              do (incf count)
++              do (delete-foo solution))
++        (sleep 7)
++        (format t "count is ~S~%" count)
++        (print (multiple-value-list (dfs-statistics dfs)))
++        (sleep 7)))))
+ 
+ (defun dfs-search-gist (space)
+   (let ((status
+@@ -499,6 +503,7 @@ res = 7;
+     (:pr (preferred-all graph))))
+ 
+ (defun ee-se (graph task semantic vector)
++  vector
+   (when (eql task :ee) (write-char #\[))
+   (multiple-value-bind (extensions se-no?)
+       (list-first-if-se
+@@ -508,8 +513,6 @@ res = 7;
+         (write-string "NO")
+         (loop for tail on extensions
+            for extension = (car tail)
+-           do (format t "[~{~A~^,~}]"
+-                      (mapcar (lambda (index) (aref vector index)) extension))
+            unless (null (cdr tail))
+            do (write-char #\,))))
+   (when (eql task :ee) (write-char #\])))
