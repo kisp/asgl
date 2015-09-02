@@ -183,16 +183,6 @@ s->constrain_not_subset(*o);
 
 "))
 
-(defun constrain-set-greater (space other)
-  (ffi:c-inline (space other) (:pointer-void :pointer-void) :void
-                "
-v1::PrBABSpace* s = ((v1::PrBABSpace*)(#0));
-v1::PrBABSpace* o = ((v1::PrBABSpace*)(#1));
-
-s->constrain(*o);
-
-"))
-
 (defun delete-foo (foo)
   (ffi:c-inline (foo) (:pointer-void) :void
                 "{ delete ((v1::Foo*)#0); }"))
