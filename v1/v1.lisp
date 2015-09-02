@@ -543,28 +543,11 @@ res = 7;
     (foo-branch/l/int-var-degree-max/int-val-min space)
     (dfs-search-gist-or-list-ins space gist)))
 
-(defun grounded-all (graph &key gist)
-  (when gist (error "gist does not make sense here"))
-  (let* ((order (order graph))
-         (space (with-timing (make-foo order))))
-    (with-post-env-setup (space)
-      (constrain-complete graph))
-    (with-timing (space-status space))
-    (list (space-indices-that-are-in-otherwise-out-and-delete space))))
-
 (defun preferred-all (graph &key gist)
   (declare (ignore gist))
   (remove-duplicates
    (sort (complete-all graph) #'< :key #'length)
    :test #'subsetp))
-
-(defun stable-all (graph &key gist)
-  (let* ((order (order graph))
-         (space (with-timing (make-foo order))))
-    (with-post-env-setup (space)
-      (constrain-complete graph)
-      (constrain-stable graph))
-    (dfs-search-gist-or-list-ins space gist)))
 
 (defun adopt-keywords (list)
   (mapcar (lambda (x)
