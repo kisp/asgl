@@ -15,6 +15,91 @@ constraint-based systems and applications. The interface conforms to
     This is free software, and you are welcome to redistribute it
     under certain conditions.
 
+# Building
+
+## autoconf
+
+Run `autoconf` to create the `configure` script from `configure.ac`.
+
+## configure
+
+Run `./configure`. Depending on your GECODE installation, you might want to pass `--without-gist`.
+
+Files involved:
+
+- Makefile.in
+- lisp-scripts/compile-foo.lisp.in
+
+## generate make .mk files
+
+Run `./scripts/generate-make-mk.sh` to generate .mk files.
+
+Files involved:
+
+- common/asgl-config/asgl-config.asd                                                       
+- common/early/early.asd                                                                   
+- common/early/make.mk.patch                                                               
+- lib/alexandria/alexandria.asd                                                            
+- lib/arnesi-list-match/arnesi-list-match.asd                                              
+- lib/myam/version.lisp-expr                                                               
+- lisp-scripts/deps.lisp                                                                   
+- support/asdf.lisp                                                                        
+
+
+## make
+
+Run `make`.
+
+Files involved:
+
+- common/asgl-config/asgl-config.lisp
+- common/early/apx.lisp
+- common/early/count_args.rl
+- common/early/cover.lisp
+- common/early/graph.lisp
+- common/early/myfoo.h
+- common/early/myfoo.rl
+- common/early/package.lisp
+- common/early/slurp.cpp
+- common/early/utils.lisp
+- lib/alexandria/arrays.lisp
+- lib/alexandria/binding.lisp
+- lib/alexandria/conditions.lisp
+- lib/alexandria/control-flow.lisp
+- lib/alexandria/definitions.lisp
+- lib/alexandria/features.lisp
+- lib/alexandria/functions.lisp
+- lib/alexandria/hash-tables.lisp
+- lib/alexandria/io.lisp
+- lib/alexandria/lists.lisp
+- lib/alexandria/macros.lisp
+- lib/alexandria/numbers.lisp
+- lib/alexandria/package.lisp
+- lib/alexandria/sequences.lisp
+- lib/alexandria/strings.lisp
+- lib/alexandria/symbols.lisp
+- lib/alexandria/types.lisp
+- lib/arnesi-list-match/list-match.lisp
+- lib/arnesi-list-match/package.lisp
+- lib/myam/myam.asd
+- lib/myam/src/check.lisp
+- lib/myam/src/classes.lisp
+- lib/myam/src/explain.lisp
+- lib/myam/src/packages.lisp
+- lib/myam/src/random.lisp
+- lib/myam/src/run.lisp
+- lib/myam/src/suite.lisp
+- lib/myam/src/test.lisp
+- lib/myam/src/utils.lisp
+- lisp-scripts/compile-file-system-p.lisp
+- support/gecode-patched-headers.tgz
+- v1/Foo.cpp
+- v1/Foo.h
+- v1/PrBABSpace.cpp
+- v1/PrBABSpace.h
+- v1/v1.lisp
+
+
 # Notes
 
 ## Loading via fas files
