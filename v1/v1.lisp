@@ -437,11 +437,6 @@ res = 7;
 (defun space-indices-that-are-in-and-delete (space)
   (space-indices-that-are-in space :delete t))
 
-(defun space-indices-that-are-in-otherwise-out-and-delete (space)
-  (prog1
-      (bits-to-set (space-to-list space) :unassigned-permitted-as-out t)
-    (delete-foo space)))
-
 (defmacro sortf2 (a b)
   `(unless (< ,a ,b)
      (rotatef ,a ,b)))
