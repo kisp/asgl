@@ -25,7 +25,7 @@ bash scripts/clean.sh
 
 bash scripts/generate-make-mk.sh
 autoconf
-./configure
+./configure --without-gist
 make install-v1
 make test-v1
 ./bin/asgl --check
