@@ -100,6 +100,12 @@ Files involved:
 - v1/v1.lisp
 
 
+## make test
+
+Run ```ASGL_HOME=`pwd` make test``` or alternatively
+```ASGL_HOME=`pwd` CUKE_ARGS="--tags '~@slow'" make test``` (skipping
+some long running tests).
+
 # Notes
 
 ## Loading via fas files
