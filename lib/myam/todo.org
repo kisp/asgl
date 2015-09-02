@@ -1,5 +1,0 @@
-* Tasks
-** TODO should be warning at compile time:
-   WARNING: Redefining test REMOVE-INPUT.1
-** TODO it is not good to force output of every character when running under slime
-   have an option to change that
