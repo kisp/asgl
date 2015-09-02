@@ -579,13 +579,6 @@ res = 7;
      (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
      (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
 
-(defun list-first-if-se (task extensions)
-  (values
-   (ecase task
-     (:se (list (first extensions)))
-     (:ee extensions))
-   (and (eql task :se) (null extensions))))
-
 (defun all-for-semantic (graph semantic)
   (ecase semantic
     (:co (complete-all graph))
