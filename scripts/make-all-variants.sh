@@ -21,14 +21,8 @@ if [ -z "$ASGL_HOME" ]; then
     export ASGL_HOME=`pwd`
 fi
 
-bash scripts/generate-make-mk.sh
+bash scripts/clean.sh
 
-# make clean
-# bash scripts/generate-make-mk.sh
-# make install-ref
-# make test-ref
-
-make clean
 bash scripts/generate-make-mk.sh
 autoconf
 ./configure
@@ -36,5 +30,4 @@ make install-v1
 make test-v1
 ./bin/asgl --check
 
-make clean
 echo DONE
