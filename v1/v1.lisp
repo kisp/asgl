@@ -593,22 +593,6 @@ res = 7;
     (:gr (grounded-all graph))
     (:pr (preferred-all graph))))
 
-(defun ee-se (graph task semantic vector)
-  (when (eql task :ee) (write-char #\[))
-  (multiple-value-bind (extensions se-no?)
-      (list-first-if-se
-       task
-       (all-for-semantic graph semantic))
-    (if se-no?
-        (write-string "NO")
-        (loop for tail on extensions
-           for extension = (car tail)
-           do (format t "[~{~A~^,~}]"
-                      (mapcar (lambda (index) (aref vector index)) extension))
-           unless (null (cdr tail))
-           do (write-char #\,))))
-  (when (eql task :ee) (write-char #\])))
-
 (defun dc-ds1 (graph task semantic arg-index)
   (flet ((contains-arg-p (extension)
            (member arg-index extension)))
@@ -1202,8 +1186,8 @@ res = 7;
        (let ((*print-case* :downcase))
          (multiple-value-bind (graph vector hash)
              (read-apx-file f)
-           (ecase task
-             ((:ee :se) (ee-se graph task semantic vector))
+           (declare (ignore vector))
+           (ecase task          
              ((:dc :ds) (dc-ds graph task semantic hash a)))
            (terpri)))))))
 
