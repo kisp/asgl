@@ -18,6 +18,7 @@
 source-files = $(shell cat tools/source-files.txt)
 
 all: install-v1
+test: test-v1 check
 
 # ref
 install-ref:
