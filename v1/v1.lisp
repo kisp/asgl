@@ -700,7 +700,7 @@ res = 7;
 (defmethod constrain-arg (semantic task space)
   (log* "constrain arg is noop for ~A" task))
 
-(defmethod constrain-arg ((semantic grounded) task space)
+(defmethod constrain-arg ((semantic grounded) (task d-task) space)
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-false space (task-arg task)))
