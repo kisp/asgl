@@ -771,7 +771,8 @@ res = 7;
    (engine-vector :reader engine-vector :initarg :engine-vector)
    (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next)
    (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
-   (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)))
+   (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
+   (space-collect-fn :reader space-collect-fn :initform #'cl-user::space-collect-in)))
 
 (defclass se-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
@@ -837,11 +838,12 @@ res = 7;
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
-        (space-delete-fn (space-delete-fn engine)))
+        (space-delete-fn (space-delete-fn engine))
+        (space-collect-fn (space-collect-fn engine)))
     (loop
        for solution = (funcall next-solution-fn gecode-engine)
        until (si:null-pointer-p solution)
-       collect (cl-user::space-collect-in solution engine-vector)
+       collect (funcall space-collect-fn solution engine-vector)
        do (funcall space-delete-fn solution))))
 
 (defmethod drive-search-and-print (task (engine se-engine))
