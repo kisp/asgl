@@ -783,7 +783,7 @@ res = 7;
   (let ((space (gecode-engine-space-wrapper-space wrapper)))
     (when space
       (prog1
-          (space-propagate-assert-not-failed space)
+          (cl-user::space-propagate-assert-not-failed space)
         (setf (gecode-engine-space-wrapper-space wrapper)
               nil)))))
 
