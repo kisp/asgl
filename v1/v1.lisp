@@ -726,12 +726,10 @@ res = 7;
     (grounded
      (etypecase task       
        ((or ee-task se-task) (make-instance 'propagate-only-engine
-                                         :space space
-                                         :engine-vector vector))
-       (dc-task (make-instance 'dc-engine-grounded
-                               :space space))
-       (ds-task (make-instance 'ds-engine-grounded
-                               :space space))))
+                                            :space space
+                                            :engine-vector vector))
+       (d-task (make-instance 'dc-engine-grounded
+                              :space space))))
     (t (prog1
            (etypecase task
              (ee-task (typecase semantic
@@ -762,9 +760,6 @@ res = 7;
          (cl-user::delete-foo space)))))
 
 (defclass dc-engine-grounded ()
-  ((space :reader engine-space :initarg :space)))
-
-(defclass ds-engine-grounded ()
   ((space :reader engine-space :initarg :space)))
 
 (defclass ee-engine ()
@@ -989,32 +984,6 @@ res = 7;
       (terpri))))
 
 (defmethod drive-search-and-collect (task (engine dc-engine-grounded))
-  (let ((space (engine-space engine)))
-    (cl-user::space-status space)
-    (log* "arg is ~S" (task-arg task))
-    (cl-user::post-must-be-false space (task-arg task))
-    (let ((status (cl-user::space-status space)))
-      (log* "space status is ~S" status)
-      (prog1
-          (if (eql :failed status)
-              t
-              nil)
-        (cl-user::delete-foo space)))))
-
-(defmethod drive-search-and-print (task (engine ds-engine-grounded))
-  (let ((space (engine-space engine)))
-    (cl-user::space-status space)
-    (log* "arg is ~S" (task-arg task))
-    (cl-user::post-must-be-false space (task-arg task))
-    (let ((status (cl-user::space-status space)))
-      (log* "space status is ~S" status)
-      (if (eql :failed status)
-          (write-string "YES")
-          (write-string "NO"))
-      (cl-user::delete-foo space)
-      (terpri))))
-
-(defmethod drive-search-and-collect (task (engine ds-engine-grounded))
   (let ((space (engine-space engine)))
     (cl-user::space-status space)
     (log* "arg is ~S" (task-arg task))
