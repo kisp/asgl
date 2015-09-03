@@ -768,7 +768,8 @@ res = 7;
 
 (defclass ee-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
-   (engine-vector :reader engine-vector :initarg :engine-vector)))
+   (engine-vector :reader engine-vector :initarg :engine-vector)
+   (next-fn :reader next-fn :initform #'cl-user::dfs-next)))
 
 (defclass se-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
