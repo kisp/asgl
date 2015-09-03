@@ -636,15 +636,11 @@ res = 7;
       (prepare-space input task semantic)
     (make-search-engine space task semantic vector)))
 
-(defmethod print-answer ((input graph-input)
-                         (task task)
-                         (semantic semantic))
+(defun print-answer (input task semantic)
   (let ((engine (build-engine input task semantic)))
     (drive-search-and-print task engine)))
 
-(defmethod collect-answer ((input graph-input)
-                           (task task)
-                           (semantic semantic))
+(defun collect-answer (input task semantic)
   (let ((engine (build-engine input task semantic)))
     (drive-search-and-collect task engine)))
 
