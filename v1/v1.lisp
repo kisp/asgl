@@ -740,9 +740,10 @@ res = 7;
                                           :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
-                         (make-instance 'bab-engine
+                         (make-instance 'ee-engine
                                         :gecode-engine (cl-user::make-bab space)
-                                        :engine-vector vector))
+                                        :engine-vector vector
+                                        :next-solution-fn #'cl-user::bab-best))
                         (t
                          (make-instance 'ee-engine
                                         :gecode-engine (cl-user::make-dfs space)
@@ -773,10 +774,6 @@ res = 7;
    (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
    (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
    (space-collect-fn :reader space-collect-fn :initform #'cl-user::space-collect-in)))
-
-(defclass bab-engine ()
-  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
-   (engine-vector :reader engine-vector :initarg :engine-vector)))
 
 (defclass multi-bab-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
@@ -869,29 +866,6 @@ res = 7;
           (values (prog1
                       (funcall space-collect-fn space engine-vector)
                     (funcall space-delete-fn space))
-                  t)))))
-
-(defmethod drive-search-and-print (task (engine bab-engine))
-  (let ((gecode-engine (gecode-engine engine))
-        (engine-vector (engine-vector engine)))
-    (let ((space (cl-user::bab-best gecode-engine)))
-      (if (null space)
-          (write-string "NO")
-          (progn
-            (cl-user::space-print-in space engine-vector)
-            (cl-user::delete-foo space))))
-    (terpri)
-    nil))
-
-(defmethod drive-search-and-collect (task (engine bab-engine))
-  (let ((gecode-engine (gecode-engine engine))
-        (engine-vector (engine-vector engine)))
-    (let ((space (cl-user::bab-best gecode-engine)))
-      (if (null space)
-          (values nil nil)
-          (values (prog1
-                      (cl-user::space-collect-in space engine-vector)
-                    (cl-user::delete-foo space))
                   t)))))
 
 (defun step1 (bab fn first-time vector master)
