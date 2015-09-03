@@ -28,4 +28,7 @@
    #:do-parents
    #:do-parents-grandparents)
   ;; apx
-  (:export #:read-apx-file))
+  (:export #:read-apx-file)
+  ;; graph-input
+  (:export #:make-graph-input
+           #:read-graph-input))
