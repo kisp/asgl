@@ -770,7 +770,8 @@ res = 7;
 (defclass ee-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)
-   (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next)
+   (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next
+                     :initarg :next-solution-fn)
    (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
    (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
    (space-collect-fn :reader space-collect-fn :initform #'cl-user::space-collect-in)))
