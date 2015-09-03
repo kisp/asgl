@@ -931,10 +931,12 @@ res = 7;
 
 (defmethod drive-search-and-print ((task d-task) (engine ee-engine))
   (let* ((gecode-engine (gecode-engine engine))
-         (space (cl-user::dfs-next gecode-engine))
+         (next-solution-fn (next-solution-fn engine))
+         (space-delete-fn (space-delete-fn engine))
+         (solution (funcall next-solution-fn gecode-engine))
          (no-solution-found-means-yes
            (no-solution-found-means-yes task)))
-    (if (null space)
+    (if (null solution)
         (write-string (if no-solution-found-means-yes
                           "YES"
                           "NO"))
@@ -942,20 +944,22 @@ res = 7;
           (write-string (if no-solution-found-means-yes
                             "NO"
                             "YES"))
-          (cl-user::delete-foo space)))
+          (funcall space-delete-fn solution)))
     (terpri)
     nil))
 
 (defmethod drive-search-and-collect ((task d-task) (engine ee-engine))
   (let* ((gecode-engine (gecode-engine engine))
-         (space (cl-user::dfs-next gecode-engine))
+         (next-solution-fn (next-solution-fn engine))
+         (space-delete-fn (space-delete-fn engine))
+         (solution (funcall next-solution-fn gecode-engine))
          (no-solution-found-means-yes
            (no-solution-found-means-yes task)))
-    (if (null space)
+    (if (null solution)
         no-solution-found-means-yes
         (prog1
             (not no-solution-found-means-yes)
-          (cl-user::delete-foo space)))))
+          (funcall space-delete-fn solution)))))
 
 (defmethod drive-search-and-print (task (engine dc-engine-grounded))
   (let ((space (engine-space engine)))
