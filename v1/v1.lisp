@@ -587,8 +587,8 @@ res = 7;
 
 (defgeneric make-initial-space (graph task semantic))
 
-(defgeneric constrain-space (space graph task semantic))
-(defgeneric constrain-arg (semantic task space))
+(defgeneric constrain-space (space semantic task graph))
+(defgeneric constrain-arg (space semantic task))
 
 (defgeneric branch-space (space task semantic))
 
@@ -632,8 +632,8 @@ res = 7;
     (setf (task-hash task) hash)
     (let ((space (make-initial-space graph task semantic)))
       (cl-user::with-post-env-setup (space)
-        (constrain-space space graph task semantic)
-        (constrain-arg semantic task space))
+        (constrain-space space semantic task graph)
+        (constrain-arg space semantic task))
       (branch-space space task semantic)
       (values space vector))))
 
@@ -674,26 +674,26 @@ res = 7;
 (defmethod make-initial-space (graph (task ee-task) (semantic preferred))
   (cl-user::make-pr-bab-space (order graph)))
 
-(defmethod constrain-space (space graph task (semantic complete))
+(defmethod constrain-space (space (semantic complete) task graph)
   (cl-user::constrain-complete graph))
 
-(defmethod constrain-space :after (space graph task (semantic stable))
+(defmethod constrain-space :after (space (semantic stable) task graph)
   (cl-user::constrain-stable graph))
 
-(defmethod constrain-arg (semantic task space)
+(defmethod constrain-arg (space semantic task)
   (log* "constrain arg is noop for ~A" task))
 
-(defmethod constrain-arg ((semantic grounded) (task d-task) space)
+(defmethod constrain-arg (space (semantic grounded) (task d-task))
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-false space (task-arg task)))
 
-(defmethod constrain-arg (semantic (task ds-task) space)
+(defmethod constrain-arg (space semantic (task ds-task))
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-false space (task-arg task)))
 
-(defmethod constrain-arg (semantic (task dc-task) space)
+(defmethod constrain-arg (space semantic (task dc-task))
   (log* "constrain arg to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-true space (task-arg task)))
