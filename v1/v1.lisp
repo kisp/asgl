@@ -581,12 +581,10 @@ res = 7;
            #:collect-answer
            #:make-semantic
            #:make-task
-           #:make-graph-input
            #:translate-problem))
 
 (in-package :oo)
 
-(defclass graph-input () ())
 (defclass task () ())
 (defclass semantic () ())
 
@@ -613,12 +611,6 @@ res = 7;
 
 (defmethod task-arg ((task d-task))
   (gethash (task-arg-name task) (task-hash task)))
-
-(defclass apx-input (graph-input)
-  ((pathname :reader apx-pathname :initarg :pathname)))
-
-(defclass vector-input (graph-input)
-  ((vector :reader graph-input-vector :initarg :vector)))
 
 (defun prepare-space (input task semantic)
   (multiple-value-bind (graph vector hash)
@@ -658,22 +650,6 @@ res = 7;
       (:se (make-instance 'se-task))
       (:dc (make-instance 'dc-task :arg-name arg))
       (:ds (make-instance 'ds-task :arg-name arg)))))
-
-(defun make-graph-input (input)
-  (typecase input
-    ((or pathname string) (make-instance 'apx-input :pathname input))
-    (vector (make-instance 'vector-input :vector input))))
-
-(defmethod read-graph-input ((input apx-input))
-  (read-apx-file (apx-pathname input)))
-
-(defmethod read-graph-input ((input vector-input))
-  (let* ((graph (graph-input-vector input))
-         (items (alexandria:iota (order graph))))
-    (values graph
-            (make-array (order graph) :initial-contents items)
-            (alexandria:alist-hash-table
-             (mapcar #'cons items items)))))
 
 (defmethod make-initial-space (graph (task task) (semantic semantic))
   (cl-user::make-foo (order graph)))
@@ -1026,7 +1002,7 @@ res = 7;
                       (semantic (oo:make-semantic ,semantic)))
                   (multiple-value-bind (task semantic)
                       (oo:translate-problem task semantic)
-                    (oo:collect-answer (oo:make-graph-input graph)
+                    (oo:collect-answer (make-graph-input graph)
                                        task
                                        semantic))))))
   ;; all
@@ -1066,7 +1042,7 @@ res = 7;
              (semantic (oo:make-semantic semantic)))
          (multiple-value-bind (task semantic)
              (oo:translate-problem task semantic)
-           (oo:print-answer (oo:make-graph-input f)
+           (oo:print-answer (make-graph-input f)
                             task
                             semantic))))
       (t
@@ -1074,7 +1050,7 @@ res = 7;
          (multiple-value-bind (graph vector hash)
              (read-apx-file f)
            (declare (ignore vector))
-           (ecase task          
+           (ecase task
              ((:dc :ds) (dc-ds graph task semantic hash a)))
            (terpri)))))))
 
