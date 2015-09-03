@@ -956,6 +956,30 @@ res = 7;
             (not no-solution-found-means-yes)
           (funcall space-delete-fn solution)))))
 
+(defmethod drive-search-and-print ((task d-task) (engine propagate-only-engine))
+  (let* ((gecode-engine (gecode-engine engine))
+         (next-solution-fn (next-solution-fn engine))
+         (space-delete-fn (space-delete-fn engine))
+         (solution (funcall next-solution-fn gecode-engine)))
+    (if (null solution)
+        (write-string "YES")
+        (progn
+          (write-string "NO")
+          (funcall space-delete-fn solution)))
+    (terpri)
+    nil))
+
+(defmethod drive-search-and-collect ((task d-task) (engine propagate-only-engine))
+  (let* ((gecode-engine (gecode-engine engine))
+         (next-solution-fn (next-solution-fn engine))
+         (space-delete-fn (space-delete-fn engine))
+         (solution (funcall next-solution-fn gecode-engine)))
+    (if (null solution)
+        t
+        (prog1
+            nil
+          (funcall space-delete-fn solution)))))
+
 (macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
              (declare (ignore arrow))
              (let ((from-task-type (type-of (make-task from-task)))
