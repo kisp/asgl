@@ -731,12 +731,9 @@ res = 7;
 (defmethod make-search-engine (space task semantic vector)
   (typecase semantic
     (grounded
-     (etypecase task       
-       ((or ee-task se-task) (make-instance 'propagate-only-engine
-                                            :space space
-                                            :engine-vector vector))
-       (d-task (make-instance 'dc-engine-grounded
-                              :space space))))
+     (make-instance 'propagate-only-engine
+                    :space space
+                    :engine-vector vector))
     (t (prog1
            (etypecase task
              (ee-task (typecase semantic
@@ -765,9 +762,6 @@ res = 7;
              (ds-task (make-instance 'ee-engine
                                      :gecode-engine (cl-user::make-dfs space))))
          (cl-user::delete-foo space)))))
-
-(defclass dc-engine-grounded ()
-  ((space :reader engine-space :initarg :space)))
 
 (defclass ee-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
@@ -962,26 +956,6 @@ res = 7;
         (prog1
             (not no-solution-found-means-yes)
           (funcall space-delete-fn solution)))))
-
-(defmethod drive-search-and-print (task (engine dc-engine-grounded))
-  (let ((space (engine-space engine)))    
-    (let ((status (cl-user::space-status space)))
-      (log* "space status is ~S" status)
-      (if (eql :failed status)
-          (write-string "YES")
-          (write-string "NO"))
-      (cl-user::delete-foo space)
-      (terpri))))
-
-(defmethod drive-search-and-collect (task (engine dc-engine-grounded))
-  (let ((space (engine-space engine)))    
-    (let ((status (cl-user::space-status space)))
-      (log* "space status is ~S" status)
-      (prog1
-          (if (eql :failed status)
-              t
-              nil)
-        (cl-user::delete-foo space)))))
 
 (macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
              (declare (ignore arrow))
