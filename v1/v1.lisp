@@ -630,7 +630,7 @@ res = 7;
     (let ((space (make-initial-space graph task semantic)))
       (cl-user::with-post-env-setup (space)
         (constrain-space space graph task semantic)
-        (constrain-arg space task semantic))
+        (constrain-arg semantic task space))
       (branch-space space task semantic)
       (values space vector))))
 
@@ -697,21 +697,21 @@ res = 7;
 (defmethod constrain-space :after (space graph task (semantic stable))
   (cl-user::constrain-stable graph))
 
-(defmethod constrain-arg (space task semantic)
+(defmethod constrain-arg (semantic task space)
   (log* "constrain arg is noop for ~A" task))
 
-(defmethod constrain-arg (space (task ds-task) semantic)
+(defmethod constrain-arg ((semantic grounded) task space)
+  (log* "constrain arg is a noop for grounded"))
+
+(defmethod constrain-arg (semantic (task ds-task) space)
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-false space (task-arg task)))
 
-(defmethod constrain-arg (space (task dc-task) semantic)
+(defmethod constrain-arg (semantic (task dc-task) space)
   (log* "constrain arg to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-true space (task-arg task)))
-
-(defmethod constrain-arg :around (space task (semantic grounded))
-  (log* "constrain arg is a noop for grounded"))
 
 (defmethod branch-space (space task semantic)
   (cl-user::foo-branch/l/int-var-degree-max/int-val-min space))
