@@ -297,6 +297,7 @@ default: @(return 0) = 100; break;
       ((bab-next (bab)
          (ffi:c-inline (bab) (:pointer-void) :pointer-void
                        "{ @(return 0) = ((Gecode::BAB<v1::Foo>*)(#0))->next(); }")))
+    (declare (inline bab-next))
     (loop
       for prev-solution = nil then
                               (progn (when prev-solution
