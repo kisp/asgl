@@ -336,8 +336,8 @@ Gecode::Search::Statistics s = dfs->statistics();
   (let ((dfs (make-dfs space)))
     (delete-foo space)
     (values
-     (loop for solution = (dfs-next dfs)
-        until (si:null-pointer-p solution)
+     (loop for solution = (dfs-next* dfs)
+        until (null solution)
         collect solution)
      (multiple-value-list
       (dfs-statistics dfs)))))
@@ -924,8 +924,8 @@ res = 7;
 
 (defmethod drive-search-and-print (task (engine dc-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (si:null-pointer-p space)
+    (let ((space (cl-user::dfs-next* gecode-engine)))
+      (if (null space)
           (write-string "NO")
           (progn
             (write-string "YES")
@@ -935,8 +935,8 @@ res = 7;
 
 (defmethod drive-search-and-collect (task (engine dc-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (si:null-pointer-p space)
+    (let ((space (cl-user::dfs-next* gecode-engine)))
+      (if (null space)
           nil
           (prog1
               t
@@ -944,8 +944,8 @@ res = 7;
 
 (defmethod drive-search-and-print (task (engine ds-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (si:null-pointer-p space)
+    (let ((space (cl-user::dfs-next* gecode-engine)))
+      (if (null space)
           (write-string "YES")
           (progn
             (write-string "NO")
@@ -955,8 +955,8 @@ res = 7;
 
 (defmethod drive-search-and-collect (task (engine ds-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (si:null-pointer-p space)
+    (let ((space (cl-user::dfs-next* gecode-engine)))
+      (if (null space)
           t
           (prog1
               nil
