@@ -600,12 +600,17 @@ res = 7;
 
 (defclass d-task (task)
   ((hash :accessor task-hash :initform nil)
-   (arg-name :reader task-arg-name :initarg :arg-name)))
+   (arg-name :reader task-arg-name :initarg :arg-name)
+   (no-solution-found-means-yes :reader no-solution-found-means-yes)))
 
 (defclass ee-task (task) ())
 (defclass se-task (task) ())
-(defclass dc-task (d-task) ())
-(defclass ds-task (d-task) ())
+
+(defclass dc-task (d-task)
+  ((no-solution-found-means-yes :initform nil)))
+
+(defclass ds-task (d-task)
+  ((no-solution-found-means-yes :initform t)))
 
 (defmethod (setf task-hash) (value (task task)))
 
@@ -753,9 +758,9 @@ res = 7;
                          (make-instance 'ee-engine
                                         :gecode-engine (cl-user::make-dfs space)
                                         :engine-vector vector))))
-             (dc-task (make-instance 'dc-engine
+             (dc-task (make-instance 'ee-engine
                                      :gecode-engine (cl-user::make-dfs space)))
-             (ds-task (make-instance 'ds-engine
+             (ds-task (make-instance 'ee-engine
                                      :gecode-engine (cl-user::make-dfs space))))
          (cl-user::delete-foo space)))))
 
@@ -794,12 +799,6 @@ res = 7;
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)
    (space :reader engine-space :initarg :space)))
-
-(defclass dc-engine ()
-  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)))
-
-(defclass ds-engine ()
-  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)))
 
 (defclass preferred-all-engine ()
   ((sub-engine :reader sub-engine :initarg :sub-engine)))
@@ -930,45 +929,33 @@ res = 7;
        (push (cl-user::space-collect-in next vector) list)))
     list))
 
-(defmethod drive-search-and-print (task (engine dc-engine))
-  (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (null space)
-          (write-string "NO")
-          (progn
-            (write-string "YES")
-            (cl-user::delete-foo space))))
+(defmethod drive-search-and-print ((task d-task) (engine ee-engine))
+  (let* ((gecode-engine (gecode-engine engine))
+         (space (cl-user::dfs-next gecode-engine))
+         (no-solution-found-means-yes
+           (no-solution-found-means-yes task)))
+    (if (null space)
+        (write-string (if no-solution-found-means-yes
+                          "YES"
+                          "NO"))
+        (progn
+          (write-string (if no-solution-found-means-yes
+                            "NO"
+                            "YES"))
+          (cl-user::delete-foo space)))
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect (task (engine dc-engine))
-  (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (null space)
-          nil
-          (prog1
-              t
-            (cl-user::delete-foo space))))))
-
-(defmethod drive-search-and-print (task (engine ds-engine))
-  (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (null space)
-          (write-string "YES")
-          (progn
-            (write-string "NO")
-            (cl-user::delete-foo space))))
-    (terpri)
-    nil))
-
-(defmethod drive-search-and-collect (task (engine ds-engine))
-  (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next gecode-engine)))
-      (if (null space)
-          t
-          (prog1
-              nil
-            (cl-user::delete-foo space))))))
+(defmethod drive-search-and-collect ((task d-task) (engine ee-engine))
+  (let* ((gecode-engine (gecode-engine engine))
+         (space (cl-user::dfs-next gecode-engine))
+         (no-solution-found-means-yes
+           (no-solution-found-means-yes task)))
+    (if (null space)
+        no-solution-found-means-yes
+        (prog1
+            (not no-solution-found-means-yes)
+          (cl-user::delete-foo space)))))
 
 (defmethod drive-search-and-print (task (engine dc-engine-grounded))
   (let ((space (engine-space engine)))
