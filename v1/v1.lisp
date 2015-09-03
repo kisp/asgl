@@ -744,7 +744,7 @@ res = 7;
                                         :gecode-engine (cl-user::make-bab space)
                                         :engine-vector vector))
                         (t
-                         (make-instance 'se-engine
+                         (make-instance 'ee-engine
                                         :gecode-engine (cl-user::make-dfs space)
                                         :engine-vector vector))))
              (dc-task (make-instance 'dc-engine
@@ -773,10 +773,6 @@ res = 7;
    (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
    (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
    (space-collect-fn :reader space-collect-fn :initform #'cl-user::space-collect-in)))
-
-(defclass se-engine ()
-  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
-   (engine-vector :reader engine-vector :initarg :engine-vector)))
 
 (defclass bab-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
@@ -846,7 +842,7 @@ res = 7;
        collect (funcall space-collect-fn solution engine-vector)
        do (funcall space-delete-fn solution))))
 
-(defmethod drive-search-and-print (task (engine se-engine))
+(defmethod drive-search-and-print ((task se-task) (engine ee-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine)))
     (let ((space (cl-user::dfs-next gecode-engine)))
@@ -858,7 +854,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect (task (engine se-engine))
+(defmethod drive-search-and-collect ((task se-task) (engine ee-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine)))
     (let ((space (cl-user::dfs-next gecode-engine)))
