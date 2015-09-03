@@ -219,6 +219,11 @@ default: @(return 0) = 100; break;
       (2 :solved)
       (3 :branch))))
 
+(defun space-propagate-assert-not-failed (space)
+  (let ((status (space-status space)))
+    (assert (not (eql :failed status)))
+    space))
+
 (defun space-to-list (space)
   (mapcar #'boolvar-domain (space-vars-as-list space)))
 
@@ -719,13 +724,10 @@ res = 7;
 (defmethod make-search-engine (space task semantic vector)
   (typecase semantic
     (grounded
-     (etypecase task
-       (ee-task (make-instance 'ee-engine-grounded
-                               :space space
-                               :engine-vector vector))
-       (se-task (make-instance 'se-engine-grounded
-                               :space space
-                               :engine-vector vector))
+     (etypecase task       
+       ((ee-task se-task) (make-instance 'propagate-only-engine
+                                         :space space
+                                         :engine-vector vector))
        (dc-task (make-instance 'dc-engine-grounded
                                :space space))
        (ds-task (make-instance 'ds-engine-grounded
@@ -759,13 +761,6 @@ res = 7;
                                      :gecode-engine (cl-user::make-dfs space))))
          (cl-user::delete-foo space)))))
 
-(defclass se-engine-grounded ()
-  ((engine-vector :reader engine-vector :initarg :engine-vector)
-   (space :reader engine-space :initarg :space)))
-
-(defclass ee-engine-grounded (se-engine-grounded)
-  ())
-
 (defclass dc-engine-grounded ()
   ((space :reader engine-space :initarg :space)))
 
@@ -780,6 +775,10 @@ res = 7;
    (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
    (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
    (space-collect-fn :reader space-collect-fn :initform #'cl-user::space-collect-in)))
+
+(defclass propagate-only-engine (ee-engine)
+  ((gecode-engine :initarg :space)
+   (next-solution-fn :initform #'cl-user::space-propagate-assert-not-failed)))
 
 (defclass multi-bab-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
@@ -960,35 +959,6 @@ res = 7;
           (prog1
               nil
             (cl-user::delete-foo space))))))
-
-(defmethod drive-search-and-print (task (engine se-engine-grounded))
-  (let ((space (engine-space engine))
-        (engine-vector (engine-vector engine)))
-    (cl-user::space-status space)
-    (cl-user::space-print-in space engine-vector)
-    (cl-user::delete-foo space)))
-
-(defmethod drive-search-and-collect (task (engine se-engine-grounded))
-  (let ((space (engine-space engine))
-        (engine-vector (engine-vector engine)))
-    (cl-user::space-status space)
-    (multiple-value-prog1
-        (values (cl-user::space-collect-in space engine-vector) t)
-      (cl-user::delete-foo space))))
-
-(defmethod drive-search-and-collect (task (engine ee-engine-grounded))
-  (let ((space (engine-space engine))
-        (engine-vector (engine-vector engine)))
-    (cl-user::space-status space)
-    (prog1
-        (list (cl-user::space-collect-in space engine-vector))
-      (cl-user::delete-foo space))))
-
-(defmethod drive-search-and-print :before (task (engine ee-engine-grounded))
-  (write-string "["))
-
-(defmethod drive-search-and-print :after (task (engine ee-engine-grounded))
-  (write-string "]"))
 
 (defmethod drive-search-and-print (task (engine dc-engine-grounded))
   (let ((space (engine-space engine)))
