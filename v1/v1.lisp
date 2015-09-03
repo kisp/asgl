@@ -277,11 +277,9 @@ default: @(return 0) = 100; break;
                 "{ @(return 0) = new Gecode::DFS<v1::Foo>(((v1::Foo*)(#0)));}"))
 
 (defun dfs-next (dfs)
-  (ffi:c-inline (dfs) (:pointer-void) :pointer-void
-                "{ @(return 0) = ((Gecode::DFS<v1::Foo>*)(#0))->next(); }"))
-
-(defun dfs-next* (dfs)
-  (let ((solution (dfs-next dfs)))
+  (let ((solution
+          (ffi:c-inline (dfs) (:pointer-void) :pointer-void
+                "{ @(return 0) = ((Gecode::DFS<v1::Foo>*)(#0))->next(); }")))
     (if (si:null-pointer-p solution)
         nil
         solution)))
@@ -336,7 +334,7 @@ Gecode::Search::Statistics s = dfs->statistics();
   (let ((dfs (make-dfs space)))
     (delete-foo space)
     (values
-     (loop for solution = (dfs-next* dfs)
+     (loop for solution = (dfs-next dfs)
         until (null solution)
         collect solution)
      (multiple-value-list
@@ -776,7 +774,7 @@ res = 7;
 (defclass ee-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)
-   (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next*
+   (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next
                      :initarg :next-solution-fn)
    (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
    (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
@@ -924,7 +922,7 @@ res = 7;
 
 (defmethod drive-search-and-print (task (engine dc-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next* gecode-engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
       (if (null space)
           (write-string "NO")
           (progn
@@ -935,7 +933,7 @@ res = 7;
 
 (defmethod drive-search-and-collect (task (engine dc-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next* gecode-engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
       (if (null space)
           nil
           (prog1
@@ -944,7 +942,7 @@ res = 7;
 
 (defmethod drive-search-and-print (task (engine ds-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next* gecode-engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
       (if (null space)
           (write-string "YES")
           (progn
@@ -955,7 +953,7 @@ res = 7;
 
 (defmethod drive-search-and-collect (task (engine ds-engine))
   (let ((gecode-engine (gecode-engine engine)))
-    (let ((space (cl-user::dfs-next* gecode-engine)))
+    (let ((space (cl-user::dfs-next gecode-engine)))
       (if (null space)
           t
           (prog1
