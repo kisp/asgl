@@ -280,6 +280,12 @@ default: @(return 0) = 100; break;
   (ffi:c-inline (dfs) (:pointer-void) :pointer-void
                 "{ @(return 0) = ((Gecode::DFS<v1::Foo>*)(#0))->next(); }"))
 
+(defun dfs-next* (dfs)
+  (let ((solution (dfs-next dfs)))
+    (if (si:null-pointer-p solution)
+        nil
+        solution)))
+
 (defun make-bab (space)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = new Gecode::BAB<v1::Foo>(((v1::Foo*)(#0)));}"))
@@ -770,7 +776,7 @@ res = 7;
 (defclass ee-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)
-   (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next
+   (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next*
                      :initarg :next-solution-fn)
    (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
    (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
@@ -818,7 +824,7 @@ res = 7;
     (loop
        with first-time = t
        for solution = (funcall next-solution-fn gecode-engine)
-       until (si:null-pointer-p solution)
+       until (null solution)
        do (if first-time
               (setq first-time nil)
               (write-char #\,))
@@ -836,7 +842,7 @@ res = 7;
         (space-collect-fn (space-collect-fn engine)))
     (loop
        for solution = (funcall next-solution-fn gecode-engine)
-       until (si:null-pointer-p solution)
+       until (null solution)
        collect (funcall space-collect-fn solution engine-vector)
        do (funcall space-delete-fn solution))))
 
@@ -847,7 +853,7 @@ res = 7;
         (space-delete-fn (space-delete-fn engine))
         (space-print-fn (space-print-fn engine)))
     (let ((space (funcall next-solution-fn gecode-engine)))
-      (if (si:null-pointer-p space)
+      (if (null space)
           (write-string "NO")
           (progn
             (funcall space-print-fn space engine-vector)
@@ -862,7 +868,7 @@ res = 7;
         (space-delete-fn (space-delete-fn engine))
         (space-collect-fn (space-collect-fn engine)))
     (let ((space (funcall next-solution-fn gecode-engine)))
-      (if (si:null-pointer-p space)
+      (if (null space)
           (values nil nil)
           (values (prog1
                       (funcall space-collect-fn space engine-vector)
