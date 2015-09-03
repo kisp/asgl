@@ -185,7 +185,8 @@ s->constrain_not_subset(*o);
 
 (defun delete-foo (foo)
   (ffi:c-inline (foo) (:pointer-void) :void
-                "{ delete ((v1::Foo*)#0); }"))
+                "{ delete ((v1::Foo*)#0); }")
+  nil)
 
 (defun clone-foo (foo)
   (ffi:c-inline (foo) (:pointer-void) :pointer-void
@@ -295,7 +296,8 @@ default: @(return 0) = 100; break;
 
 (defun delete-bab (bab)
   (ffi:c-inline (bab) (:pointer-void) :void
-                "{ delete ((Gecode::BAB<v1::Foo>*)#0); }"))
+                "{ delete ((Gecode::BAB<v1::Foo>*)#0); }")
+  nil)
 
 (defun bab-best (bab)
   (labels
