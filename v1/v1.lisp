@@ -964,10 +964,7 @@ res = 7;
           (funcall space-delete-fn solution)))))
 
 (defmethod drive-search-and-print (task (engine dc-engine-grounded))
-  (let ((space (engine-space engine)))
-    (cl-user::space-status space)
-    (log* "arg is ~S" (task-arg task))
-    (cl-user::post-must-be-false space (task-arg task))
+  (let ((space (engine-space engine)))    
     (let ((status (cl-user::space-status space)))
       (log* "space status is ~S" status)
       (if (eql :failed status)
@@ -977,10 +974,7 @@ res = 7;
       (terpri))))
 
 (defmethod drive-search-and-collect (task (engine dc-engine-grounded))
-  (let ((space (engine-space engine)))
-    (cl-user::space-status space)
-    (log* "arg is ~S" (task-arg task))
-    (cl-user::post-must-be-false space (task-arg task))
+  (let ((space (engine-space engine)))    
     (let ((status (cl-user::space-status space)))
       (log* "space status is ~S" status)
       (prog1
