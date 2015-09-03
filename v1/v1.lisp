@@ -607,7 +607,7 @@ res = 7;
 (defclass preferred (complete) ())
 (defclass stable (preferred) ())
 
-(defclass d-task (task)
+(defclass decision-task (task)
   ((hash :accessor task-hash :initform nil)
    (arg-name :reader task-arg-name :initarg :arg-name)
    (no-solution-found-means-yes :reader no-solution-found-means-yes)))
@@ -615,15 +615,15 @@ res = 7;
 (defclass ee-task (task) ())
 (defclass se-task (task) ())
 
-(defclass dc-task (d-task)
+(defclass dc-task (decision-task)
   ((no-solution-found-means-yes :initform nil)))
 
-(defclass ds-task (d-task)
+(defclass ds-task (decision-task)
   ((no-solution-found-means-yes :initform t)))
 
 (defmethod (setf task-hash) (value (task task)))
 
-(defmethod task-arg ((task d-task))
+(defmethod task-arg ((task decision-task))
   (gethash (task-arg-name task) (task-hash task)))
 
 (defun prepare-space (input task semantic)
@@ -683,7 +683,7 @@ res = 7;
 (defmethod constrain-arg (space semantic task)
   (log* "constrain arg is noop for ~A" task))
 
-(defmethod constrain-arg (space (semantic grounded) (task d-task))
+(defmethod constrain-arg (space (semantic grounded) (task decision-task))
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-false space (task-arg task)))
@@ -910,7 +910,7 @@ res = 7;
        (push (cl-user::space-collect-in next vector) list)))
     list))
 
-(defmethod drive-search-and-print ((task d-task) (engine ee-engine))
+(defmethod drive-search-and-print ((task decision-task) (engine ee-engine))
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -929,7 +929,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task d-task) (engine ee-engine))
+(defmethod drive-search-and-collect ((task decision-task) (engine ee-engine))
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -942,7 +942,7 @@ res = 7;
             (not no-solution-found-means-yes)
           (funcall space-delete-fn solution)))))
 
-(defmethod drive-search-and-print ((task d-task) (engine propagate-only-engine))
+(defmethod drive-search-and-print ((task decision-task) (engine propagate-only-engine))
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -955,7 +955,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task d-task) (engine propagate-only-engine))
+(defmethod drive-search-and-collect ((task decision-task) (engine propagate-only-engine))
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -975,7 +975,7 @@ res = 7;
                `(defmethod translate-problem ((task ,from-task-type)
                                               (semantic ,from-semantic-type))
                   (values ,(if task-change
-                               (if (subtypep from-task-type 'd-task)
+                               (if (subtypep from-task-type 'decision-task)
                                    `(make-task ,to-task (task-arg-name task))
                                    `(make-task ,to-task))
                                'task)
