@@ -802,7 +802,7 @@ res = 7;
      (sort complete-all #'< :key #'length)
      :test #'subsetp)))
 
-(defmethod drive-search-and-print (task (engine search-engine))
+(defmethod drive-search-and-print (task engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -822,7 +822,7 @@ res = 7;
     (write-line "]")
     nil))
 
-(defmethod drive-search-and-collect (task (engine search-engine))
+(defmethod drive-search-and-collect (task engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -834,7 +834,7 @@ res = 7;
        collect (funcall space-collect-fn solution engine-vector)
        do (funcall space-delete-fn solution))))
 
-(defmethod drive-search-and-print ((task se-task) (engine search-engine))
+(defmethod drive-search-and-print ((task se-task) engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -849,7 +849,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task se-task) (engine search-engine))
+(defmethod drive-search-and-collect ((task se-task) engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -910,7 +910,7 @@ res = 7;
        (push (cl-user::space-collect-in next vector) list)))
     list))
 
-(defmethod drive-search-and-print ((task decision-task) (engine search-engine))
+(defmethod drive-search-and-print ((task decision-task) engine)
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -929,7 +929,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task decision-task) (engine search-engine))
+(defmethod drive-search-and-collect ((task decision-task) engine)
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
