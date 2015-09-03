@@ -220,11 +220,6 @@ default: @(return 0) = 100; break;
       (2 :solved)
       (3 :branch))))
 
-(defun space-propagate-assert-not-failed (space)
-  (let ((status (space-status space)))
-    (assert (not (eql :failed status)))
-    space))
-
 (defun space-to-list (space)
   (mapcar #'boolvar-domain (space-vars-as-list space)))
 
@@ -781,7 +776,9 @@ res = 7;
   (let ((space (gecode-engine-space-wrapper-space wrapper)))
     (when space
       (prog1
-          (cl-user::space-propagate-assert-not-failed space)
+          (case (cl-user::space-status space)
+            (:failed (cl-user::delete-foo space))
+            (t space))
         (setf (gecode-engine-space-wrapper-space wrapper)
               nil)))))
 
