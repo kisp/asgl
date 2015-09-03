@@ -725,7 +725,7 @@ res = 7;
   (typecase semantic
     (grounded
      (etypecase task       
-       ((ee-task se-task) (make-instance 'propagate-only-engine
+       ((or ee-task se-task) (make-instance 'propagate-only-engine
                                          :space space
                                          :engine-vector vector))
        (dc-task (make-instance 'dc-engine-grounded
