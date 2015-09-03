@@ -776,9 +776,24 @@ res = 7;
    (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
    (space-collect-fn :reader space-collect-fn :initform #'cl-user::space-collect-in)))
 
+(defstruct gecode-engine-space-wrapper
+  space)
+
+(defun gecode-engine-space-wrapper-next (wrapper)
+  (let ((space (gecode-engine-space-wrapper-space wrapper)))
+    (when space
+      (prog1
+          (space-propagate-assert-not-failed space)
+        (setf (gecode-engine-space-wrapper-space wrapper)
+              nil)))))
+
 (defclass propagate-only-engine (ee-engine)
-  ((gecode-engine :initarg :space)
-   (next-solution-fn :initform #'cl-user::space-propagate-assert-not-failed)))
+  ((next-solution-fn :initform #'gecode-engine-space-wrapper-next)))
+
+(defmethod initialize-instance :after ((propagate-only-engine propagate-only-engine)
+                                       &key space)
+  (setf (slot-value propagate-only-engine 'gecode-engine)
+        (make-gecode-engine-space-wrapper :space space)))
 
 (defclass multi-bab-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
