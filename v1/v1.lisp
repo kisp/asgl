@@ -727,26 +727,26 @@ res = 7;
                                         :space (progn
                                                  (cl-user::space-status space)
                                                  (cl-user::clone-foo space))))
-                        (t (make-instance 'ee-engine
+                        (t (make-instance 'search-engine
                                           :gecode-engine (cl-user::make-dfs space)
                                           :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
-                         (make-instance 'ee-engine
+                         (make-instance 'search-engine
                                         :gecode-engine (cl-user::make-bab space)
                                         :engine-vector vector
                                         :next-solution-fn #'cl-user::bab-best))
                         (t
-                         (make-instance 'ee-engine
+                         (make-instance 'search-engine
                                         :gecode-engine (cl-user::make-dfs space)
                                         :engine-vector vector))))
-             (dc-task (make-instance 'ee-engine
+             (dc-task (make-instance 'search-engine
                                      :gecode-engine (cl-user::make-dfs space)))
-             (ds-task (make-instance 'ee-engine
+             (ds-task (make-instance 'search-engine
                                      :gecode-engine (cl-user::make-dfs space))))
          (cl-user::delete-foo space)))))
 
-(defclass ee-engine ()
+(defclass search-engine ()
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)
    (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next
@@ -768,7 +768,7 @@ res = 7;
         (setf (gecode-engine-space-wrapper-space wrapper)
               nil)))))
 
-(defclass propagate-only-engine (ee-engine)
+(defclass propagate-only-engine (search-engine)
   ((next-solution-fn :initform #'gecode-engine-space-wrapper-next)))
 
 (defmethod initialize-instance :after ((propagate-only-engine propagate-only-engine)
@@ -802,7 +802,7 @@ res = 7;
      (sort complete-all #'< :key #'length)
      :test #'subsetp)))
 
-(defmethod drive-search-and-print (task (engine ee-engine))
+(defmethod drive-search-and-print (task (engine search-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -822,7 +822,7 @@ res = 7;
     (write-line "]")
     nil))
 
-(defmethod drive-search-and-collect (task (engine ee-engine))
+(defmethod drive-search-and-collect (task (engine search-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -834,7 +834,7 @@ res = 7;
        collect (funcall space-collect-fn solution engine-vector)
        do (funcall space-delete-fn solution))))
 
-(defmethod drive-search-and-print ((task se-task) (engine ee-engine))
+(defmethod drive-search-and-print ((task se-task) (engine search-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -849,7 +849,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task se-task) (engine ee-engine))
+(defmethod drive-search-and-collect ((task se-task) (engine search-engine))
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -910,7 +910,7 @@ res = 7;
        (push (cl-user::space-collect-in next vector) list)))
     list))
 
-(defmethod drive-search-and-print ((task decision-task) (engine ee-engine))
+(defmethod drive-search-and-print ((task decision-task) (engine search-engine))
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -929,7 +929,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task decision-task) (engine ee-engine))
+(defmethod drive-search-and-collect ((task decision-task) (engine search-engine))
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
