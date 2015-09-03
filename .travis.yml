@@ -23,7 +23,7 @@ env:
     - VARIANT=ref
     - VARIANT=v1
     - VARIANT=v1 ASGL_COVER=yes
-    - VARIANT=dist
+    - VARIANT=dist CUKE_ARGS="--tags ~@slow"
 
 install:
     - bash travis/install.sh
