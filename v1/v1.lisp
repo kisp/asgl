@@ -585,6 +585,20 @@ res = 7;
 
 (in-package :oo)
 
+(defgeneric make-initial-space (graph task semantic))
+
+(defgeneric constrain-space (space graph task semantic))
+(defgeneric constrain-arg (semantic task space))
+
+(defgeneric branch-space (space task semantic))
+
+(defgeneric make-search-engine (space task semantic vector))
+
+(defgeneric drive-search-and-print (task engine))
+(defgeneric drive-search-and-collect (task engine))
+
+(defgeneric translate-problem (task semantic))
+
 (defclass task () ())
 (defclass semantic () ())
 
