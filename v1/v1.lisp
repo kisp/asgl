@@ -292,19 +292,19 @@ default: @(return 0) = 100; break;
   (ffi:c-inline (bab) (:pointer-void) :void
                 "{ delete ((Gecode::BAB<v1::Foo>*)#0); }"))
 
-(defun bab-next (bab)
-  (ffi:c-inline (bab) (:pointer-void) :pointer-void
-                "{ @(return 0) = ((Gecode::BAB<v1::Foo>*)(#0))->next(); }"))
-
 (defun bab-best (bab)
-  (loop
-     for prev-solution = nil then
-       (progn (when prev-solution
-                (delete-foo prev-solution))
-              solution)
-     for solution = (bab-next bab)
-     until (si:null-pointer-p solution)
-     finally (return prev-solution)))
+  (labels
+      ((bab-next (bab)
+         (ffi:c-inline (bab) (:pointer-void) :pointer-void
+                       "{ @(return 0) = ((Gecode::BAB<v1::Foo>*)(#0))->next(); }")))
+    (loop
+      for prev-solution = nil then
+                              (progn (when prev-solution
+                                       (delete-foo prev-solution))
+                                     solution)
+      for solution = (bab-next bab)
+      until (si:null-pointer-p solution)
+      finally (return prev-solution))))
 
 (defun dfs-statistics (dfs)
   (multiple-value-bind (fail node depth restart nogood)
