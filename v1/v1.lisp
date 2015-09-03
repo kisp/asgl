@@ -812,11 +812,12 @@ res = 7;
 
 (defmethod drive-search-and-print (task (engine ee-engine))
   (let ((gecode-engine (gecode-engine engine))
-        (engine-vector (engine-vector engine)))
+        (engine-vector (engine-vector engine))
+        (next-fn (next-fn engine)))
     (write-line "[")
     (loop
        with first-time = t
-       for solution = (cl-user::dfs-next gecode-engine)
+       for solution = (funcall next-fn gecode-engine)
        until (si:null-pointer-p solution)
        do (if first-time
               (setq first-time nil)
