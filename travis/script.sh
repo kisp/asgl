@@ -31,9 +31,9 @@ function standard_cover {
     cat report-both
 
     echo ===================================
-    echo diff -u report-test report-both
+    echo diff -u report-both report-test
     echo ===================================
-    diff -u report-test report-both
+    diff -u report-both report-test || true
 
     rm report-test
     rm report-both
