@@ -8,10 +8,35 @@ function standard {
     make check
     make test-$VARIANT
 
-    if [ -n "$ASGL_COVER" ]; then
-        ./bin/asgl --cover-report
-    fi
+    make clean | tail
+}
 
+function standard_cover {
+    export ASGL_HOME=`pwd`
+
+    make test-$VARIANT
+    ./bin/asgl --cover-report &>report-test
+
+    make check
+    ./bin/asgl --cover-report &>report-both
+
+    echo ===================================
+    echo make test coverage
+    echo ===================================
+    cat report-test
+
+    echo ===================================
+    echo make test AND make check coverage
+    echo ===================================
+    cat report-both
+
+    echo ===================================
+    echo diff -u report-test report-both
+    echo ===================================
+    diff -u report-test report-both
+
+    rm report-test
+    rm report-both
     make clean | tail
 }
 
@@ -31,6 +56,8 @@ function dist {
 
 if [ "$VARIANT" == "dist" ]; then
     dist
+elif [ -n "$ASGL_COVER" ]; then
+    standard_cover
 else
     standard
 fi
