@@ -34,6 +34,7 @@ common/asgl-config/asgl-config.c
 common/early/apx.c
 common/early/cover.c
 common/early/graph.c
+common/early/graph-input.c
 common/early/package.c
 common/early/utils.c
 lib/alexandria/arrays.c
