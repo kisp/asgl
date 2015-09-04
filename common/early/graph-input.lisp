@@ -33,7 +33,7 @@
   ((vector :reader graph-input-vector :initarg :vector)))
 
 (defun make-graph-input (input)
-  (typecase input
+  (etypecase input
     ((or pathname string) (make-instance 'apx-input :pathname input))
     (vector (make-instance 'vector-input :vector input))))
 
