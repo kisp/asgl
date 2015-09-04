@@ -59,8 +59,6 @@
 
 #+cover
 (defvar *annotating* nil)
-#+cover
-(defvar *testing* nil)
 
 #+cover
 (cl:defun save-points (pathname)
@@ -248,7 +246,7 @@
   (shadowing-import
    (set-difference '(defun #+nil defmacro)
                    (package-shadowing-symbols *package*)))
-  (when (and flag (not *testing*))
+  (when flag
     (format *error-output* "Coverage annotation applied.~%"))
   (setq *annotating* (not (null flag))))
 
