@@ -2,7 +2,7 @@
 
 (defpackage :cover
   (:use :cl)
-  (:shadow #:defun #+nil #:defmacro)
+  (:shadow #:defun #:defmethod #+nil #:defmacro)
   (:export #:annotate
            #+cover #:report
            #+cover #:reset
@@ -146,7 +146,7 @@
         (setf (id p) (incf *count*))))))
 
 #+cover
-(defvar *line-limit* 75)
+(defvar *line-limit* 100)
 
 #+cover
 (declaim (special *depth* *all* *out* *done*))
@@ -244,7 +244,7 @@
 #+cover
 (cl:defun annotate1 (flag)
   (shadowing-import
-   (set-difference '(defun #+nil defmacro)
+   (set-difference '(defun defmethod #+nil defmacro)
                    (package-shadowing-symbols *package*)))
   (when flag
     (format *error-output* "Coverage annotation applied.~%"))
@@ -253,6 +253,51 @@
 #+cover
 (cl:defmacro defun (n argl &body b)
   (process 'defun 'cl:defun n argl b))
+
+#+cover
+(cl:defmacro defmethod (&rest args)
+  (labels ((car-or-atom (x)
+             (if (atom x)
+                 x
+                 (car x)))
+           (second-or-t (x)
+             (if (atom x)
+                 t
+                 (second x)))
+           (handler1 (args)
+                (destructuring-bind (name qualifier lambda-list &rest body) args
+                  (assert (or (symbolp name)
+                              (and (consp name)
+                                   (eql 'setf (car name)))))
+                  (assert (symbolp qualifier))
+                  (assert (listp lambda-list))
+                  (list name (list qualifier) lambda-list body)))
+           (handler2 (args)
+             (destructuring-bind (name lambda-list &rest body) args
+               (assert (or (symbolp name)
+                           (and (consp name)
+                                (eql 'setf (car name)))))
+               (assert (listp lambda-list))
+               (list name nil lambda-list body)))
+           (argument-names (lambda-list)
+             (set-difference (mapcar #'car-or-atom lambda-list)
+                             lambda-list-keywords))
+           (type-names (lambda-list)
+             (set-difference (mapcar #'second-or-t lambda-list)
+                             lambda-list-keywords)))
+    (destructuring-bind (name qualifiers lambda-list body)
+        ;; poor man's pattern matching
+        (or (ignore-errors (handler1 args))
+            (ignore-errors (handler2 args)))
+      (let ((defun-name (gensym (format nil "~A ~{~A~^ ~} ~A "
+                                        name qualifiers (type-names lambda-list))))
+            (arguments (argument-names lambda-list)))
+        `(progn
+           (defun ,defun-name ,arguments
+             (declare (ignorable ,@arguments))
+             ,@body)
+           (cl:defmethod ,name ,@qualifiers ,lambda-list
+             (,defun-name ,@arguments)))))))
 
 #+nil
 (cl:defmacro defmacro (n a &body b)
