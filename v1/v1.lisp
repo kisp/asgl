@@ -593,6 +593,7 @@ res = 7;
 (defgeneric branch-space (space task semantic))
 
 (defgeneric make-search-engine (space task semantic vector))
+(defgeneric make-driver (semantic task))
 
 (defgeneric drive-search-and-print (task engine))
 (defgeneric drive-search-and-collect (task engine))
@@ -642,13 +643,44 @@ res = 7;
       (prepare-space input task semantic)
     (make-search-engine space task semantic vector)))
 
+(defclass search-all-driver ()
+  ())
+
+(defclass search-one-driver ()
+  ())
+
+(defclass search-one-decision-driver ()
+  ((no-solution-found-means-yes
+    :reader no-solution-found-means-yes
+    :initarg :no-solution-found-means-yes)))
+
+(defmethod make-driver (semantic (task ee-task))
+  (make-instance 'search-all-driver))
+
+(defmethod make-driver (semantic (task se-task))
+  (make-instance 'search-one-driver))
+
+(defmethod make-driver (semantic (task dc-task))
+  (make-instance 'search-one-decision-driver
+                 :no-solution-found-means-yes nil))
+
+(defmethod make-driver (semantic (task ds-task))
+  (make-instance 'search-one-decision-driver
+                 :no-solution-found-means-yes t))
+
+(defmethod make-driver ((semantic grounded) (task decision-task))
+  (make-instance 'search-one-decision-driver
+                 :no-solution-found-means-yes t))
+
 (defun print-answer (input task semantic)
-  (let ((engine (build-engine input task semantic)))
-    (drive-search-and-print task engine)))
+  (let ((engine (build-engine input task semantic))
+        (driver (make-driver semantic task)))
+    (drive-search-and-print driver engine)))
 
 (defun collect-answer (input task semantic)
-  (let ((engine (build-engine input task semantic)))
-    (drive-search-and-collect task engine)))
+  (let ((engine (build-engine input task semantic))
+        (driver (make-driver semantic task)))
+    (drive-search-and-collect driver engine)))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-semantic (semantic)
@@ -784,7 +816,7 @@ res = 7;
 (defclass preferred-all-engine ()
   ((sub-engine :reader sub-engine :initarg :sub-engine)))
 
-(defmethod drive-search-and-print (task (engine preferred-all-engine))
+(defmethod drive-search-and-print ((task search-all-driver) (engine preferred-all-engine))
   (write-line "[")
   (loop
      with first-time = t
@@ -796,13 +828,13 @@ res = 7;
      do (terpri))
   (write-line "]"))
 
-(defmethod drive-search-and-collect (task (engine preferred-all-engine))
+(defmethod drive-search-and-collect ((task search-all-driver) (engine preferred-all-engine))
   (let ((complete-all (drive-search-and-collect task (sub-engine engine))))
     (remove-duplicates
      (sort complete-all #'< :key #'length)
      :test #'subsetp)))
 
-(defmethod drive-search-and-print (task engine)
+(defmethod drive-search-and-print ((driver search-all-driver) engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -822,7 +854,7 @@ res = 7;
     (write-line "]")
     nil))
 
-(defmethod drive-search-and-collect (task engine)
+(defmethod drive-search-and-collect ((driver search-all-driver) engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -834,7 +866,7 @@ res = 7;
        collect (funcall space-collect-fn solution engine-vector)
        do (funcall space-delete-fn solution))))
 
-(defmethod drive-search-and-print ((task se-task) engine)
+(defmethod drive-search-and-print ((driver search-one-driver) engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -849,7 +881,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task se-task) engine)
+(defmethod drive-search-and-collect ((driver search-one-driver) engine)
   (let ((gecode-engine (gecode-engine engine))
         (engine-vector (engine-vector engine))
         (next-solution-fn (next-solution-fn engine))
@@ -910,7 +942,7 @@ res = 7;
        (push (cl-user::space-collect-in next vector) list)))
     list))
 
-(defmethod drive-search-and-print ((task decision-task) engine)
+(defmethod drive-search-and-print ((task search-one-decision-driver) engine)
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -929,7 +961,7 @@ res = 7;
     (terpri)
     nil))
 
-(defmethod drive-search-and-collect ((task decision-task) engine)
+(defmethod drive-search-and-collect ((task search-one-decision-driver) engine)
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
@@ -940,30 +972,6 @@ res = 7;
         no-solution-found-means-yes
         (prog1
             (not no-solution-found-means-yes)
-          (funcall space-delete-fn solution)))))
-
-(defmethod drive-search-and-print ((task decision-task) (engine propagate-only-engine))
-  (let* ((gecode-engine (gecode-engine engine))
-         (next-solution-fn (next-solution-fn engine))
-         (space-delete-fn (space-delete-fn engine))
-         (solution (funcall next-solution-fn gecode-engine)))
-    (if (null solution)
-        (write-string "YES")
-        (progn
-          (write-string "NO")
-          (funcall space-delete-fn solution)))
-    (terpri)
-    nil))
-
-(defmethod drive-search-and-collect ((task decision-task) (engine propagate-only-engine))
-  (let* ((gecode-engine (gecode-engine engine))
-         (next-solution-fn (next-solution-fn engine))
-         (space-delete-fn (space-delete-fn engine))
-         (solution (funcall next-solution-fn gecode-engine)))
-    (if (null solution)
-        t
-        (prog1
-            nil
           (funcall space-delete-fn solution)))))
 
 (macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
