@@ -814,7 +814,8 @@ res = 7;
               nil)))))
 
 (defclass propagate-only-engine (search-engine)
-  ((next-solution-fn :initform #'gecode-engine-space-wrapper-next)))
+  ()
+  (:default-initargs :next-solution-fn #'gecode-engine-space-wrapper-next))
 
 (defmethod initialize-instance :after
     ((propagate-only-engine propagate-only-engine) &key space)
