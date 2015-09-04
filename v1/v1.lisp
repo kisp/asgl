@@ -592,6 +592,9 @@ res = 7;
 
 (in-package :oo)
 
+(eval-when (:compile-toplevel :execute)
+  (cover:annotate t))
+
 (defgeneric make-initial-space (graph task semantic))
 
 (defgeneric constrain-space (space semantic task graph))
