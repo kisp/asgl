@@ -265,13 +265,13 @@
                  t
                  (second x)))
            (handler1 (args)
-                (destructuring-bind (name qualifier lambda-list &rest body) args
-                  (assert (or (symbolp name)
-                              (and (consp name)
-                                   (eql 'setf (car name)))))
-                  (assert (symbolp qualifier))
-                  (assert (listp lambda-list))
-                  (list name (list qualifier) lambda-list body)))
+             (destructuring-bind (name qualifier lambda-list &rest body) args
+               (assert (or (symbolp name)
+                           (and (consp name)
+                                (eql 'setf (car name)))))
+               (assert (symbolp qualifier))
+               (assert (listp lambda-list))
+               (list name (list qualifier) lambda-list body)))
            (handler2 (args)
              (destructuring-bind (name lambda-list &rest body) args
                (assert (or (symbolp name)
@@ -289,7 +289,7 @@
         ;; poor man's pattern matching
         (or (ignore-errors (handler1 args))
             (ignore-errors (handler2 args)))
-      (let ((defun-name (gensym (format nil "~A ~{~A~^ ~} ~A "
+      (let ((defun-name (intern (format nil "~A ~{~A~^ ~} ~A"
                                         name qualifiers (type-names lambda-list))))
             (arguments (argument-names lambda-list)))
         `(progn
