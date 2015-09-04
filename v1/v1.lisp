@@ -34,7 +34,8 @@
   (ffi:c-inline (n) (:int) :pointer-void "{ @(return 0) = new v1::Foo(#0); }"))
 
 (defun make-pr-bab-space (n)
-  (ffi:c-inline (n) (:int) :pointer-void "{ @(return 0) = new v1::PrBABSpace(#0); }"))
+  (ffi:c-inline (n) (:int) :pointer-void
+                "{ @(return 0) = new v1::PrBABSpace(#0); }"))
 
 (defun expr-or (space boolvars)
   "Return a new boolvar that is constrained to be the OR of boolvars."
@@ -193,12 +194,15 @@ s->constrain_not_subset(*o);
                 "{ @(return 0) = ((v1::Foo*)#0)->clone(); }"))
 
 (defun foo-branch/l/int-var-degree-max/int-val-min (foo)
-  (ffi:c-inline (foo) (:pointer-void) :void
-                "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_min(); }"))
+  (ffi:c-inline
+   (foo)
+   (:pointer-void) :void
+   "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_min(); }"))
 
 (defun foo-branch/l/int-var-degree-max/int-val-max (foo)
-  (ffi:c-inline (foo) (:pointer-void) :void
-                "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_max(); }"))
+  (ffi:c-inline
+   (foo) (:pointer-void) :void
+   "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_max(); }"))
 
 (defun space-status (space)
   (let ((status
@@ -270,8 +274,9 @@ default: @(return 0) = 100; break;
                 "{ @(return 0) = ((Gecode::BoolVarArray*)(#0))->size(); }"))
 
 (defun vars-nth (vars n)
-  (ffi:c-inline (vars n) (:pointer-void :int) :pointer-void
-                "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
+  (ffi:c-inline
+   (vars n) (:pointer-void :int) :pointer-void
+   "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
 
 (defun make-dfs (space)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
@@ -297,8 +302,9 @@ default: @(return 0) = 100; break;
 (defun bab-best (bab)
   (labels
       ((bab-next (bab)
-         (ffi:c-inline (bab) (:pointer-void) :pointer-void
-                       "{ @(return 0) = ((Gecode::BAB<v1::Foo>*)(#0))->next(); }")))
+         (ffi:c-inline
+          (bab) (:pointer-void) :pointer-void
+          "{ @(return 0) = ((Gecode::BAB<v1::Foo>*)(#0))->next(); }")))
     (declare (inline bab-next))
     (loop
       for prev-solution = nil then
@@ -402,7 +408,8 @@ res = 7;
                             (progn
                               (log* "EXPR-OR ~D ~A" (length key) key)
                               (setf (gethash key expr-or-table)
-                                    (expr-or space (mapcar #'!!var!! indices))))))))
+                                    (expr-or space
+                                             (mapcar #'!!var!! indices))))))))
                 (!!expr-and-vars!! (vars)
                   (log* "EXPR-AND-VARS ~D ..." (length vars))
                   (expr-and space vars))
@@ -741,7 +748,8 @@ res = 7;
 
 (defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
   (make-instance 'preferred-all-engine
-                 :sub-engine (make-search-engine space task (make-semantic :co) vector)))
+                 :sub-engine (make-search-engine space task
+                                                 (make-semantic :co) vector)))
 
 (defmethod make-search-engine (space task semantic vector)
   (typecase semantic
@@ -759,9 +767,10 @@ res = 7;
                                         :space (progn
                                                  (cl-user::space-status space)
                                                  (cl-user::clone-foo space))))
-                        (t (make-instance 'search-engine
-                                          :gecode-engine (cl-user::make-dfs space)
-                                          :engine-vector vector))))
+                        (t (make-instance
+                            'search-engine
+                            :gecode-engine (cl-user::make-dfs space)
+                            :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
                          (make-instance 'search-engine
@@ -779,13 +788,17 @@ res = 7;
          (cl-user::delete-foo space)))))
 
 (defclass search-engine ()
-  ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
-   (engine-vector :reader engine-vector :initarg :engine-vector)
-   (next-solution-fn :reader next-solution-fn :initform #'cl-user::dfs-next
-                     :initarg :next-solution-fn)
-   (space-delete-fn :reader space-delete-fn :initform #'cl-user::delete-foo)
-   (space-print-fn :reader space-print-fn :initform #'cl-user::space-print-in)
-   (space-collect-fn :reader space-collect-fn :initform #'cl-user::space-collect-in)))
+  ((gecode-engine    :reader gecode-engine    :initarg :gecode-engine)
+   (engine-vector    :reader engine-vector    :initarg :engine-vector)
+   (next-solution-fn :reader next-solution-fn :initarg :next-solution-fn)
+   (space-delete-fn  :reader space-delete-fn  :initarg :space-delete-fn)
+   (space-print-fn   :reader space-print-fn   :initarg :space-print-fn)
+   (space-collect-fn :reader space-collect-fn :initarg :space-collect-fn))
+  (:default-initargs
+   :next-solution-fn #'cl-user::dfs-next
+   :space-delete-fn  #'cl-user::delete-foo
+   :space-print-fn   #'cl-user::space-print-in
+   :space-collect-fn #'cl-user::space-collect-in))
 
 (defstruct gecode-engine-space-wrapper
   space)
@@ -803,8 +816,8 @@ res = 7;
 (defclass propagate-only-engine (search-engine)
   ((next-solution-fn :initform #'gecode-engine-space-wrapper-next)))
 
-(defmethod initialize-instance :after ((propagate-only-engine propagate-only-engine)
-                                       &key space)
+(defmethod initialize-instance :after
+    ((propagate-only-engine propagate-only-engine) &key space)
   (setf (slot-value propagate-only-engine 'gecode-engine)
         (make-gecode-engine-space-wrapper :space space)))
 
@@ -816,7 +829,8 @@ res = 7;
 (defclass preferred-all-engine ()
   ((sub-engine :reader sub-engine :initarg :sub-engine)))
 
-(defmethod drive-search-and-print ((task search-all-driver) (engine preferred-all-engine))
+(defmethod drive-search-and-print ((task search-all-driver)
+                                   (engine preferred-all-engine))
   (write-line "[")
   (loop
      with first-time = t
@@ -828,7 +842,8 @@ res = 7;
      do (terpri))
   (write-line "]"))
 
-(defmethod drive-search-and-collect ((task search-all-driver) (engine preferred-all-engine))
+(defmethod drive-search-and-collect ((task search-all-driver)
+                                     (engine preferred-all-engine))
   (let ((complete-all (drive-search-and-collect task (sub-engine engine))))
     (remove-duplicates
      (sort complete-all #'< :key #'length)
@@ -1080,6 +1095,56 @@ res = 7;
 (defvar *cover-file*
   (merge-pathnames "cover.data" (asgl-home)))
 
+(defun print-informational-message ()
+  (format t "ASGL version ~A~%"
+          #.(multiple-value-bind (stream exit-code)
+                (ext:run-program "git" '("describe" "HEAD"))
+              (assert (zerop exit-code))
+              (prog1
+                  (read-line stream)
+                (close stream))))
+  (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
+  (terpri)
+  (write-line "configuration options: ")
+  (write-line #.(multiple-value-bind (stream exit-code)
+                    (ext:run-program "./config.status" '("--config"))
+                  (assert (zerop exit-code))
+                  (prog1
+                      (read-line stream)
+                    (close stream))))
+  (terpri)
+  (write-line "Copyright (C) 2015  Kilian Sprotte")
+  (write-line "This program comes with ABSOLUTELY NO WARRANTY.")
+  (write-line "This is free software, and you are welcome to redistribute it")
+  (write-line "under certain conditions."))
+
+(defun print-supported-graph-formats ()
+  (write-line "[apx]"))
+
+(defun print-supported-problems ()
+  (format t "[DC-CO, DC-GR, DC-PR, DC-ST, ~
+              DS-CO, DS-GR, DS-PR, DS-ST, ~
+              EE-CO, EE-GR, EE-PR, EE-ST, ~
+              SE-CO, SE-GR, SE-PR, SE-ST]"))
+
+(defun run-self-check ()
+  (let ((*default-pathname-defaults*
+          (merge-pathnames "tests/" (asgl-home))))
+    (load "tests.lisp")
+    (load "tests-apx.lisp")
+    (load "tests-complete.lisp")
+    (load "tests-grounded.lisp")
+    (load "tests-stable.lisp")
+    (load "tests-preferred.lisp"))
+  (format t "Running self-check... This will take around 5 min.~%")
+  (if (myam:run! :tests)
+      (format t "~&SELF-CHECK PASSED SUCCESSFULLY~%")
+      (progn
+        (format t "~&**********************************~%")
+        (format t "~&SELF-CHECK FAILED something is wrong~%")
+        (format t "~&**********************************~%")
+        (quit 1))))
+
 (defun main ()
   (setq *debugger-hook* (lambda (c old)
                           (declare (ignore old))
@@ -1097,31 +1162,11 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (format t "ASGL version ~A~%"
-                  #.(multiple-value-bind (stream exit-code)
-                        (ext:run-program "git" '("describe" "HEAD"))
-                      (assert (zerop exit-code))
-                      (prog1
-                          (read-line stream)
-                        (close stream))))
-          (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
-          (terpri)
-          (write-line "configuration options: ")
-          (write-line #.(multiple-value-bind (stream exit-code)
-                            (ext:run-program "./config.status" '("--config"))
-                          (assert (zerop exit-code))
-                          (prog1
-                              (read-line stream)
-                            (close stream))))
-          (terpri)
-          (write-line "Copyright (C) 2015  Kilian Sprotte")
-          (write-line "This program comes with ABSOLUTELY NO WARRANTY.")
-          (write-line "This is free software, and you are welcome to redistribute it")
-          (write-line "under certain conditions."))
+          (print-informational-message))
          ((equal "--formats" (second ext:*command-args*))
-          (write-line "[apx]"))
+          (print-supported-graph-formats))
          ((equal "--problems" (second ext:*command-args*))
-          (write-line "[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]"))
+          (print-supported-problems))
          #+cover
          ((equal "--cover-report" (second ext:*command-args*))
           (cover:report :out *error-output*)
@@ -1132,21 +1177,7 @@ res = 7;
               (load init-file))
             (si:top-level)))
          ((equal "--check" (second ext:*command-args*))
-          (let ((*default-pathname-defaults* (merge-pathnames "tests/" (asgl-home))))
-            (load "tests.lisp")
-            (load "tests-apx.lisp")
-            (load "tests-complete.lisp")
-            (load "tests-grounded.lisp")
-            (load "tests-stable.lisp")
-            (load "tests-preferred.lisp"))
-          (format t "Running self-check... This will take around 5 min.~%")
-          (if (myam:run! :tests)
-              (format t "~&SELF-CHECK PASSED SUCCESSFULLY~%")
-              (progn
-                (format t "~&**********************************~%")
-                (format t "~&SELF-CHECK FAILED something is wrong~%")
-                (format t "~&**********************************~%")
-                (quit 1))))
+          (run-self-check))
          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
     #+cover
     (cover:save-points *cover-file*)))
