@@ -1114,6 +1114,12 @@ res = 7;
               EE-CO, EE-GR, EE-PR, EE-ST, ~
               SE-CO, SE-GR, SE-PR, SE-ST]"))
 
+(defun run-repl ()
+  (let ((init-file (merge-pathnames ".asglrc" (user-homedir-pathname))))
+    (when (probe-file init-file)
+      (load init-file))
+    (si:top-level)))
+
 (defun run-self-check ()
   (let ((*default-pathname-defaults*
           (merge-pathnames "tests/" (asgl-home))))
@@ -1159,10 +1165,7 @@ res = 7;
           (cover:report :out *error-output*)
           (terpri *error-output*))
          ((equal "--repl" (second ext:*command-args*))
-          (let ((init-file (merge-pathnames ".asglrc" (user-homedir-pathname))))
-            (when (probe-file init-file)
-              (load init-file))
-            (si:top-level)))
+          (run-repl))
          ((equal "--check" (second ext:*command-args*))
           (run-self-check))
          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
