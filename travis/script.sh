@@ -5,8 +5,8 @@ set -e
 function standard {
     export ASGL_HOME=`pwd`
 
-    make check
-    make test-$VARIANT
+    time make check
+    time make test-$VARIANT
 
     make clean | tail
 }
@@ -14,10 +14,10 @@ function standard {
 function standard_cover {
     export ASGL_HOME=`pwd`
 
-    make test-$VARIANT
+    time make test-$VARIANT
     ./bin/asgl --cover-report &>report-test
 
-    make check
+    time make check
     ./bin/asgl --cover-report &>report-both
 
     echo ===================================
