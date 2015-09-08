@@ -1126,7 +1126,7 @@ res = 7;
 (defun run-self-check ()
   (let ((*default-pathname-defaults*
           (merge-pathnames "tests/" (asgl-home))))
-    (load "tests.lisp")
+    (compile-file-if-needed "tests.lisp" t)
     (load "tests-apx.lisp")
     (load "tests-complete.lisp")
     (load "tests-grounded.lisp")
