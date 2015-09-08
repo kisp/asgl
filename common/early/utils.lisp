@@ -115,5 +115,22 @@ directory designated by PATHSPEC does actually exist."
        (format eout "~%"))
   (format eout "~%"))
 
+;;; compile-file-if-needed
+(defun file-newer-p (new-file old-file)
+  "Returns true if NEW-FILE is newer than OLD-FILE."
+  (> (file-write-date new-file) (file-write-date old-file)))
+
+(defun requires-compile-p (source-file)
+  (let ((fasl-file (probe-file (compile-file-pathname source-file))))
+    (or (not fasl-file)
+        (file-newer-p source-file fasl-file))))
+
+(defun compile-file-if-needed (filename loadp)
+  (when (requires-compile-p filename)
+    (compile-file filename))
+  (when loadp
+    (load (compile-file-pathname filename)))
+  (compile-file-pathname filename))
+
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))

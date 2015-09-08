@@ -19,7 +19,8 @@
   (:use #:cl)
   (:export #:asgl-home)
   (:export #:with-timing #:log* #:aif #:it
-           #:print-error-log)
+           #:print-error-log
+	   #:compile-file-if-needed)
   ;; graph
   (:export
    #:make-graph-from-adj
