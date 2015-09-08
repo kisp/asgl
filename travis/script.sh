@@ -14,30 +14,52 @@ function standard {
 function standard_cover {
     export ASGL_HOME=`pwd`
 
-    time make test-$VARIANT
-    ./bin/asgl --cover-report &>report-test
+    cat >af.apx <<EOF
+arg(0).
+arg(1).
+arg(2).
+arg(3).
+arg(4).
+att(4,2).
+att(3,4).
+att(2,3).
+att(1,0).
+att(0,2).
+att(0,1).
+EOF
 
-    time make check
-    ./bin/asgl --cover-report &>report-both
+    ./bin/asgl -p EE-CO -f af.apx
 
-    echo ===================================
-    echo make test coverage
-    echo ===================================
-    cat report-test
+    ./bin/asgl --cover-report --all >report
 
-    echo ===================================
-    echo make test AND make check coverage
-    echo ===================================
-    cat report-both
+    grep '^;-' report
+    grep '^;+' report
 
-    echo ===================================
-    echo diff -u report-both report-test
-    echo ===================================
-    diff -u report-both report-test || true
 
-    rm report-test
-    rm report-both
-    make clean | tail
+    # time make test-$VARIANT
+    # ./bin/asgl --cover-report >report-test
+
+    # time make check
+    # ./bin/asgl --cover-report >report-both
+
+    # echo ===================================
+    # echo make test coverage
+    # echo ===================================
+    # cat report-test
+
+    # echo ===================================
+    # echo make test AND make check coverage
+    # echo ===================================
+    # cat report-both
+
+    # echo ===================================
+    # echo diff -u report-both report-test
+    # echo ===================================
+    # diff -u report-both report-test || true
+
+    # rm report-test
+    # rm report-both
+    # make clean | tail
 }
 
 function dist {
