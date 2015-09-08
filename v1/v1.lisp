@@ -626,6 +626,7 @@ res = 7;
 (defgeneric make-initial-space (graph task semantic))
 
 (defgeneric constrain-space (space semantic task graph))
+(defgeneric constrain-arg-if-needed (space semantic task))
 (defgeneric constrain-arg (space semantic task))
 
 (defgeneric branch-space (space task semantic))
@@ -672,7 +673,7 @@ res = 7;
     (let ((space (make-initial-space graph task semantic)))
       (cl-user::with-post-env-setup (space)
         (constrain-space space semantic task graph)
-        (constrain-arg space semantic task))
+        (constrain-arg-if-needed space semantic task))
       (branch-space space task semantic)
       (values space vector))))
 
@@ -750,8 +751,12 @@ res = 7;
 (defmethod constrain-space :after (space (semantic stable) task graph)
   (cl-user::constrain-stable graph))
 
-(defmethod constrain-arg (space semantic task)
-  (log* "constrain arg is noop for ~A" task))
+(defmethod constrain-arg-if-needed (space semantic task)
+  ;; noop
+  )
+
+(defmethod constrain-arg-if-needed (space semantic (task decision-task))
+  (constrain-arg space semantic task))
 
 (defmethod constrain-arg (space (semantic grounded) (task decision-task))
   (log* "constrain arg not to be in")
