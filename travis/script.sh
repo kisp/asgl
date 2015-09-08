@@ -11,6 +11,23 @@ function standard {
     make clean | tail
 }
 
+function cover_for {
+    rm -f cover.data
+    ./bin/asgl -p $1 -f af.apx -a 0
+
+    ./bin/asgl --cover-report --all >report
+
+    echo ===================================
+    echo $1 used
+    echo ===================================
+    grep '^;+' report
+
+    echo ===================================
+    echo $1 unused
+    echo ===================================
+    grep '^;-' report
+}
+
 function standard_cover {
     export ASGL_HOME=`pwd`
 
@@ -28,13 +45,8 @@ att(0,2).
 att(0,1).
 EOF
 
-    ./bin/asgl -p EE-CO -f af.apx
-
-    ./bin/asgl --cover-report --all >report
-
-    grep '^;-' report
-    grep '^;+' report
-
+    cover_for EE-CO
+    cover_for EE-GR
 
     # time make test-$VARIANT
     # ./bin/asgl --cover-report >report-test
