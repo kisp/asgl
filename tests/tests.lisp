@@ -30,6 +30,43 @@
       (is (eql (every (lambda (solution) (member a solution)) solutions)
                (funcall ds-fn graph a))))))
 
+(in-package :cl-user)
+
+(macrolet ((frob (name semantic task)
+             `(defun ,name ,(if (eql 2 (length task))
+                                '(graph a)
+                                '(graph))
+                (let ((task (oo:make-task ,@task))
+                      (semantic (oo:make-semantic ,semantic)))
+                  (multiple-value-bind (task semantic)
+                      (oo:translate-problem task semantic)
+                    (oo:collect-answer (make-graph-input graph)
+                                       task
+                                       semantic))))))
+  ;; all
+  (frob $$complete-all :co (:ee))
+  (frob $$stable-all :st (:ee))
+  (frob $$grounded-all :gr (:ee))
+  (frob $$preferred-all :pr (:ee))
+  ;; one
+  (frob $$complete-one :co (:se))
+  (frob $$stable-one :st (:se))
+  (frob $$grounded-one :gr (:se))
+  (frob $$preferred-one :pr (:se))
+  ;; dc
+  (frob $$complete-dc :co (:dc a))
+  (frob $$stable-dc :st (:dc a))
+  (frob $$grounded-dc :gr (:dc a))
+  (frob $$preferred-dc :pr (:dc a))
+  ;; ds
+  (frob $$complete-ds :co (:ds a))
+  (frob $$stable-ds :st (:ds a))
+  (frob $$grounded-ds :gr (:ds a)))
+
+(defun $$preferred-ds (graph a) (dc-ds1 graph :ds :pr a))
+
+(in-package :tests)
+
 (defun check-complete (expected graph)
   (check-semantic (early:make-graph-from-adj graph) expected
                   #'cl-user::$$complete-all
