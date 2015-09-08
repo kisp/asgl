@@ -17,6 +17,7 @@ function cover_for {
 
     ./bin/asgl --cover-report --all >report
 
+    echo =====================================================================
     echo ===================================
     echo $1 used
     echo ===================================
@@ -45,33 +46,50 @@ att(0,2).
 att(0,1).
 EOF
 
-    cover_for EE-CO
+    cover_for SE-GR
     cover_for EE-GR
+    cover_for DC-GR
+    cover_for DS-GR
 
-    # time make test-$VARIANT
-    # ./bin/asgl --cover-report >report-test
+    cover_for SE-CO
+    cover_for EE-CO
+    cover_for DC-CO
+    cover_for DS-CO
 
-    # time make check
-    # ./bin/asgl --cover-report >report-both
+    cover_for SE-ST
+    cover_for EE-ST
+    cover_for DC-ST
+    cover_for DS-ST
 
-    # echo ===================================
-    # echo make test coverage
-    # echo ===================================
-    # cat report-test
+    cover_for SE-PR
+    cover_for EE-PR
+    cover_for DC-PR
+    cover_for DS-PR
 
-    # echo ===================================
-    # echo make test AND make check coverage
-    # echo ===================================
-    # cat report-both
+    time make test-$VARIANT
+    ./bin/asgl --cover-report >report-test
 
-    # echo ===================================
-    # echo diff -u report-both report-test
-    # echo ===================================
-    # diff -u report-both report-test || true
+    time make check
+    ./bin/asgl --cover-report >report-both
 
-    # rm report-test
-    # rm report-both
-    # make clean | tail
+    echo ===================================
+    echo make test coverage
+    echo ===================================
+    cat report-test
+
+    echo ===================================
+    echo make test AND make check coverage
+    echo ===================================
+    cat report-both
+
+    echo ===================================
+    echo diff -u report-both report-test
+    echo ===================================
+    diff -u report-both report-test || true
+
+    rm report-test
+    rm report-both
+    make clean | tail
 }
 
 function dist {
