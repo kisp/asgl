@@ -1174,8 +1174,10 @@ res = 7;
           (print-supported-problems))
          #+cover
          ((equal "--cover-report" (second ext:*command-args*))
-          (cover:report :out *error-output*)
-          (terpri *error-output*))
+          (cover:report :out *standard-output*
+                        :all (find "--all" (cdr ext:*command-args*)
+                                   :test #'equal))
+          (terpri *standard-output*))
          ((equal "--repl" (second ext:*command-args*))
           (run-repl))
          ((equal "--check" (second ext:*command-args*))
