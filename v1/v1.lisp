@@ -31,10 +31,12 @@
   (cover:annotate t))
 
 (defun make-foo (n)
+  (check-type n alexandria:non-negative-fixnum)
   ;; c-inline00001
   (ffi:c-inline (n) (:int) :pointer-void "{ @(return 0) = new v1::Foo(#0); }"))
 
 (defun make-pr-bab-space (n)
+  (check-type n alexandria:non-negative-fixnum)
   ;; c-inline00002
   (ffi:c-inline (n) (:int) :pointer-void
                 "{ @(return 0) = new v1::PrBABSpace(#0); }"))
@@ -42,6 +44,9 @@
 (defun expr-or (space boolvars)
   "Return a new boolvar that is constrained to be the OR of boolvars."
   ;; c-inline00003
+  (check-type space SI:FOREIGN-DATA)
+  (check-type boolvars list)
+  (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
                 "
 v1::Foo* foo = ((v1::Foo*)(#0));
@@ -405,7 +410,7 @@ res = 7;
 (defvar *imp-or-table*)
 
 (defmacro with-post-env-setup ((space) &body body)
-  (check-type space symbol)
+  (check-type space symbol)             ;keep this one
   `(let ((*space* ,space)
          (*vars-vector* (coerce (space-vars-as-list ,space) 'vector))
          (*nand-table* (make-hash-table :test #'equal))
