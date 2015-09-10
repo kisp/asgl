@@ -23,6 +23,7 @@
            #:compile-file-if-needed)
   ;; graph
   (:export
+   #:graph
    #:make-graph-from-adj
    #:order
    #:do-edges

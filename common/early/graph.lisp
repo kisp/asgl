@@ -64,6 +64,8 @@
          ,setter))))
 
 ;;; api
+(deftype graph () 'simple-array)
+
 (defun order (graph)
   (%%order graph))
 
