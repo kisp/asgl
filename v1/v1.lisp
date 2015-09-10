@@ -279,7 +279,7 @@ default: @(return 0) = 100; break;
           (if first-time
               (setq first-time nil)
               (write-string ","))
-          (write-string (aref vector i))))
+          (princ (aref vector i))))
   (write-string "]"))
 
 (defun space-collect-in (space vector)
@@ -1072,32 +1072,41 @@ res = 7;
 
 (in-package :cl-user)
 
-(defun main% (&key (fo "apx") f p a)
+(defun parse-cons (string)
+  (let ((pos (position #\. string)))
+    (assert pos)
+    (cons (parse-integer string :end pos)
+          (parse-integer string :start (1+ pos)))))
+
+(defun main% (&key (fo "apx") f p a g)
   (assert (equal fo "apx"))
-  (multiple-value-bind (task semantic) (parse-problem p)
-    (cond
-      ((or (not (eql :pr semantic))
-           (and #+nil(eql :pr semantic)
-                (eql :se task))
-           (and #+nil(eql :pr semantic)
-                (eql :ee task))
-           (and #+nil(eql :pr semantic)
-                (eql :dc task)))
-       (let ((task (oo:make-task task a))
-             (semantic (oo:make-semantic semantic)))
-         (multiple-value-bind (task semantic)
-             (oo:translate-problem task semantic)
-           (oo:print-answer f
-                            task
-                            semantic))))
-      (t
-       (let ((*print-case* :downcase))
-         (multiple-value-bind (graph vector hash)
-             (read-apx-file f)
-           (declare (ignore vector))
-           (ecase task
-             ((:dc :ds) (dc-ds graph task semantic hash a)))
-           (terpri)))))))
+  (assert (alexandria:xor f g))
+  (let* ((g (when g (parse-cons g)))
+         (f (or f g)))
+    (multiple-value-bind (task semantic) (parse-problem p)
+      (cond
+        ((or (not (eql :pr semantic))
+             (and #+nil(eql :pr semantic)
+                  (eql :se task))
+             (and #+nil(eql :pr semantic)
+                  (eql :ee task))
+             (and #+nil(eql :pr semantic)
+                  (eql :dc task)))
+         (let ((task (oo:make-task task a))
+               (semantic (oo:make-semantic semantic)))
+           (multiple-value-bind (task semantic)
+               (oo:translate-problem task semantic)
+             (oo:print-answer f
+                              task
+                              semantic))))
+        (t
+         (let ((*print-case* :downcase))
+           (multiple-value-bind (graph vector hash)
+               (read-graph-input f)
+             (declare (ignore vector))
+             (ecase task
+               ((:dc :ds) (dc-ds graph task semantic hash a)))
+             (terpri))))))))
 
 #+cover
 (defvar *cover-file*
