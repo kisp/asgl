@@ -1,6 +1,6 @@
 ;; -*- paul-nice-on-save:nil -*-
 
-(defpackage :tests (:use :cl :myam :alexandria))
+(defpackage :tests (:use :cl :myam :alexandria :early))
 
 (in-package :tests)
 
@@ -10,6 +10,10 @@
 
 (defun xteql (expected result)
   (is (set-equal expected result :test #'set-equal)
+      "expected ~S~%but got ~S" expected result))
+
+(defun alist-eql (expected result)
+  (is (set-equal expected result :test #'equal)
       "expected ~S~%but got ~S" expected result))
 
 (defun check-semantic (graph expected all-fn one-fn dc-fn ds-fn)
@@ -127,13 +131,18 @@
        (when (probe-file ,pathname)
          (delete-file ,pathname)))))
 
+(defmacro with-tmp-file-of-lines ((pathname lines) &body body)
+  (check-type pathname symbol)
+  `(with-tmp-file (,pathname "tmp.apx")
+     (with-open-file (output ,pathname :direction :output)
+       (dolist (line ,lines)
+         (write-line line output)))
+     ,@body))
+
 (defun check-extensions (problem expexted lines)
   (let ((*default-pathname-defaults*
          (early:asgl-home)))
-    (with-tmp-file (pathname "tmp.apx")
-      (with-open-file (output pathname :direction :output)
-        (dolist (line lines)
-          (write-line line output)))
+    (with-tmp-file-of-lines (pathname lines)
       (let ((result
              (with-output-to-string (*standard-output*)
                (cl-user::main% :fo "apx" :p problem :f pathname))))
