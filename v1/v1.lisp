@@ -693,6 +693,10 @@ res = 7;
     :reader no-solution-found-means-yes
     :initarg :no-solution-found-means-yes)))
 
+(defclass search-every-driver ()
+  ((search-every-driver-predicate :reader search-every-driver-predicate
+                                  :initarg :search-every-driver-predicate)))
+
 (defmethod make-driver (semantic (task ee-task))
   (make-instance 'search-all-driver))
 
@@ -710,6 +714,13 @@ res = 7;
 (defmethod make-driver ((semantic grounded) (task decision-task))
   (make-instance 'search-one-decision-driver
                  :no-solution-found-means-yes t))
+
+(defmethod make-driver ((semantic preferred) (task ds-task))
+  (make-instance 'search-every-driver
+                 :search-every-driver-predicate
+                 (let ((argument (task-arg task)))
+                   (lambda (solution)
+                     (member argument solution)))))
 
 (defun print-answer (input task semantic)
   (let ((engine (build-engine input task semantic))
@@ -773,6 +784,9 @@ res = 7;
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-true space (task-arg task)))
 
+(defmethod constrain-arg (space (semantic preferred) (task ds-task))
+  nil)
+
 (defmethod branch-space (space task semantic)
   (cl-user::foo-branch/l/int-var-degree-max/int-val-min space))
 
@@ -783,9 +797,20 @@ res = 7;
   (cl-user::foo-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
-  (make-instance 'preferred-all-engine
-                 :sub-engine (make-search-engine space task
-                                                 (make-semantic :co) vector)))
+  (let ((vector* (make-array (length vector))))
+    (dotimes (i (length vector*))
+      (setf (aref vector* i) i))
+    (make-instance 'preferred-all-engine
+                   :sub-engine (make-search-engine space (make-task :ee)
+                                                   (make-semantic :co) vector*))))
+
+(defmethod make-search-engine (space (task ds-task) (semantic preferred) vector)
+  (let ((vector* (make-array (length vector))))
+    (dotimes (i (length vector*))
+      (setf (aref vector* i) i))
+    (make-instance 'preferred-all-engine
+                   :sub-engine (make-search-engine space (make-task :ee)
+                                                   (make-semantic :co) vector*))))
 
 (defmethod make-search-engine (space task semantic vector)
   (typecase semantic
@@ -864,27 +889,56 @@ res = 7;
    (space :reader engine-space :initarg :space)))
 
 (defclass preferred-all-engine ()
-  ((sub-engine :reader sub-engine :initarg :sub-engine)))
+  ((sub-engine :reader sub-engine :initarg :sub-engine
+               :reader gecode-engine)
+   (next-solution-fn :reader next-solution-fn)
+   (space-delete-fn :reader space-delete-fn :initform #'identity)))
 
-(defmethod drive-search-and-print ((task search-all-driver)
-                                   (engine preferred-all-engine))
-  (write-line "[")
-  (loop
-     with first-time = t
-     for solution in (drive-search-and-collect task engine)
-     do (if first-time
-            (setq first-time nil)
-            (write-char #\,))
-     do (format t "[~{~A~^,~}]" solution)
-     do (terpri))
-  (write-line "]"))
+(defmethod engine-vector ((preferred-all-engine preferred-all-engine))
+  (engine-vector (sub-engine preferred-all-engine)))
 
-(defmethod drive-search-and-collect ((task search-all-driver)
-                                     (engine preferred-all-engine))
+(defmethod space-print-fn ((preferred-all-engine preferred-all-engine))
+  (lambda (a b) b (format t "[~{~A~^,~}]" a)))
+
+(defun aux13 (task engine)
   (let ((complete-all (drive-search-and-collect task (sub-engine engine))))
-    (remove-duplicates
+    (assert (every (lambda (x) (every #'integerp x)) complete-all))
+    (delete-duplicates
      (sort complete-all #'< :key #'length)
      :test #'subsetp)))
+
+(defmethod initialize-instance :after ((preferred-all-engine preferred-all-engine)
+                                       &key)
+  (let ((list (aux13 (make-instance 'search-all-driver)
+                     preferred-all-engine)))
+    (setf (slot-value preferred-all-engine 'next-solution-fn)
+          (lambda (engine)
+            (declare (ignore engine))
+            (if list
+                (values (pop list) t)
+                (values nil nil))))))
+
+(defmethod drive-search-and-print ((driver search-every-driver)
+                                   engine)
+  (if (drive-search-and-collect driver engine)
+      (write-line "YES")
+      (write-line "NO")))
+
+(defmethod drive-search-and-collect ((driver search-every-driver)
+                                     engine)
+  (let ((gecode-engine (gecode-engine engine))
+        (next-solution-fn (next-solution-fn engine))
+        (space-delete-fn (space-delete-fn engine))
+        (predicate (search-every-driver-predicate driver)))
+    (loop with solution and solution-found
+       do (multiple-value-setq (solution solution-found)
+            (funcall next-solution-fn gecode-engine))
+       while solution-found
+       unless (prog1
+                  (funcall predicate solution)
+                (funcall space-delete-fn solution))
+       return nil
+       finally (return t))))
 
 (defmethod drive-search-and-print ((driver search-all-driver) engine)
   (let ((gecode-engine (gecode-engine engine))
