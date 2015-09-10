@@ -673,7 +673,7 @@ res = 7;
 
 (defun prepare-space (input task semantic)
   (multiple-value-bind (graph vector hash)
-      (read-graph-input input)
+      (with-timing (read-graph-input input))
     (setf (task-hash task) hash)
     (let ((space (make-initial-space graph task semantic)))
       (cl-user::with-post-env-setup (space)
@@ -713,10 +713,10 @@ res = 7;
 
 (defun print-answer (input task semantic)
   (multiple-value-bind (space vector)
-      (prepare-space input task semantic)
-    (let ((engine (make-search-engine space task semantic vector))
-          (driver (make-driver semantic task)))
-      (drive-search-and-print driver engine))))
+      (with-timing (prepare-space input task semantic))
+    (let ((engine (with-timing (make-search-engine space task semantic vector)))
+          (driver (with-timing (make-driver semantic task))))
+      (with-timing (drive-search-and-print driver engine)))))
 
 (defun collect-answer (input task semantic)
   (multiple-value-bind (space vector)
@@ -1096,13 +1096,14 @@ res = 7;
                (semantic (oo:make-semantic semantic)))
            (multiple-value-bind (task semantic)
                (oo:translate-problem task semantic)
-             (oo:print-answer f
-                              task
-                              semantic))))
+             (with-timing
+                 (oo:print-answer f
+                                  task
+                                  semantic)))))
         (t
          (let ((*print-case* :downcase))
            (multiple-value-bind (graph vector hash)
-               (read-graph-input f)
+               (with-timing (read-graph-input f))
              (declare (ignore vector))
              (ecase task
                ((:dc :ds) (dc-ds graph task semantic hash a)))
