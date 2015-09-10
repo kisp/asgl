@@ -74,6 +74,9 @@ rel(*foo, Gecode::BOT_OR, a, *u);
 (defun expr-and (space boolvars)
   "Return a new boolvar that is constrained to be the AND of boolvars."
   ;; c-inline00004
+  (check-type space SI:FOREIGN-DATA)
+  (check-type boolvars list)
+  (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
                 "
 v1::Foo* foo = ((v1::Foo*)(#0));
@@ -101,6 +104,8 @@ rel(*foo, Gecode::BOT_AND, a, *u);
 (defun expr-not (space boolvar)
   "Return a new boolvar that is constrained to be the NOT of boolvar."
   ;; c-inline00005
+  (check-type space SI:FOREIGN-DATA)
+  (check-type boolvar SI:FOREIGN-DATA)
   (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :pointer-void
                 "
 v1::Foo* foo = ((v1::Foo*)(#0));
@@ -117,6 +122,9 @@ rel(*foo, *a, Gecode::IRT_NQ, *u);
 
 (defun post-nand (space i j)
   ;; c-inline00006
+  (check-type space SI:FOREIGN-DATA)
+  (check-type i alexandria:non-negative-fixnum)
+  (check-type j alexandria:non-negative-fixnum)
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
                 "{
 
@@ -134,6 +142,9 @@ rel(*foo, vars[i], Gecode::BOT_AND, vars[j], 0);
 (defun assert-imp (space a b)
   "BoolVar a --> BoolVar b."
   ;; c-inline00007
+  (check-type space SI:FOREIGN-DATA)
+  (check-type a SI:FOREIGN-DATA)
+  (check-type b SI:FOREIGN-DATA)
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
                 "{
 
@@ -149,6 +160,8 @@ rel(*foo, *a, Gecode::BOT_IMP, *b, 1);
 (defun post-must-be-false (space i)
   "Post that i can only be 0."
   ;; c-inline00008
+  (check-type space SI:FOREIGN-DATA)
+  (check-type i alexandria:non-negative-fixnum)
   (ffi:c-inline (space i) (:pointer-void :int) :void
                 "{
 
@@ -165,6 +178,8 @@ rel(*foo, vars[i], Gecode::IRT_EQ, 0);
 (defun post-must-be-true (space i)
   "Post that i can only be 1."
   ;; c-inline00009
+  (check-type space SI:FOREIGN-DATA)
+  (check-type i alexandria:non-negative-fixnum)
   (ffi:c-inline (space i) (:pointer-void :int) :void
                 "{
 
@@ -181,6 +196,9 @@ rel(*foo, vars[i], Gecode::IRT_EQ, 1);
 (defun boolvar-post-eql (space a b)
   "Boolvar a eql boolvar b."
   ;; c-inline00010
+  (check-type space SI:FOREIGN-DATA)
+  (check-type a SI:FOREIGN-DATA)
+  (check-type b SI:FOREIGN-DATA)
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
                 "
 v1::Foo* foo = ((v1::Foo*)(#0));
@@ -191,6 +209,8 @@ rel(*foo, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
 
 (defun constrain-not-subset (space other)
   ;; c-inline00011
+  (check-type space SI:FOREIGN-DATA)
+  (check-type other SI:FOREIGN-DATA)
   (ffi:c-inline (space other) (:pointer-void :pointer-void) :void
                 "
 v1::PrBABSpace* s = ((v1::PrBABSpace*)(#0));
@@ -202,17 +222,20 @@ s->constrain_not_subset(*o);
 
 (defun delete-foo (foo)
   ;; c-inline00012
+  (check-type foo SI:FOREIGN-DATA)
   (ffi:c-inline (foo) (:pointer-void) :void
                 "{ delete ((v1::Foo*)#0); }")
   nil)
 
 (defun clone-foo (foo)
   ;; c-inline00013
+  (check-type foo SI:FOREIGN-DATA)
   (ffi:c-inline (foo) (:pointer-void) :pointer-void
                 "{ @(return 0) = ((v1::Foo*)#0)->clone(); }"))
 
 (defun foo-branch/l/int-var-degree-max/int-val-min (foo)
   ;; c-inline00014
+  (check-type foo SI:FOREIGN-DATA)
   (ffi:c-inline
    (foo)
    (:pointer-void) :void
@@ -220,11 +243,13 @@ s->constrain_not_subset(*o);
 
 (defun foo-branch/l/int-var-degree-max/int-val-max (foo)
   ;; c-inline00015
+  (check-type foo SI:FOREIGN-DATA)
   (ffi:c-inline
    (foo) (:pointer-void) :void
    "{ ((v1::Foo*)(#0))->branch__l__int_var_degree_max__int_val_max(); }"))
 
 (defun space-status (space)
+  (check-type space SI:FOREIGN-DATA)
   (let ((status
           ;; c-inline00016
           (ffi:c-inline (space) (:pointer-void) :int
@@ -246,19 +271,23 @@ default: @(return 0) = 100; break;
       (3 :branch))))
 
 (defun space-to-list (space)
+  (check-type space SI:FOREIGN-DATA)
   (mapcar #'boolvar-domain (space-vars-as-list space)))
 
 (defun boolvar-min (boolvar)
   ;; c-inline00017
+  (check-type boolvar SI:FOREIGN-DATA)
   (ffi:c-inline (boolvar) (:pointer-void) :int
                 "{ @(return 0) = ((Gecode::BoolVar*)(#0))->min(); }"))
 
 (defun boolvar-max (boolvar)
   ;; c-inline00018
+  (check-type boolvar SI:FOREIGN-DATA)
   (ffi:c-inline (boolvar) (:pointer-void) :int
                 "{ @(return 0) = ((Gecode::BoolVar*)(#0))->max(); }"))
 
 (defun boolvar-domain (boolvar)
+  (check-type boolvar SI:FOREIGN-DATA)
   (let ((min (boolvar-min boolvar))
         (max (boolvar-max boolvar)))
     (if (eql min max)
@@ -266,11 +295,17 @@ default: @(return 0) = 100; break;
         (list min max))))
 
 (defun space-vars-as-list (space)
+  (check-type space SI:FOREIGN-DATA)
   (let ((vars (space-vars space)))
     (loop for i from 0 below (vars-size vars)
        collect (vars-nth vars i))))
 
 (defun space-print-in (space vector)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type vector vector)
+  (every (lambda (x) (check-type x (or string
+                                       alexandria:non-negative-fixnum)))
+         vector)
   (write-string "[")
   (loop with first-time = t
      for tail on (space-to-list space)
@@ -283,6 +318,11 @@ default: @(return 0) = 100; break;
   (write-string "]"))
 
 (defun space-collect-in (space vector)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type vector vector)
+  (every (lambda (x) (check-type x (or string
+                                       alexandria:non-negative-fixnum)))
+         vector)
   (loop for tail on (space-to-list space)
      for i upfrom 0
      when (eql 1 (car tail))
@@ -290,26 +330,32 @@ default: @(return 0) = 100; break;
 
 (defun space-vars (space)
   ;; c-inline00019
+  (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = (void*)(((v1::Foo*)(#0))->getVars());}"))
 
 (defun vars-size (vars)
   ;; c-inline00020
+  (check-type vars SI:FOREIGN-DATA)
   (ffi:c-inline (vars) (:pointer-void) :int
                 "{ @(return 0) = ((Gecode::BoolVarArray*)(#0))->size(); }"))
 
 (defun vars-nth (vars n)
   ;; c-inline00021
+  (check-type vars SI:FOREIGN-DATA)
+  (check-type n alexandria:non-negative-fixnum)
   (ffi:c-inline
    (vars n) (:pointer-void :int) :pointer-void
    "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
 
 (defun make-dfs (space)
   ;; c-inline00022
+  (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = new Gecode::DFS<v1::Foo>(((v1::Foo*)(#0)));}"))
 
 (defun dfs-next (dfs)
+  (check-type dfs SI:FOREIGN-DATA)
   (let ((solution
           ;; c-inline00023
           (ffi:c-inline (dfs) (:pointer-void) :pointer-void
@@ -320,16 +366,19 @@ default: @(return 0) = 100; break;
 
 (defun make-bab (space)
   ;; c-inline00024
+  (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = new Gecode::BAB<v1::Foo>(((v1::Foo*)(#0)));}"))
 
 (defun delete-bab (bab)
   ;; c-inline00025
+  (check-type bab SI:FOREIGN-DATA)
   (ffi:c-inline (bab) (:pointer-void) :void
                 "{ delete ((Gecode::BAB<v1::Foo>*)#0); }")
   nil)
 
 (defun bab-best (bab)
+  (check-type bab SI:FOREIGN-DATA)
   (labels
       ((bab-next (bab)
          ;; c-inline00026
@@ -347,6 +396,7 @@ default: @(return 0) = 100; break;
       finally (return prev-solution))))
 
 (defun dfs-statistics (dfs)
+  (check-type dfs SI:FOREIGN-DATA)
   (multiple-value-bind (fail node depth restart nogood)
       ;; c-inline00027
       (ffi:c-inline (dfs) (:pointer-void)
@@ -372,6 +422,7 @@ Gecode::Search::Statistics s = dfs->statistics();
             :nogood nogood)))
 
 (defun dfs-search-all (space)
+  (check-type space SI:FOREIGN-DATA)
   (let ((dfs (make-dfs space)))
     (delete-foo space)
     (values
@@ -382,6 +433,7 @@ Gecode::Search::Statistics s = dfs->statistics();
       (dfs-statistics dfs)))))
 
 (defun dfs-search-gist (space)
+  (check-type space SI:FOREIGN-DATA)
   (let ((status
           ;; c-inline000028
           (ffi:c-inline (space) (:pointer-void) :int
@@ -454,6 +506,9 @@ res = 7;
          ,@body))))
 
 (defun bits-to-set (list &key (unassigned-permitted-as-out nil))
+  (check-type list list)
+  (check-type unassigned-permitted-as-out boolean)
+  (every (lambda (x) (check-type x bit)) list)
   (if unassigned-permitted-as-out
       (loop for x in list
          for i upfrom 0
@@ -466,12 +521,15 @@ res = 7;
          collect i)))
 
 (defun space-indices-that-are-in (space &key delete)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type delete boolean)
   (prog1
       (bits-to-set (space-to-list space))
     (when delete
       (delete-foo space))))
 
 (defun space-indices-that-are-in-and-delete (space)
+  (check-type space SI:FOREIGN-DATA)
   (space-indices-that-are-in space :delete t))
 
 (defmacro sortf2 (a b)
@@ -479,9 +537,11 @@ res = 7;
      (rotatef ,a ,b)))
 
 (defun safe-sort (list)
+  (check-type list list)
   (sort (copy-list list) #'<))
 
 (defun dfs-search-all-and-list-ins (space)
+  (check-type space SI:FOREIGN-DATA)
   (multiple-value-bind (solutions statistics)
       (with-timing (dfs-search-all space))
     (values
@@ -489,11 +549,15 @@ res = 7;
      statistics)))
 
 (defun dfs-search-gist-or-list-ins (space gist)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type gist boolean)
   (if gist
       (dfs-search-gist space)
       (dfs-search-all-and-list-ins space)))
 
 (defun constrain-conflict-free (graph constrain-nand)
+  (check-type graph graph)
+  (check-type constrain-nand function)
   (with-timing
       (do-edges (from to graph)
         (funcall constrain-nand from to))))
@@ -506,6 +570,14 @@ res = 7;
                                     expr-and-vars
                                     expr-or
                                     var)
+  (check-type graph graph)
+  (check-type post-must-be-false function)
+  (check-type post-must-be-true function)
+  (check-type post-eql-indices function)
+  (check-type post-eql-vars function)
+  (check-type expr-and-vars function)
+  (check-type expr-or function)
+  (check-type var function)
   (with-timing
       (do-parents-grandparents (node pg graph)
         (cond
@@ -531,6 +603,7 @@ res = 7;
                     (funcall var node)))))))
 
 (defun constrain-complete (graph)
+  (check-type graph graph)
   (with-local-post-env ()
     (constrain-conflict-free graph #'!!post-nand!!)
     #+nil
@@ -558,6 +631,7 @@ res = 7;
        #'!!var!!))))
 
 (defun constrain-stable (graph)
+  (check-type graph graph)
   (with-local-post-env ()
     (with-timing
         (do-parents (node parents graph)
@@ -568,6 +642,8 @@ res = 7;
              (!!expr-or!! parents)))))))
 
 (defun complete-all (graph &key gist)
+  (check-type graph graph)
+  (check-type gist boolean)
   (let* ((order (order graph))
          (space (with-timing (make-foo order))))
     (with-post-env-setup (space)
@@ -576,12 +652,14 @@ res = 7;
     (dfs-search-gist-or-list-ins space gist)))
 
 (defun preferred-all (graph &key gist)
-  (declare (ignore gist))
+  (check-type graph graph)
+  (check-type gist boolean)
   (remove-duplicates
    (sort (complete-all graph) #'< :key #'length)
    :test #'subsetp))
 
 (defun adopt-keywords (list)
+  (check-type list list)
   (mapcar (lambda (x)
             (if (char= #\- (char x 0))
                 (intern (string-upcase (subseq x 1)) "KEYWORD")
@@ -589,12 +667,15 @@ res = 7;
           list))
 
 (defun parse-problem (string)
+  (check-type string string)
   (let ((pos (position #\- string)))
     (values
      (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
      (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
 
 (defun all-for-semantic (graph semantic)
+  (check-type graph graph)
+  (check-type semantic keyword)
   (ecase semantic
     (:co (complete-all graph))
     (:st (stable-all graph))
@@ -602,6 +683,10 @@ res = 7;
     (:pr (preferred-all graph))))
 
 (defun dc-ds1 (graph task semantic arg-index)
+  (check-type graph graph)
+  (check-type task keyword)
+  (check-type semantic keyword)
+  (check-type arg-index alexandria:non-negative-fixnum)
   (flet ((contains-arg-p (extension)
            (member arg-index extension)))
     (let ((extensions (all-for-semantic graph semantic)))
@@ -610,6 +695,11 @@ res = 7;
         (:dc (not (null (some #'contains-arg-p extensions))))))))
 
 (defun dc-ds (graph task semantic hash arg)
+  (check-type graph graph)
+  (check-type task keyword)
+  (check-type semantic keyword)
+  (check-type hash hash-table)
+  (check-type arg string)
   (let ((arg-index (gethash arg hash)))
     (if (dc-ds1 graph task semantic arg-index)
         (write-string "YES")
@@ -627,6 +717,8 @@ res = 7;
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
+
+(deftype input () '(or string pathname vector cons))
 
 (defgeneric make-initial-space (graph task semantic))
 
@@ -652,13 +744,18 @@ res = 7;
 (defclass preferred (complete) ())
 (defclass stable (preferred) ())
 
+(defclass ee-task (task) ())
+(defclass se-task (task) ())
+
+(defmethod (setf task-hash) (value (task task))
+  (check-type value hash-table)
+  ;; noop
+  )
+
 (defclass decision-task (task)
   ((hash :accessor task-hash :initform nil)
    (arg-name :reader task-arg-name :initarg :arg-name)
    (no-solution-found-means-yes :reader no-solution-found-means-yes)))
-
-(defclass ee-task (task) ())
-(defclass se-task (task) ())
 
 (defclass dc-task (decision-task)
   ((no-solution-found-means-yes :initform nil)))
@@ -666,12 +763,13 @@ res = 7;
 (defclass ds-task (decision-task)
   ((no-solution-found-means-yes :initform t)))
 
-(defmethod (setf task-hash) (value (task task)))
-
 (defmethod task-arg ((task decision-task))
   (gethash (task-arg-name task) (task-hash task)))
 
 (defun prepare-space (input task semantic)
+  (check-type input input)
+  (check-type task task)
+  (check-type semantic semantic)
   (multiple-value-bind (graph vector hash)
       (with-timing (read-graph-input input))
     (setf (task-hash task) hash)
@@ -682,28 +780,34 @@ res = 7;
       (branch-space space task semantic)
       (values space vector))))
 
-(defclass search-all-driver ()
+(defclass driver () ())
+
+(defclass search-all-driver (driver)
   ())
 
-(defclass search-one-driver ()
+(defclass search-one-driver (driver)
   ())
 
-(defclass search-one-decision-driver ()
+(defclass search-one-decision-driver (driver)
   ((no-solution-found-means-yes
     :reader no-solution-found-means-yes
     :initarg :no-solution-found-means-yes)))
 
 (defmethod make-driver (semantic (task ee-task))
+  (check-type semantic semantic)
   (make-instance 'search-all-driver))
 
 (defmethod make-driver (semantic (task se-task))
+  (check-type semantic semantic)
   (make-instance 'search-one-driver))
 
 (defmethod make-driver (semantic (task dc-task))
+  (check-type semantic semantic)
   (make-instance 'search-one-decision-driver
                  :no-solution-found-means-yes nil))
 
 (defmethod make-driver (semantic (task ds-task))
+  (check-type semantic semantic)
   (make-instance 'search-one-decision-driver
                  :no-solution-found-means-yes t))
 
@@ -712,6 +816,9 @@ res = 7;
                  :no-solution-found-means-yes t))
 
 (defun print-answer (input task semantic)
+  (check-type input input)
+  (check-type task task)
+  (check-type semantic semantic)
   (multiple-value-bind (space vector)
       (with-timing (prepare-space input task semantic))
     (let ((engine (with-timing (make-search-engine space task semantic vector)))
@@ -719,6 +826,9 @@ res = 7;
       (with-timing (drive-search-and-print driver engine)))))
 
 (defun collect-answer (input task semantic)
+  (check-type input input)
+  (check-type task task)
+  (check-type semantic semantic)
   (multiple-value-bind (space vector)
       (prepare-space input task semantic)
     (let ((engine (make-search-engine space task semantic vector))
@@ -734,6 +844,7 @@ res = 7;
       (:pr (make-instance 'preferred))))
 
   (defun make-task (task &optional arg)
+    (check-type arg (or null string alexandria:non-negative-fixnum))
     (ecase task
       (:ee (make-instance 'ee-task))
       (:se (make-instance 'se-task))
@@ -741,57 +852,98 @@ res = 7;
       (:ds (make-instance 'ds-task :arg-name arg)))))
 
 (defmethod make-initial-space (graph (task task) (semantic semantic))
+  (check-type graph graph)
   (cl-user::make-foo (order graph)))
 
 (defmethod make-initial-space (graph (task se-task) (semantic preferred))
+  (check-type graph graph)
   (cl-user::make-pr-bab-space (order graph)))
 
 (defmethod make-initial-space (graph (task ee-task) (semantic preferred))
+  (check-type graph graph)
   (cl-user::make-pr-bab-space (order graph)))
 
 (defmethod constrain-space (space (semantic complete) task graph)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type task task)
+  (check-type graph graph)
   (cl-user::constrain-complete graph))
 
 (defmethod constrain-space :after (space (semantic stable) task graph)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type task task)
+  (check-type graph graph)
   (cl-user::constrain-stable graph))
 
 (defmethod constrain-arg-if-needed (space semantic task)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   ;; noop
   )
 
 (defmethod constrain-arg-if-needed (space semantic (task decision-task))
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   (constrain-arg space semantic task))
 
 (defmethod constrain-arg (space (semantic grounded) (task decision-task))
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-false space (task-arg task)))
 
 (defmethod constrain-arg (space semantic (task ds-task))
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-false space (task-arg task)))
 
 (defmethod constrain-arg (space semantic (task dc-task))
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   (log* "constrain arg to be in")
   (log* "task arg is ~S" (task-arg task))
   (cl-user::post-must-be-true space (task-arg task)))
 
 (defmethod branch-space (space task semantic)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   (cl-user::foo-branch/l/int-var-degree-max/int-val-min space))
 
 (defmethod branch-space (space (task se-task) (semantic preferred))
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   (cl-user::foo-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod branch-space (space (task ee-task) (semantic preferred))
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
   (cl-user::foo-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
+  (check-type vector vector)
   (make-instance 'preferred-all-engine
                  :sub-engine (make-search-engine space task
                                                  (make-semantic :co) vector)))
 
 (defmethod make-search-engine (space task semantic vector)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
+  (check-type vector vector)
   (typecase semantic
     (grounded
      (make-instance 'propagate-only-engine
@@ -827,7 +979,9 @@ res = 7;
                                      :gecode-engine (cl-user::make-dfs space))))
          (cl-user::delete-foo space)))))
 
-(defclass search-engine ()
+(defclass engine () ())
+
+(defclass search-engine (engine)
   ((gecode-engine    :reader gecode-engine    :initarg :gecode-engine)
    (engine-vector    :reader engine-vector    :initarg :engine-vector)
    (next-solution-fn :reader next-solution-fn :initarg :next-solution-fn)
@@ -844,6 +998,7 @@ res = 7;
   space)
 
 (defun gecode-engine-space-wrapper-next (wrapper)
+  (check-type wrapper gecode-engine-space-wrapper)
   (let ((space (gecode-engine-space-wrapper-space wrapper)))
     (when space
       (prog1
@@ -862,13 +1017,23 @@ res = 7;
   (setf (slot-value propagate-only-engine 'gecode-engine)
         (make-gecode-engine-space-wrapper :space space)))
 
-(defclass multi-bab-engine ()
+(defclass multi-bab-engine (engine)
   ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
    (engine-vector :reader engine-vector :initarg :engine-vector)
    (space :reader engine-space :initarg :space)))
 
-(defclass preferred-all-engine ()
+(defclass preferred-all-engine (engine)
   ((sub-engine :reader sub-engine :initarg :sub-engine)))
+
+(defmethod drive-search-and-print :around (driver engine)
+  (check-type driver driver)
+  (check-type engine engine)
+  (call-next-method))
+
+(defmethod drive-search-and-collect :around (driver engine)
+  (check-type driver driver)
+  (check-type engine engine)
+  (call-next-method))
 
 (defmethod drive-search-and-print ((task search-all-driver)
                                    (engine preferred-all-engine))
