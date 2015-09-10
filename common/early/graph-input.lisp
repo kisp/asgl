@@ -42,5 +42,22 @@
                 (setf (gethash item hash) item))
               hash))))
 
+(defun cons2vector (cons)
+  (destructuring-bind (order . integer) cons
+    (let* ((length (* order order))
+           (array (make-array length :element-type 'bit)))
+      (dotimes (i length)
+        (setf (aref array (- (1- length) i))
+              (if (logbitp i integer) 1 0)))
+      array)))
+
+(defmethod read-graph-input ((input cons))
+  (let ((order (car input)))
+    (read-graph-input
+     (make-graph-from-adj
+      (make-array (list order order)
+                  :displaced-to (cons2vector input)
+                  :element-type 'bit)))))
+
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
