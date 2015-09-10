@@ -52,12 +52,24 @@
       array)))
 
 (defmethod read-graph-input ((input cons))
-  (let ((order (car input)))
-    (read-graph-input
-     (make-graph-from-adj
-      (make-array (list order order)
-                  :displaced-to (cons2vector input)
-                  :element-type 'bit)))))
+  (destructuring-bind (order . bits) input
+    (declare (fixnum order))
+    (let ((order-1 (1- order))
+          (all-one (1- (expt 2 order)))
+          (vector (make-array order :initial-element nil)))
+      (loop for i below order
+            for position downfrom (* order (1- order)) by order
+            for row = (ldb (byte order position) bits)
+            do (cond
+                 ((zerop row))
+                 ((eql row all-one)
+                  (dotimes (j order)
+                    (push i (aref vector (- order-1 j)))))
+                 (t
+                  (dotimes (j order)
+                    (when (logbitp j row)
+                      (push i (aref vector (- order-1 j))))))))
+      vector)))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
