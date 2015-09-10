@@ -1087,7 +1087,7 @@ res = 7;
              (semantic (oo:make-semantic semantic)))
          (multiple-value-bind (task semantic)
              (oo:translate-problem task semantic)
-           (oo:print-answer (make-graph-input f)
+           (oo:print-answer f
                             task
                             semantic))))
       (t
