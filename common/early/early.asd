@@ -20,7 +20,7 @@
     :depends-on (:asgl-config)
     :components
     ((:file "package")
-     (:file "graph-input" :depends-on ("package" "cover"))
+     (:file "graph-input" :depends-on ("package" "cover" "utils"))
      (:file "utils" :depends-on ("package" "cover"))
      (:file "graph" :depends-on ("utils" "cover"))
      (:file "apx" :depends-on ("graph" "cover"))

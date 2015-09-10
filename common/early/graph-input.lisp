@@ -47,20 +47,21 @@
     (declare (fixnum order))
     (let ((order-1 (1- order))
           (all-one (1- (expt 2 order)))
-          (vector (make-array order :initial-element nil)))
-      (loop for i below order
-            for position downfrom (* order (1- order)) by order
-            for row = (ldb (byte order position) bits)
-            do (cond
-                 ((zerop row))
-                 ((eql row all-one)
-                  (dotimes (j order)
-                    (push i (aref vector (- order-1 j)))))
-                 (t
-                  (dotimes (j order)
-                    (when (logbitp j row)
-                      (push i (aref vector (- order-1 j))))))))
-      (read-graph-input vector))))
+          (vector (with-timing (make-array order :initial-element nil))))
+      (with-timing
+          (loop for i below order
+                for position downfrom (* order (1- order)) by order
+                for row = (ldb (byte order position) bits)
+                do (cond
+                     ((zerop row))
+                     ((eql row all-one)
+                      (dotimes (j order)
+                        (push i (aref vector (- order-1 j)))))
+                     (t
+                      (dotimes (j order)
+                        (when (logbitp j row)
+                          (push i (aref vector (- order-1 j)))))))))
+      (with-timing (read-graph-input vector)))))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
