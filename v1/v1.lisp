@@ -1127,15 +1127,17 @@ res = 7;
       (load init-file))
     (si:top-level)))
 
-(defun run-self-check ()
-  (let ((*default-pathname-defaults*
-          (merge-pathnames "tests/" (asgl-home))))
-    (compile-file-if-needed "tests.lisp" t)
-    (load "tests-apx.lisp")
-    (load "tests-complete.lisp")
-    (load "tests-grounded.lisp")
-    (load "tests-stable.lisp")
-    (load "tests-preferred.lisp"))
+(defun run-self-check (test-files)
+  (dolist (file (directory
+                 (merge-pathnames "tests/support/*.lisp"
+                                  (asgl-home))))
+    (compile-file-if-needed file t))
+  (let ((test-files (or test-files
+                        (directory
+                         (merge-pathnames "tests/*.lisp"
+                                          (asgl-home))))))
+    (dolist (file test-files)
+      (load file)))
   (format t "Running self-check... This will take around 5 min.~%")
   (if (myam:run! :tests)
       (format t "~&SELF-CHECK PASSED SUCCESSFULLY~%")
@@ -1176,7 +1178,7 @@ res = 7;
          ((equal "--repl" (second ext:*command-args*))
           (run-repl))
          ((equal "--check" (second ext:*command-args*))
-          (run-self-check))
+          (run-self-check (cddr ext:*command-args*)))
          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
     #+cover
     (cover:save-points *cover-file*)))
