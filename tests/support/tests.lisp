@@ -65,9 +65,8 @@
   ;; ds
   (frob $$complete-ds :co (:ds a))
   (frob $$stable-ds :st (:ds a))
-  (frob $$grounded-ds :gr (:ds a)))
-
-(defun $$preferred-ds (graph a) (dc-ds1 graph :ds :pr a))
+  (frob $$grounded-ds :gr (:ds a))
+  (frob $$preferred-ds :pr (:ds a)))
 
 (in-package :tests)
 
