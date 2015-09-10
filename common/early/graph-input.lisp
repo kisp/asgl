@@ -42,15 +42,6 @@
                 (setf (gethash item hash) item))
               hash))))
 
-(defun cons2vector (cons)
-  (destructuring-bind (order . integer) cons
-    (let* ((length (* order order))
-           (array (make-array length :element-type 'bit)))
-      (dotimes (i length)
-        (setf (aref array (- (1- length) i))
-              (if (logbitp i integer) 1 0)))
-      array)))
-
 (defmethod read-graph-input ((input cons))
   (destructuring-bind (order . bits) input
     (declare (fixnum order))
@@ -69,7 +60,7 @@
                   (dotimes (j order)
                     (when (logbitp j row)
                       (push i (aref vector (- order-1 j))))))))
-      vector)))
+      (read-graph-input vector))))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
