@@ -31,5 +31,4 @@
   ;; apx
   (:export #:read-apx-file)
   ;; graph-input
-  (:export #:make-graph-input
-           #:read-graph-input))
+  (:export #:read-graph-input))

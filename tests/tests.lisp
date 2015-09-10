@@ -40,7 +40,7 @@
                       (semantic (oo:make-semantic ,semantic)))
                   (multiple-value-bind (task semantic)
                       (oo:translate-problem task semantic)
-                    (oo:collect-answer (make-graph-input graph)
+                    (oo:collect-answer graph
                                        task
                                        semantic))))))
   ;; all

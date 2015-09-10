@@ -24,24 +24,16 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
-(defclass graph-input () ())
+(defgeneric read-graph-input (input))
 
-(defclass apx-input (graph-input)
-  ((pathname :reader apx-pathname :initarg :pathname)))
+(defmethod read-graph-input ((input pathname))
+  (read-apx-file input))
 
-(defclass vector-input (graph-input)
-  ((vector :reader graph-input-vector :initarg :vector)))
+(defmethod read-graph-input ((input string))
+  (read-apx-file input))
 
-(defun make-graph-input (input)
-  (etypecase input
-    ((or pathname string) (make-instance 'apx-input :pathname input))
-    (vector (make-instance 'vector-input :vector input))))
-
-(defmethod read-graph-input ((input apx-input))
-  (read-apx-file (apx-pathname input)))
-
-(defmethod read-graph-input ((input vector-input))
-  (let* ((graph (graph-input-vector input))
+(defmethod read-graph-input ((input vector))
+  (let* ((graph input)
          (items (loop for i below (order graph) collect i)))
     (values graph
             (make-array (order graph) :initial-contents items)
