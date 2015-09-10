@@ -682,11 +682,6 @@ res = 7;
       (branch-space space task semantic)
       (values space vector))))
 
-(defun build-engine (input task semantic)
-  (multiple-value-bind (space vector)
-      (prepare-space input task semantic)
-    (make-search-engine space task semantic vector)))
-
 (defclass search-all-driver ()
   ())
 
@@ -717,14 +712,18 @@ res = 7;
                  :no-solution-found-means-yes t))
 
 (defun print-answer (input task semantic)
-  (let ((engine (build-engine input task semantic))
-        (driver (make-driver semantic task)))
-    (drive-search-and-print driver engine)))
+  (multiple-value-bind (space vector)
+      (prepare-space input task semantic)
+    (let ((engine (make-search-engine space task semantic vector))
+          (driver (make-driver semantic task)))
+      (drive-search-and-print driver engine))))
 
 (defun collect-answer (input task semantic)
-  (let ((engine (build-engine input task semantic))
-        (driver (make-driver semantic task)))
-    (drive-search-and-collect driver engine)))
+  (multiple-value-bind (space vector)
+      (prepare-space input task semantic)
+    (let ((engine (make-search-engine space task semantic vector))
+          (driver (make-driver semantic task)))
+      (drive-search-and-collect driver engine))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-semantic (semantic)
