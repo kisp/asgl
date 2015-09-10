@@ -1,3 +1,4 @@
+@notref
 Feature: cons encoding
 
   As a user of asgl
