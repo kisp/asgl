@@ -2,7 +2,7 @@ FROM ubuntu
 
 RUN apt-get update
 
-RUN apt-get -y install git build-essential curl autoconf m4 libgmp-dev ragel
+RUN apt-get -y install git build-essential curl autoconf m4 libgmp-dev ragel bundler
 
 RUN curl --no-progress-bar --retry 10 -o "gecode-4.3.3.tar.gz" \
   -L "http://www.gecode.org/download/gecode-4.3.3.tar.gz"
@@ -37,6 +37,9 @@ RUN rm -rf ecl-13.5.1*
 
 ### asgl
 RUN git clone https://github.com/kisp/asgl.git
+
+# install cucumber
+RUN cd asgl && bundle
 
 RUN cd asgl && autoconf && ./configure --without-gist
 
