@@ -764,7 +764,10 @@ res = 7;
   ((no-solution-found-means-yes :initform t)))
 
 (defmethod task-arg ((task decision-task))
-  (gethash (task-arg-name task) (task-hash task)))
+  (or (gethash (task-arg-name task) (task-hash task))
+      (error "task-arg-name ~S not found in task-hash ~S containing~%~S"
+             (task-arg-name task) (task-hash task)
+             (alexandria:hash-table-alist (task-hash task)))))
 
 (defun prepare-space (input task semantic)
   (check-type input input)
