@@ -1195,6 +1195,49 @@ res = 7;
             (not no-solution-found-means-yes)
           (funcall space-delete-fn solution)))))
 
+;;; DS-PR
+(defmethod make-search-engine (space (task ds-task) (semantic preferred) vector)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
+  (check-type vector vector)
+  (make-instance 'ds-pr-engine :task task :space space :vector vector))
+
+(defmethod constrain-arg-if-needed
+    (space (semantic preferred) (task ds-task))
+  ;; noop
+  )
+
+(defclass ds-pr-engine (engine)
+  ((task :initarg :task :reader engine-task)
+   (space :initarg :space :reader engine-space)
+   (vector :initarg :vector :reader engine-vector)))
+
+(defmethod gecode-engine ((engine ds-pr-engine))
+  engine)
+
+(defmethod next-solution-fn ((ds-pr-engine ds-pr-engine))
+  (let ((engine (make-search-engine
+                 (engine-space ds-pr-engine)
+                 (make-task :ee)
+                 (make-semantic :pr)
+                 (coerce (alexandria:iota (length (engine-vector ds-pr-engine)))
+                         'vector))))
+    (lambda (arg)
+      (declare (ignore arg))
+      ;; give t here if you can find a preferred extension that does
+      ;; not contain arg
+      (let ((solutions
+              (drive-search-and-collect
+               (make-instance 'search-all-driver) engine))
+            (arg (task-arg (engine-task ds-pr-engine))))
+        (some (lambda (solution) (not (member arg solution)))
+              solutions)))))
+
+(defmethod space-delete-fn ((engine ds-pr-engine)) (lambda (arg) (declare (ignore arg))))
+;;; END DS-PR
+
+
 (macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
              (declare (ignore arrow))
              (let ((from-task-type (type-of (make-task from-task)))
@@ -1249,30 +1292,14 @@ res = 7;
   (let* ((g (when g (parse-cons g)))
          (f (or f g)))
     (multiple-value-bind (task semantic) (parse-problem p)
-      (cond
-        ((or (not (eql :pr semantic))
-             (and #+nil(eql :pr semantic)
-                  (eql :se task))
-             (and #+nil(eql :pr semantic)
-                  (eql :ee task))
-             (and #+nil(eql :pr semantic)
-                  (eql :dc task)))
-         (let ((task (oo:make-task task a))
-               (semantic (oo:make-semantic semantic)))
-           (multiple-value-bind (task semantic)
-               (oo:translate-problem task semantic)
-             (with-timing
-                 (oo:print-answer f
-                                  task
-                                  semantic)))))
-        (t
-         (let ((*print-case* :downcase))
-           (multiple-value-bind (graph vector hash)
-               (with-timing (read-graph-input f))
-             (declare (ignore vector))
-             (ecase task
-               ((:dc :ds) (dc-ds graph task semantic hash a)))
-             (terpri))))))))
+      (let ((task (oo:make-task task a))
+            (semantic (oo:make-semantic semantic)))
+        (multiple-value-bind (task semantic)
+            (oo:translate-problem task semantic)
+          (with-timing
+              (oo:print-answer f
+                               task
+                               semantic)))))))
 
 #+cover
 (defvar *cover-file*
