@@ -59,26 +59,42 @@ directory designated by PATHSPEC does actually exist."
 (defvar *with-timing* #+timing t #-timing nil)
 
 #+timing
+(defvar *timing-stack* (list nil))
+
+#+timing
 (defun call-with-timing (form thunk)
-  (if (not *with-timing*)
-      (funcall thunk)
-      (let ((*print-length* 3)
-            (*print-level* 2))
-        (format *error-output* "~&Calling ~S..." form)
-        (force-output *error-output*)
-        (let ((ok)
-              (start (get-internal-real-time)))
-          (unwind-protect
-               (multiple-value-prog1
-                   (funcall thunk)
-                 (let ((end (get-internal-real-time)))
-                   (setq ok t)
-                   (format *error-output*
-                           "done (~5,3F s)~%"
-                           (/ (- end start)
-                              internal-time-units-per-second))))
-            (unless ok
-              (format *error-output* " (aborted by a non-local toc)~%")))))))
+  (labels ((spaces (x)
+             (make-string (* 2 x) :initial-element #\space))
+           (prepare-result-output (level timing-stack)
+             (when (car timing-stack)
+               (format *error-output* "~&~A<~D " (spaces level) level))))
+    (if (not *with-timing*)
+        (funcall thunk)
+        (progn
+          ;; whatever happens, let the others below in the call stack
+          ;; know that call-with-timing was attempted
+          (setf (car *timing-stack*) t)
+          (let ((*print-length* 3)
+                (*print-level* 2)
+                (level (1- (length *timing-stack*))))
+            (format *error-output* "~&~A~D> Calling ~S " (spaces level) level form)
+            (force-output *error-output*)
+            (let ((ok)
+                  (*timing-stack* (cons nil *timing-stack*))
+                  (start (get-internal-real-time)))
+              (unwind-protect
+                   (multiple-value-prog1
+                       (funcall thunk)
+                     (let ((end (get-internal-real-time)))
+                       (setq ok t)
+                       (prepare-result-output level *timing-stack*)
+                       (format *error-output*
+                               "done (~5,3F s)~%"
+                               (/ (- end start)
+                                  internal-time-units-per-second))))
+                (unless ok
+                  (prepare-result-output level *timing-stack*)
+                  (format *error-output* " (aborted by a non-local toc)~%")))))))))
 
 (defmacro with-timing (form)
   #+timing
