@@ -1092,11 +1092,14 @@ res = 7;
 (defmethod drive-search-and-collect :around (driver engine)
   (check-type driver driver)
   (check-type engine engine)
-  (values
-   (call-next-method)
-   (search-statistics engine)
-   driver
-   engine))
+  (multiple-value-bind (extension exists-p)
+      (call-next-method)
+    (values
+     extension
+     exists-p
+     (search-statistics engine)
+     driver
+     engine)))
 
 (defmethod drive-search-and-print ((task search-all-driver)
                                    (engine preferred-all-engine))
