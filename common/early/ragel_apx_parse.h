@@ -14,38 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef MY_FOO_HEADER_
-#define MY_FOO_HEADER_
-#include "../asgl_config.h"
-#include <gecode/int.hh>
-#include <gecode/search.hh>
-#ifdef HAVE_GECODE_GIST_HH
-#include <gecode/gist.hh>
-#endif
+#include <ecl/ecl.h>
 
-namespace v1 {
-  class Foo : public Gecode::Space
-  {
-  private:
-    int n;
-
-  protected:
-    Gecode::BoolVarArray l;
-
-  public:
-    Foo(int x);
-    Foo(bool share, Foo& s);
-
-    int getN();
-
-    Gecode::Space* copy(bool share);
-
-    Gecode::BoolVarArray* getVars();
-
-    void print(std::ostream&) const;
-
-    virtual void branch__l__int_var_degree_max__int_val_min();
-    virtual void branch__l__int_var_degree_max__int_val_max();
-  };
-}
-#endif
+void ragel_apx_parse(char *buffer, long size, cl_object table, cl_object fn);
+char *slurp_file(cl_object namestring, long *size);
+int count_args(char *buffer, long size);

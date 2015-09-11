@@ -5,6 +5,6 @@ Feature: error-handling
   I want to get useful information about errors
 
   Scenario: Unhandled error detected
-     When I run `asgl --foo`
+     When I run `asgl --quux`
      Then the exit status should be 1
      And the output should contain "Unhandled error detected"

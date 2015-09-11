@@ -16,7 +16,7 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(ffi:clines "#include \"myfoo.h\"")
+(ffi:clines "#include \"ragel_apx_parse.h\"")
 
 (in-package #:early)
 
@@ -72,7 +72,7 @@ long msize = 99;
                                   (add-edge graph from to)))
                         (:pointer-void :long :object :object)
                         :void
-                        "{ myfoo((char*)#0, #1, #2, #3); }")
+                        "{ ragel_apx_parse((char*)#0, #1, #2, #3); }")
           (hash-table2vector hash vector)
           (values graph vector hash)))))
   #+nil
@@ -81,7 +81,7 @@ long msize = 99;
      (ffi:c-inline
       ((coerce (namestring (merge-pathnames pathname)) 'base-string)
        table)
-      (:object :object) :void "{ myfoo(#0,#1); }"))
+      (:object :object) :void "{ ragel_apx_parse(#0,#1); }"))
     #+nil(describe table)
     #+nil(format t "here are all the keys:~%")
     #+nil(loop for key being the hash-keys of table

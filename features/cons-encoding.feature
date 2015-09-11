@@ -18,4 +18,4 @@ Feature: cons encoding
   |    3 |
   |   3. |
   |   .0 |
-  |  foo |
+  | quux |

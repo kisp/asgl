@@ -35,52 +35,52 @@
 (deftest read-graph-input.5
     (with-tmp-file-of-lines
         (pathname
-         (list "arg(foo)."))
+         (list "arg(quux)."))
       (multiple-value-bind (graph vector hash)
           (read-graph-input pathname)
         (is (equalp #(()) graph))
-        (is (equalp #("foo") vector))
-        (is (alist-eql '(("foo" . 0)) (hash-table-alist hash))))))
+        (is (equalp #("quux") vector))
+        (is (alist-eql '(("quux" . 0)) (hash-table-alist hash))))))
 
 (deftest read-graph-input.6
     (with-tmp-file-of-lines
         (pathname
-         (list "arg(foo)."
+         (list "arg(quux)."
                "arg(bar)."))
       (multiple-value-bind (graph vector hash)
           (read-graph-input pathname)
         (is (equalp #(() ()) graph))
-        (is (equalp #("foo" "bar") vector))
-        (is (alist-eql '(("foo" . 0) ("bar" . 1)) (hash-table-alist hash))))))
+        (is (equalp #("quux" "bar") vector))
+        (is (alist-eql '(("quux" . 0) ("bar" . 1)) (hash-table-alist hash))))))
 
 (deftest read-graph-input.7
     (with-tmp-file-of-lines
         (pathname
-         (list "arg(foo)."
+         (list "arg(quux)."
                "arg(bar)."
-               "att(bar, foo)."))
+               "att(bar, quux)."))
       (multiple-value-bind (graph vector hash)
           (read-graph-input pathname)
         (is (equalp #((1) ()) graph))
-        (is (equalp #("foo" "bar") vector))
-        (is (alist-eql '(("foo" . 0) ("bar" . 1)) (hash-table-alist hash))))))
+        (is (equalp #("quux" "bar") vector))
+        (is (alist-eql '(("quux" . 0) ("bar" . 1)) (hash-table-alist hash))))))
 
 (deftest read-graph-input.8
     (with-tmp-file-of-lines
         (pathname
-         (list "arg(foo)."
+         (list "arg(quux)."
                "arg(bar)."
-               "att(foo, bar)."))
+               "att(quux, bar)."))
       (multiple-value-bind (graph vector hash)
           (read-graph-input pathname)
         (is (equalp #(() (0)) graph))
-        (is (equalp #("foo" "bar") vector))
-        (is (alist-eql '(("foo" . 0) ("bar" . 1)) (hash-table-alist hash))))))
+        (is (equalp #("quux" "bar") vector))
+        (is (alist-eql '(("quux" . 0) ("bar" . 1)) (hash-table-alist hash))))))
 
 (deftest read-graph-input.9
     (with-tmp-file-of-lines
         (pathname
-         (list "foo"))
+         (list "quux"))
       (signals error (read-graph-input pathname))))
 
 (DEFTEST READ-GRAPH-INPUT.CONS.1

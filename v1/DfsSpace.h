@@ -14,40 +14,38 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "Foo.h"
+#ifndef DfsSpace_HEADER_
+#define DfsSpace_HEADER_
+#include "../asgl_config.h"
+#include <gecode/int.hh>
+#include <gecode/search.hh>
+#ifdef HAVE_GECODE_GIST_HH
+#include <gecode/gist.hh>
+#endif
 
 namespace v1 {
+  class DfsSpace : public Gecode::Space
+  {
+  private:
+    int n;
 
-  Foo::Foo(int _n) : l(*this, _n, 0, 1) {
-    n = _n;
-  }
+  protected:
+    Gecode::BoolVarArray l;
 
-  void Foo::branch__l__int_var_degree_max__int_val_min() {
-    Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MIN());
-  }
+  public:
+    DfsSpace(int x);
+    DfsSpace(bool share, DfsSpace& s);
 
-  void Foo::branch__l__int_var_degree_max__int_val_max() {
-    Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MAX());
-  }
+    int getN();
 
-  Foo::Foo(bool share, Foo& s) : Gecode::Space(share, s) {
-    l.update(*this, share, s.l);
-  }
+    Gecode::Space* copy(bool share);
 
-  int Foo::getN() {
-    return n;
-  }
+    Gecode::BoolVarArray* getVars();
 
-  Gecode::Space* Foo::copy(bool share) {
-    return new Foo(share, *this);
-  }
+    void print(std::ostream&) const;
 
-  Gecode::BoolVarArray* Foo::getVars(void) {
-    return &l;
-  }
-
-  void Foo::print(std::ostream& os) const {
-    os << l << std::endl;
-  }
-
+    virtual void branch__l__int_var_degree_max__int_val_min();
+    virtual void branch__l__int_var_degree_max__int_val_max();
+  };
 }
+#endif
