@@ -1306,16 +1306,20 @@ res = 7;
 
 (in-package :cl-user)
 
-(defun parse-cons (string)
-  (let ((pos (position #\. string)))
-    (assert pos)
-    (cons (parse-integer string :end pos)
-          (parse-integer string :start (1+ pos)))))
+(defun parse-g-arg (string)
+  (let ((form (read-from-string string)))
+    (cond
+      ((floatp form)
+       (let ((pos (position #\. string)))
+         (assert pos)
+         (cons (parse-integer string :end pos)
+               (parse-integer string :start (1+ pos)))))
+      (t form))))
 
 (defun main% (&key (fo "apx") f p a g)
   (assert (equal fo "apx"))
   (assert (alexandria:xor f g))
-  (let* ((g (when g (parse-cons g)))
+  (let* ((g (when g (parse-g-arg g)))
          (f (or f g)))
     (multiple-value-bind (task semantic) (parse-problem p)
       (let ((task (oo:make-task task a))
