@@ -439,17 +439,6 @@ Gecode::Search::Statistics s = dfs->statistics();
           :depth depth :restart restart
           :nogood nogood)))
 
-(defun dfs-search-all (space)
-  (check-type space SI:FOREIGN-DATA)
-  (let ((dfs (make-dfs space)))
-    (delete-dfs-space space)
-    (values
-     (loop for solution = (dfs-next dfs)
-        until (null solution)
-        collect solution)
-     (multiple-value-list
-      (dfs-statistics dfs)))))
-
 (defun dfs-search-gist (space)
   (check-type space SI:FOREIGN-DATA)
   (let ((status
@@ -546,33 +535,6 @@ res = 7;
                       (setf (gethash key imp-or-table) t)))))
          ,@body))))
 
-(defun bits-to-set (list &key (unassigned-permitted-as-out nil))
-  (check-type list list)
-  (check-type unassigned-permitted-as-out boolean)
-  (every (lambda (x) (check-type x bit)) list)
-  (if unassigned-permitted-as-out
-      (loop for x in list
-         for i upfrom 0
-         when (eql x 1)
-         collect i)
-      (loop for x in list
-         for i upfrom 0
-         do (assert (or (eql 1 x) (eql 0 x)))
-         when (eql x 1)
-         collect i)))
-
-(defun space-indices-that-are-in (space &key delete)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type delete boolean)
-  (prog1
-      (bits-to-set (space-to-list space))
-    (when delete
-      (delete-dfs-space space))))
-
-(defun space-indices-that-are-in-and-delete (space)
-  (check-type space SI:FOREIGN-DATA)
-  (space-indices-that-are-in space :delete t))
-
 (defmacro sortf2 (a b)
   `(unless (< ,a ,b)
      (rotatef ,a ,b)))
@@ -581,20 +543,7 @@ res = 7;
   (check-type list list)
   (sort (copy-list list) #'<))
 
-(defun dfs-search-all-and-list-ins (space)
-  (check-type space SI:FOREIGN-DATA)
-  (multiple-value-bind (solutions statistics)
-      (with-timing (dfs-search-all space))
-    (values
-     (mapcar #'space-indices-that-are-in-and-delete solutions)
-     statistics)))
 
-(defun dfs-search-gist-or-list-ins (space gist)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type gist boolean)
-  (if gist
-      (dfs-search-gist space)
-      (dfs-search-all-and-list-ins space)))
 
 (defun constrain-conflict-free (graph constrain-nand)
   (check-type graph graph)
@@ -682,23 +631,6 @@ res = 7;
              (expr-not space (!!var!! node))
              (!!expr-or!! parents)))))))
 
-(defun complete-all (graph &key gist)
-  (check-type graph graph)
-  (check-type gist boolean)
-  (let* ((order (order graph))
-         (space (with-timing (make-dfs-space order))))
-    (with-post-env-setup (space)
-      (constrain-complete graph))
-    (dfs-space-branch/l/int-var-degree-max/int-val-min space)
-    (dfs-search-gist-or-list-ins space gist)))
-
-(defun preferred-all (graph &key gist)
-  (check-type graph graph)
-  (check-type gist boolean)
-  (remove-duplicates
-   (sort (complete-all graph) #'< :key #'length)
-   :test #'subsetp))
-
 (defun adopt-keywords (list)
   (check-type list list)
   (mapcar (lambda (x)
@@ -713,38 +645,6 @@ res = 7;
     (values
      (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
      (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
-
-(defun all-for-semantic (graph semantic)
-  (check-type graph graph)
-  (check-type semantic keyword)
-  (ecase semantic
-    (:co (complete-all graph))
-    (:st (stable-all graph))
-    (:gr (grounded-all graph))
-    (:pr (preferred-all graph))))
-
-(defun dc-ds1 (graph task semantic arg-index)
-  (check-type graph graph)
-  (check-type task keyword)
-  (check-type semantic keyword)
-  (check-type arg-index alexandria:non-negative-fixnum)
-  (flet ((contains-arg-p (extension)
-           (member arg-index extension)))
-    (let ((extensions (all-for-semantic graph semantic)))
-      (ecase task
-        (:ds (every #'contains-arg-p extensions))
-        (:dc (not (null (some #'contains-arg-p extensions))))))))
-
-(defun dc-ds (graph task semantic hash arg)
-  (check-type graph graph)
-  (check-type task keyword)
-  (check-type semantic keyword)
-  (check-type hash hash-table)
-  (check-type arg string)
-  (let ((arg-index (gethash arg hash)))
-    (if (dc-ds1 graph task semantic arg-index)
-        (write-string "YES")
-        (write-string "NO"))))
 
 (defpackage :oo
   (:use :cl :early)
