@@ -646,19 +646,6 @@ res = 7;
      (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
      (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
 
-(defpackage :oo
-  (:use :cl :early)
-  (:export #:print-answer
-           #:collect-answer
-           #:make-semantic
-           #:make-task
-           #:translate-problem))
-
-(in-package :oo)
-
-(eval-when (:compile-toplevel :execute)
-  (cover:annotate t))
-
 (deftype input () '(or string pathname vector cons))
 
 (defgeneric make-initial-space (graph task semantic))
@@ -718,7 +705,7 @@ res = 7;
       (with-timing (read-graph-input input))
     (setf (task-hash task) hash)
     (let ((space (make-initial-space graph task semantic)))
-      (cl-user::with-post-env-setup (space)
+      (with-post-env-setup (space)
         (constrain-space space semantic task graph)
         (constrain-arg-if-needed space semantic task))
       (branch-space space task semantic)
@@ -797,27 +784,27 @@ res = 7;
 
 (defmethod make-initial-space (graph (task task) (semantic semantic))
   (check-type graph graph)
-  (cl-user::make-dfs-space (order graph)))
+  (make-dfs-space (order graph)))
 
 (defmethod make-initial-space (graph (task se-task) (semantic preferred))
   (check-type graph graph)
-  (cl-user::make-pr-bab-space (order graph)))
+  (make-pr-bab-space (order graph)))
 
 (defmethod make-initial-space (graph (task ee-task) (semantic preferred))
   (check-type graph graph)
-  (cl-user::make-pr-bab-space (order graph)))
+  (make-pr-bab-space (order graph)))
 
 (defmethod constrain-space (space (semantic complete) task graph)
   (check-type space SI:FOREIGN-DATA)
   (check-type task task)
   (check-type graph graph)
-  (cl-user::constrain-complete graph))
+  (constrain-complete graph))
 
 (defmethod constrain-space :after (space (semantic stable) task graph)
   (check-type space SI:FOREIGN-DATA)
   (check-type task task)
   (check-type graph graph)
-  (cl-user::constrain-stable graph))
+  (constrain-stable graph))
 
 (defmethod constrain-arg-if-needed (space semantic task)
   (check-type space SI:FOREIGN-DATA)
@@ -838,7 +825,7 @@ res = 7;
   (check-type task task)
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
-  (cl-user::post-must-be-false space (task-arg task)))
+  (post-must-be-false space (task-arg task)))
 
 (defmethod constrain-arg (space semantic (task ds-task))
   (check-type space SI:FOREIGN-DATA)
@@ -846,7 +833,7 @@ res = 7;
   (check-type task task)
   (log* "constrain arg not to be in")
   (log* "task arg is ~S" (task-arg task))
-  (cl-user::post-must-be-false space (task-arg task)))
+  (post-must-be-false space (task-arg task)))
 
 (defmethod constrain-arg (space semantic (task dc-task))
   (check-type space SI:FOREIGN-DATA)
@@ -854,25 +841,25 @@ res = 7;
   (check-type task task)
   (log* "constrain arg to be in")
   (log* "task arg is ~S" (task-arg task))
-  (cl-user::post-must-be-true space (task-arg task)))
+  (post-must-be-true space (task-arg task)))
 
 (defmethod branch-space (space task semantic)
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
-  (cl-user::dfs-space-branch/l/int-var-degree-max/int-val-min space))
+  (dfs-space-branch/l/int-var-degree-max/int-val-min space))
 
 (defmethod branch-space (space (task se-task) (semantic preferred))
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
-  (cl-user::dfs-space-branch/l/int-var-degree-max/int-val-max space))
+  (dfs-space-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod branch-space (space (task ee-task) (semantic preferred))
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
-  (cl-user::dfs-space-branch/l/int-var-degree-max/int-val-max space))
+  (dfs-space-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
   (check-type space SI:FOREIGN-DATA)
@@ -898,30 +885,30 @@ res = 7;
              (ee-task (typecase semantic
                         (preferred
                          (make-instance 'multi-bab-engine
-                                        :gecode-engine (cl-user::make-bab-or-gist space)
+                                        :gecode-engine (make-bab-or-gist space)
                                         :engine-vector vector
                                         :space (progn
-                                                 (cl-user::space-status space)
-                                                 (cl-user::clone-dfs-space space))))
+                                                 (space-status space)
+                                                 (clone-dfs-space space))))
                         (t (make-instance
                             'search-engine
-                            :gecode-engine (cl-user::make-dfs-or-gist space)
+                            :gecode-engine (make-dfs-or-gist space)
                             :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
                          (make-instance 'search-engine
-                                        :gecode-engine (cl-user::make-bab-or-gist space)
+                                        :gecode-engine (make-bab-or-gist space)
                                         :engine-vector vector
-                                        :next-solution-fn #'cl-user::bab-best))
+                                        :next-solution-fn #'bab-best))
                         (t
                          (make-instance 'search-engine
-                                        :gecode-engine (cl-user::make-dfs-or-gist space)
+                                        :gecode-engine (make-dfs-or-gist space)
                                         :engine-vector vector))))
              (dc-task (make-instance 'search-engine
-                                     :gecode-engine (cl-user::make-dfs-or-gist space)))
+                                     :gecode-engine (make-dfs-or-gist space)))
              (ds-task (make-instance 'search-engine
-                                     :gecode-engine (cl-user::make-dfs-or-gist space))))
-         (cl-user::delete-dfs-space space)))))
+                                     :gecode-engine (make-dfs-or-gist space))))
+         (delete-dfs-space space)))))
 
 (defclass engine () ())
 
@@ -933,10 +920,10 @@ res = 7;
    (space-print-fn   :reader space-print-fn   :initarg :space-print-fn)
    (space-collect-fn :reader space-collect-fn :initarg :space-collect-fn))
   (:default-initargs
-   :next-solution-fn #'cl-user::dfs-next
-   :space-delete-fn  #'cl-user::delete-dfs-space
-   :space-print-fn   #'cl-user::space-print-in
-   :space-collect-fn #'cl-user::space-collect-in))
+   :next-solution-fn #'dfs-next
+   :space-delete-fn  #'delete-dfs-space
+   :space-print-fn   #'space-print-in
+   :space-collect-fn #'space-collect-in))
 
 (defstruct gecode-engine-space-wrapper
   space)
@@ -946,8 +933,8 @@ res = 7;
   (let ((space (gecode-engine-space-wrapper-space wrapper)))
     (when space
       (prog1
-          (case (cl-user::space-status space)
-            (:failed (cl-user::delete-dfs-space space))
+          (case (space-status space)
+            (:failed (delete-dfs-space space))
             (t space))
         (setf (gecode-engine-space-wrapper-space wrapper)
               nil)))))
@@ -972,7 +959,7 @@ res = 7;
 (defgeneric search-statistics (engine))
 
 (defmethod search-statistics ((engine search-engine))
-  (cl-user::dfs-statistics (gecode-engine engine)))
+  (dfs-statistics (gecode-engine engine)))
 
 (defmethod search-statistics ((engine preferred-all-engine))
   (search-statistics (sub-engine engine)))
@@ -1083,25 +1070,25 @@ res = 7;
                   t)))))
 
 (defun step1 (bab fn first-time vector master)
-  (let ((next (cl-user::bab-best bab)))
+  (let ((next (bab-best bab)))
     (when next
       (funcall fn next vector first-time)
       (when first-time
         (setq first-time nil))
-      (cl-user::constrain-not-subset master next)
+      (constrain-not-subset master next)
       (let ((status (prog1
-                        (cl-user::space-status master)
-                      (cl-user::delete-dfs-space next))))
+                        (space-status master)
+                      (delete-dfs-space next))))
         (ecase status
           (:failed)
           (:solved
            (funcall fn master vector first-time))
           (:branch
-           (let ((slave (cl-user::clone-dfs-space master)))
-             (cl-user::delete-bab bab)
+           (let ((slave (clone-dfs-space master)))
+             (delete-bab bab)
              (step1 (prog1
-                        (cl-user::make-bab-or-gist slave)
-                      (cl-user::delete-dfs-space slave))
+                        (make-bab-or-gist slave)
+                      (delete-dfs-space slave))
                     fn first-time vector master))))))))
 
 (defun multi-bab-helper (engine fn)
@@ -1116,7 +1103,7 @@ res = 7;
    (lambda (next vector first-time)
      (unless first-time
        (write-char #\,))
-     (cl-user::space-print-in next vector)
+     (space-print-in next vector)
      (terpri)))
   (write-line "]"))
 
@@ -1126,7 +1113,7 @@ res = 7;
      engine
      (lambda (next vector first-time)
        (declare (ignore first-time))
-       (push (cl-user::space-collect-in next vector) list)))
+       (push (space-collect-in next vector) list)))
     list))
 
 (defmethod drive-search-and-print ((task search-one-decision-driver) engine)
@@ -1248,8 +1235,6 @@ res = 7;
   (translate (:ee :st) -> (:ee :st))
   (translate (:se :st) -> (:se :st)))
 
-(in-package :cl-user)
-
 (defun parse-g-arg (string)
   (let ((form (read-from-string string)))
     (cond
@@ -1267,12 +1252,12 @@ res = 7;
          (g (when g (parse-g-arg g)))
          (f (or f g)))
     (multiple-value-bind (task semantic) (parse-problem p)
-      (let ((task (oo:make-task task a))
-            (semantic (oo:make-semantic semantic)))
+      (let ((task (make-task task a))
+            (semantic (make-semantic semantic)))
         (multiple-value-bind (task semantic)
-            (oo:translate-problem task semantic)
+            (translate-problem task semantic)
           (with-timing
-              (oo:print-answer f
+              (print-answer f
                                task
                                semantic)))))))
 
