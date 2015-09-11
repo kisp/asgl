@@ -30,6 +30,8 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
+(defvar *use-gist* nil)
+
 (defun make-foo (n)
   (check-type n alexandria:non-negative-fixnum)
   ;; c-inline00001
@@ -354,6 +356,14 @@ default: @(return 0) = 100; break;
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = new Gecode::DFS<v1::Foo>(((v1::Foo*)(#0)));}"))
 
+(defun make-dfs-or-gist (space)
+  (if (not *use-gist*)
+      (make-dfs space)
+      (make-dfs
+       ;; go interactive. When user is done, we just continue with
+       ;; normal search. Space is returned unchanged.
+       (dfs-search-gist space))))
+
 (defun dfs-next (dfs)
   (check-type dfs SI:FOREIGN-DATA)
   (let ((solution
@@ -369,6 +379,14 @@ default: @(return 0) = 100; break;
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = new Gecode::BAB<v1::Foo>(((v1::Foo*)(#0)));}"))
+
+(defun make-bab-or-gist (space)
+  (if (not *use-gist*)
+      (make-bab space)
+      (make-bab
+       ;; go interactive. When user is done, we just continue with
+       ;; normal search. Space is returned unchanged.
+       (bab-search-gist space))))
 
 (defun delete-bab (bab)
   ;; c-inline00025
@@ -417,9 +435,9 @@ Gecode::Search::Statistics s = dfs->statistics();
 @(return 4) = s.nogood;
 
 ")
-    (values :fail fail :node node
-            :depth depth :restart restart
-            :nogood nogood)))
+    (list :fail fail :node node
+          :depth depth :restart restart
+          :nogood nogood)))
 
 (defun dfs-search-all (space)
   (check-type space SI:FOREIGN-DATA)
@@ -453,7 +471,30 @@ res = 7;
 ")))
     (unless (eql 1 status)
       (error "Perhaps gist is not enabled? (status is ~S)" status)))
-  (delete-foo space))
+  space)
+
+(defun bab-search-gist (space)
+  (check-type space SI:FOREIGN-DATA)
+  (let ((status
+          ;; c-inline000028
+          (ffi:c-inline (space) (:pointer-void) :int
+                       "
+int res = 0;
+#ifdef HAVE_GECODE_GIST_HH
+v1::Foo* foo = ((v1::Foo*)(#0));
+Gecode::Gist::Print<v1::Foo> p(\"Print solution\");
+Gecode::Gist::Options o;
+o.inspect.click(&p);
+Gecode::Gist::bab(foo,o);
+res = 1;
+#else
+res = 7;
+#endif
+@(return 0) = res;
+")))
+    (unless (eql 1 status)
+      (error "Perhaps gist is not enabled? (status is ~S)" status)))
+  space)
 
 (defvar *space*)
 (defvar *vars-vector*)
@@ -957,29 +998,29 @@ res = 7;
              (ee-task (typecase semantic
                         (preferred
                          (make-instance 'multi-bab-engine
-                                        :gecode-engine (cl-user::make-bab space)
+                                        :gecode-engine (cl-user::make-bab-or-gist space)
                                         :engine-vector vector
                                         :space (progn
                                                  (cl-user::space-status space)
                                                  (cl-user::clone-foo space))))
                         (t (make-instance
                             'search-engine
-                            :gecode-engine (cl-user::make-dfs space)
+                            :gecode-engine (cl-user::make-dfs-or-gist space)
                             :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
                          (make-instance 'search-engine
-                                        :gecode-engine (cl-user::make-bab space)
+                                        :gecode-engine (cl-user::make-bab-or-gist space)
                                         :engine-vector vector
                                         :next-solution-fn #'cl-user::bab-best))
                         (t
                          (make-instance 'search-engine
-                                        :gecode-engine (cl-user::make-dfs space)
+                                        :gecode-engine (cl-user::make-dfs-or-gist space)
                                         :engine-vector vector))))
              (dc-task (make-instance 'search-engine
-                                     :gecode-engine (cl-user::make-dfs space)))
+                                     :gecode-engine (cl-user::make-dfs-or-gist space)))
              (ds-task (make-instance 'search-engine
-                                     :gecode-engine (cl-user::make-dfs space))))
+                                     :gecode-engine (cl-user::make-dfs-or-gist space))))
          (cl-user::delete-foo space)))))
 
 (defclass engine () ())
@@ -1028,15 +1069,34 @@ res = 7;
 (defclass preferred-all-engine (engine)
   ((sub-engine :reader sub-engine :initarg :sub-engine)))
 
+(defgeneric search-statistics (engine))
+
+(defmethod search-statistics ((engine search-engine))
+  (cl-user::dfs-statistics (gecode-engine engine)))
+
+(defmethod search-statistics ((engine preferred-all-engine))
+  (search-statistics (sub-engine engine)))
+
+(defmethod search-statistics ((engine propagate-only-engine))
+  nil)
+
 (defmethod drive-search-and-print :around (driver engine)
   (check-type driver driver)
   (check-type engine engine)
-  (call-next-method))
+  (call-next-method)
+  (values
+   (search-statistics engine)
+   driver
+   engine))
 
 (defmethod drive-search-and-collect :around (driver engine)
   (check-type driver driver)
   (check-type engine engine)
-  (call-next-method))
+  (values
+   (call-next-method)
+   (search-statistics engine)
+   driver
+   engine))
 
 (defmethod drive-search-and-print ((task search-all-driver)
                                    (engine preferred-all-engine))
@@ -1137,7 +1197,7 @@ res = 7;
            (let ((slave (cl-user::clone-foo master)))
              (cl-user::delete-bab bab)
              (step1 (prog1
-                        (cl-user::make-bab slave)
+                        (cl-user::make-bab-or-gist slave)
                       (cl-user::delete-foo slave))
                     fn first-time vector master))))))))
 
@@ -1198,6 +1258,53 @@ res = 7;
             (not no-solution-found-means-yes)
           (funcall space-delete-fn solution)))))
 
+;;; DS-PR
+(defmethod make-search-engine (space (task ds-task) (semantic preferred) vector)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type semantic semantic)
+  (check-type task task)
+  (check-type vector vector)
+  (make-instance 'ds-pr-engine :task task :space space :vector vector))
+
+(defmethod constrain-arg-if-needed
+    (space (semantic preferred) (task ds-task))
+  ;; noop
+  )
+
+(defclass ds-pr-engine (engine)
+  ((task :initarg :task :reader engine-task)
+   (space :initarg :space :reader engine-space)
+   (vector :initarg :vector :reader engine-vector)))
+
+(defmethod gecode-engine ((engine ds-pr-engine))
+  engine)
+
+(defmethod next-solution-fn ((ds-pr-engine ds-pr-engine))
+  (let ((engine (make-search-engine
+                 (engine-space ds-pr-engine)
+                 (make-task :ee)
+                 (make-semantic :pr)
+                 (coerce (alexandria:iota (length (engine-vector ds-pr-engine)))
+                         'vector))))
+    (lambda (arg)
+      (declare (ignore arg))
+      ;; give t here if you can find a preferred extension that does
+      ;; not contain arg
+      (let ((solutions
+              (drive-search-and-collect
+               (make-instance 'search-all-driver) engine))
+            (arg (task-arg (engine-task ds-pr-engine))))
+        (some (lambda (solution) (not (member arg solution)))
+              solutions)))))
+
+(defmethod space-delete-fn ((engine ds-pr-engine)) (lambda (arg) (declare (ignore arg))))
+
+(defmethod search-statistics ((engine ds-pr-engine))
+  ;; for now
+  nil)
+;;; END DS-PR
+
+
 (macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
              (declare (ignore arrow))
              (let ((from-task-type (type-of (make-task from-task)))
@@ -1240,42 +1347,31 @@ res = 7;
 
 (in-package :cl-user)
 
-(defun parse-cons (string)
-  (let ((pos (position #\. string)))
-    (assert pos)
-    (cons (parse-integer string :end pos)
-          (parse-integer string :start (1+ pos)))))
+(defun parse-g-arg (string)
+  (let ((form (read-from-string string)))
+    (cond
+      ((floatp form)
+       (let ((pos (position #\. string)))
+         (assert pos)
+         (cons (parse-integer string :end pos)
+               (parse-integer string :start (1+ pos)))))
+      (t form))))
 
-(defun main% (&key (fo "apx") f p a g)
+(defun main% (&key (fo "apx") f p a g (gist "nil"))
   (assert (equal fo "apx"))
   (assert (alexandria:xor f g))
-  (let* ((g (when g (parse-cons g)))
+  (let* ((*use-gist* (read-from-string gist))
+         (g (when g (parse-g-arg g)))
          (f (or f g)))
     (multiple-value-bind (task semantic) (parse-problem p)
-      (cond
-        ((or (not (eql :pr semantic))
-             (and #+nil(eql :pr semantic)
-                  (eql :se task))
-             (and #+nil(eql :pr semantic)
-                  (eql :ee task))
-             (and #+nil(eql :pr semantic)
-                  (eql :dc task)))
-         (let ((task (oo:make-task task a))
-               (semantic (oo:make-semantic semantic)))
-           (multiple-value-bind (task semantic)
-               (oo:translate-problem task semantic)
-             (with-timing
-                 (oo:print-answer f
-                                  task
-                                  semantic)))))
-        (t
-         (let ((*print-case* :downcase))
-           (multiple-value-bind (graph vector hash)
-               (with-timing (read-graph-input f))
-             (declare (ignore vector))
-             (ecase task
-               ((:dc :ds) (dc-ds graph task semantic hash a)))
-             (terpri))))))))
+      (let ((task (oo:make-task task a))
+            (semantic (oo:make-semantic semantic)))
+        (multiple-value-bind (task semantic)
+            (oo:translate-problem task semantic)
+          (with-timing
+              (oo:print-answer f
+                               task
+                               semantic)))))))
 
 #+cover
 (defvar *cover-file*
