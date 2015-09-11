@@ -668,6 +668,9 @@ res = 7;
 
 (defgeneric translate-problem (task semantic))
 
+(defmethod translate-problem (task semantic)
+  (values task semantic))
+
 (defclass task () ())
 (defclass semantic () ())
 
@@ -1226,7 +1229,7 @@ res = 7;
   nil)
 ;;; END DS-PR
 
-
+#+nil
 (macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
              (declare (ignore arrow))
              (let ((from-task-type (type-of (make-task from-task)))
