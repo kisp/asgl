@@ -2,7 +2,7 @@
 +++ b/common/early/make.mk	2015-03-20 10:15:11.065341129 +0100
 @@ -1,4 +1,4 @@
 -common/early/libearly.a: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph-input.o common/early/graph.o common/early/apx.o
-+common/early/libearly.a: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph-input.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
++common/early/libearly.a: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph-input.o common/early/graph.o common/early/apx.o common/early/libapxparse.a
  	rm -f common/early/libearly.a
  	ecl -norc \
  	  -eval "(require 'cmp)" \
@@ -11,12 +11,12 @@
  	  -eval '(push "common/early/apx.o" *lisp-files*)' \
  	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
 -	  -eval '(c:build-static-library "common/early/early.a" :lisp-files *lisp-files*)' \
-+	  -eval '(c:build-static-library "common/early/early.a" :lisp-files *lisp-files* :ld-flags (list "common/early/libmyfoo.a"))' \
++	  -eval '(c:build-static-library "common/early/early.a" :lisp-files *lisp-files* :ld-flags (list "common/early/libapxparse.a"))' \
  	  -eval '(quit)'
  	test -f common/early/libearly.a
  
 -common/early/early.fas: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph-input.o common/early/graph.o common/early/apx.o
-+common/early/early.fas: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph-input.o common/early/graph.o common/early/apx.o common/early/libmyfoo.a
++common/early/early.fas: common/early/cover.o common/early/package.o common/early/utils.o common/early/graph-input.o common/early/graph.o common/early/apx.o common/early/libapxparse.a
  	rm -f common/early/early.fas
  	ecl -norc \
  	  -eval "(require 'cmp)" \
@@ -25,7 +25,7 @@
  	  -eval '(push "common/early/apx.o" *lisp-files*)' \
  	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
 -	  -eval '(c:build-fasl "common/early/early.fas" :lisp-files *lisp-files*)' \
-+	  -eval '(c:build-fasl "common/early/early.fas" :lisp-files *lisp-files* :ld-flags (list "common/early/libmyfoo.a"))' \
++	  -eval '(c:build-fasl "common/early/early.fas" :lisp-files *lisp-files* :ld-flags (list "common/early/libapxparse.a"))' \
  	  -eval '(quit)'
  	test -f common/early/early.fas
  
@@ -35,9 +35,9 @@
  common/early/clean: 
 +	rm -f common/early/count_args.cpp
 +	rm -f common/early/count_args.o
-+	rm -f common/early/libmyfoo.a
-+	rm -f common/early/myfoo.cpp
-+	rm -f common/early/myfoo.o
++	rm -f common/early/libapxparse.a
++	rm -f common/early/ragel_apx_parse.cpp
++	rm -f common/early/ragel_apx_parse.o
 +	rm -f common/early/slurp.o
  	rm -f common/early/libearly.a
  	rm -f common/early/early.fas

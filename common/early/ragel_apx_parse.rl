@@ -16,10 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdlib.h>
-#include "myfoo.h"
+#include "ragel_apx_parse.h"
 
 %%{
-  machine foo;
+  machine ragel_apx_parse;
   action S { sss = fpc; }
   action E {
     mys = ecl_make_constant_base_string(sss, fpc - sss);
@@ -70,7 +70,7 @@ main := ws? (arg | att) (ws (arg | att | ws))* ws? 0 @{ res = 0; };
 
 %% write data;
 
-void myfoo(char *buffer, long size, cl_object table, cl_object fn) {
+void ragel_apx_parse(char *buffer, long size, cl_object table, cl_object fn) {
   char *p = buffer;
   char *pe = p + size + 1;
   int cs = 0;
@@ -89,6 +89,6 @@ void myfoo(char *buffer, long size, cl_object table, cl_object fn) {
   %% write exec;
 
   if (res)
-    FEerror("(myfoo) Parsing apx file failed. Invalid format?", 0);
+    FEerror("(ragel_apx_parse) Parsing apx file failed. Invalid format?", 0);
 
 }

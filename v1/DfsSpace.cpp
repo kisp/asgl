@@ -14,31 +14,40 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef MYPrBABSpaceHEADER_
-#define MYPrBABSpaceHEADER_
-#include "../asgl_config.h"
-#include <gecode/int.hh>
-#include <gecode/search.hh>
-#include <gecode/minimodel.hh>
-#include <gecode/set.hh>
 #include "DfsSpace.h"
-#ifdef HAVE_GECODE_GIST_HH
-#include <gecode/gist.hh>
-#endif
 
 namespace v1 {
-  class PrBABSpace : public DfsSpace
-  {
-  protected:
-    Gecode::IntVar card;
-    Gecode::SetVar ext;
 
-  public:
-    PrBABSpace(int x);
-    PrBABSpace(bool share, PrBABSpace& s);
-    Gecode::Space* copy(bool share);
-    virtual void constrain(const Gecode::Space& _b);
-    void constrain_not_subset(const PrBABSpace& b);
-  };
+  DfsSpace::DfsSpace(int _n) : l(*this, _n, 0, 1) {
+    n = _n;
+  }
+
+  void DfsSpace::branch__l__int_var_degree_max__int_val_min() {
+    Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MIN());
+  }
+
+  void DfsSpace::branch__l__int_var_degree_max__int_val_max() {
+    Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MAX());
+  }
+
+  DfsSpace::DfsSpace(bool share, DfsSpace& s) : Gecode::Space(share, s) {
+    l.update(*this, share, s.l);
+  }
+
+  int DfsSpace::getN() {
+    return n;
+  }
+
+  Gecode::Space* DfsSpace::copy(bool share) {
+    return new DfsSpace(share, *this);
+  }
+
+  Gecode::BoolVarArray* DfsSpace::getVars(void) {
+    return &l;
+  }
+
+  void DfsSpace::print(std::ostream& os) const {
+    os << l << std::endl;
+  }
+
 }
-#endif

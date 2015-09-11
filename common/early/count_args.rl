@@ -16,10 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdlib.h>
-#include "myfoo.h"
+#include "ragel_apx_parse.h"
 
 %%{
-  machine foo;
+  machine count_args;
   action E { arg_count++; }
   val = [^), ]+;
 ws = ('\n' | ' ')+;

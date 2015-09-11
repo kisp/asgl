@@ -57,6 +57,6 @@ AC_LANG_POP
 
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([lisp-scripts/compile-foo.lisp])
+AC_CONFIG_FILES([lisp-scripts/compile-v1.lisp])
 
 AC_OUTPUT

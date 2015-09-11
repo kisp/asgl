@@ -29,14 +29,14 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
-v1/v1.fas: v1/v1.o v1/Foo.o v1/PrBABSpace.o
+v1/v1.fas: v1/v1.o v1/DfsSpace.o v1/PrBABSpace.o
 	rm -f v1/v1.fas
 	ecl -norc \
 	  -eval "(require 'cmp)" \
 	  -eval "(defvar *lisp-files* nil)" \
 	  -eval '(push "v1/v1.o" *lisp-files*)' \
 	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
-	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/Foo.o" "v1/PrBABSpace.o"))' \
+	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/DfsSpace.o" "v1/PrBABSpace.o"))' \
 	  -eval '(quit)'
 	test -f v1/v1.fas
 
@@ -49,21 +49,21 @@ v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early
 	  -load lib/alexandria/alexandria.fas \
 	  -load lib/arnesi-list-match/arnesi-list-match.fas \
 	  -load lib/myam/myam.fas \
-	  -load lisp-scripts/compile-foo.lisp
+	  -load lisp-scripts/compile-v1.lisp
 	test -f v1/v1.o
 
-v1/v1: v1/v1.o v1/Foo.o v1/PrBABSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
+v1/v1: v1/v1.o v1/DfsSpace.o v1/PrBABSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
 	  common/asgl-config/asgl-config.fas lib/myam/libmyam.a lib/alexandria/libalexandria.a \
 	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
 	  -load common/asgl-config/asgl-config.fas \
-	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libmyfoo.a" "v1/Foo.o" "v1/PrBABSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libapxparse.a" "v1/DfsSpace.o" "v1/PrBABSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
-v1/Foo.o: v1/Foo.cpp v1/Foo.h asgl_config.h
-	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c v1/Foo.cpp -o v1/Foo.o
+v1/DfsSpace.o: v1/DfsSpace.cpp v1/DfsSpace.h asgl_config.h
+	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c v1/DfsSpace.cpp -o v1/DfsSpace.o
 
-v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h v1/Foo.h asgl_config.h
+v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h v1/DfsSpace.h asgl_config.h
 	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c v1/PrBABSpace.cpp -o v1/PrBABSpace.o
 
 install-v1: v1/v1
@@ -76,24 +76,24 @@ test-dist: data/iccma15_solutions data/iccma15_testcases
 	cp user/asgl/bin/asgl bin/asgl
 	bundle exec cucumber ${CUKE_ARGS}
 
-common/early/myfoo.cpp: common/early/myfoo.rl
-	ragel -G2 common/early/myfoo.rl -o common/early/myfoo.cpp
+common/early/ragel_apx_parse.cpp: common/early/ragel_apx_parse.rl
+	ragel -G2 common/early/ragel_apx_parse.rl -o common/early/ragel_apx_parse.cpp
 
 common/early/count_args.cpp: common/early/count_args.rl
 	ragel -G2 common/early/count_args.rl -o common/early/count_args.cpp
 
-common/early/libmyfoo.a: common/early/myfoo.o common/early/slurp.o \
+common/early/libapxparse.a: common/early/ragel_apx_parse.o common/early/slurp.o \
 	  common/early/count_args.o
-	ar rcs common/early/libmyfoo.a common/early/myfoo.o common/early/slurp.o \
+	ar rcs common/early/libapxparse.a common/early/ragel_apx_parse.o common/early/slurp.o \
 	  common/early/count_args.o
 
-common/early/myfoo.o: common/early/myfoo.cpp common/early/myfoo.h
-	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c common/early/myfoo.cpp -o common/early/myfoo.o
+common/early/ragel_apx_parse.o: common/early/ragel_apx_parse.cpp common/early/ragel_apx_parse.h
+	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c common/early/ragel_apx_parse.cpp -o common/early/ragel_apx_parse.o
 
-common/early/slurp.o: common/early/slurp.cpp common/early/myfoo.h
+common/early/slurp.o: common/early/slurp.cpp common/early/ragel_apx_parse.h
 	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c common/early/slurp.cpp -o common/early/slurp.o
 
-common/early/count_args.o: common/early/count_args.cpp common/early/myfoo.h
+common/early/count_args.o: common/early/count_args.cpp common/early/ragel_apx_parse.h
 	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c common/early/count_args.cpp -o common/early/count_args.o
 
 
@@ -126,7 +126,7 @@ data/real-ee-gr-solutions: data/real-ee-gr-solutions.tar.xz
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	  common/early/clean common/asgl-config/clean
 	rm -f bin/asgl
-	rm -f v1/v1 v1/v1.o v1/Foo.o v1/v1.data v1/v1.eclh v1/v1.c v1/PrBABSpace.o
+	rm -f v1/v1 v1/v1.o v1/DfsSpace.o v1/v1.data v1/v1.eclh v1/v1.c v1/PrBABSpace.o
 	rm -rf gecode tmp
 	rm -rf data/iccma15_solutions data/iccma15_testcases data/real-ee-gr-solutions
 	rm -f cover.data
@@ -137,7 +137,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	rm -f asgl_config.h config.log config.status configure
 	rm -rf autom4te.cache
 	rm -f ecl-13.5.1.tgz gecode-4.3.3.tar.gz
-	rm -f Makefile lisp-scripts/compile-foo.lisp
+	rm -f Makefile lisp-scripts/compile-v1.lisp
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 # dist
@@ -150,9 +150,9 @@ dist:
 	rm -r dist/asgl/bin/libexec
 	bash scripts/generate-make-mk.sh
 	find -name make.mk | xargs -I% install -D % dist/asgl/%
-	make common/early/myfoo.cpp
+	make common/early/ragel_apx_parse.cpp
 	make common/early/count_args.cpp
-	ls -1 common/early/myfoo.cpp common/early/count_args.cpp | \
+	ls -1 common/early/ragel_apx_parse.cpp common/early/count_args.cpp | \
 	  xargs -I% install -D % dist/asgl/%
 	make bin/ragel
 	make build

@@ -1,5 +1,5 @@
 Makefile
-lisp-scripts/compile-foo.lisp
+lisp-scripts/compile-v1.lisp
 tmp
 bin/asgl
 gecode
@@ -13,7 +13,7 @@ make.mk
 *.a
 *.fasl
 common/early/count_args.cpp
-common/early/myfoo.cpp
+common/early/ragel_apx_parse.cpp
 data/iccma15_solutions
 data/iccma15_testcases
 v1/v1

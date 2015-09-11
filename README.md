@@ -28,7 +28,7 @@ Run `./configure`. Depending on your GECODE installation, you might want to pass
 Files involved:
 
 - Makefile.in
-- lisp-scripts/compile-foo.lisp.in
+- lisp-scripts/compile-v1.lisp.in
 
 ## generate make .mk files
 
@@ -57,8 +57,8 @@ Files involved:
 - common/early/count_args.rl
 - common/early/cover.lisp
 - common/early/graph.lisp
-- common/early/myfoo.h
-- common/early/myfoo.rl
+- common/early/ragel_apx_parse.h
+- common/early/ragel_apx_parse.rl
 - common/early/package.lisp
 - common/early/slurp.cpp
 - common/early/utils.lisp
@@ -93,8 +93,8 @@ Files involved:
 - lib/myam/src/utils.lisp
 - lisp-scripts/compile-file-system-p.lisp
 - support/gecode-patched-headers.tgz
-- v1/Foo.cpp
-- v1/Foo.h
+- v1/DfsSpace.cpp
+- v1/DfsSpace.h
 - v1/PrBABSpace.cpp
 - v1/PrBABSpace.h
 - v1/v1.lisp

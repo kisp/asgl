@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdlib.h>
-#include "myfoo.h"
+#include "ragel_apx_parse.h"
 
 char *slurp_file(cl_object namestring, long *size) {
   char *path = ecl_base_string_pointer_safe(namestring);
