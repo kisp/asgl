@@ -417,9 +417,9 @@ Gecode::Search::Statistics s = dfs->statistics();
 @(return 4) = s.nogood;
 
 ")
-    (values :fail fail :node node
-            :depth depth :restart restart
-            :nogood nogood)))
+    (list :fail fail :node node
+          :depth depth :restart restart
+          :nogood nogood)))
 
 (defun dfs-search-all (space)
   (check-type space SI:FOREIGN-DATA)
@@ -1028,15 +1028,34 @@ res = 7;
 (defclass preferred-all-engine (engine)
   ((sub-engine :reader sub-engine :initarg :sub-engine)))
 
+(defgeneric search-statistics (engine))
+
+(defmethod search-statistics ((engine search-engine))
+  (cl-user::dfs-statistics (gecode-engine engine)))
+
+(defmethod search-statistics ((engine preferred-all-engine))
+  (search-statistics (sub-engine engine)))
+
+(defmethod search-statistics ((engine propagate-only-engine))
+  nil)
+
 (defmethod drive-search-and-print :around (driver engine)
   (check-type driver driver)
   (check-type engine engine)
-  (call-next-method))
+  (call-next-method)
+  (values
+   (search-statistics engine)
+   driver
+   engine))
 
 (defmethod drive-search-and-collect :around (driver engine)
   (check-type driver driver)
   (check-type engine engine)
-  (call-next-method))
+  (values
+   (call-next-method)
+   (search-statistics engine)
+   driver
+   engine))
 
 (defmethod drive-search-and-print ((task search-all-driver)
                                    (engine preferred-all-engine))
@@ -1238,6 +1257,10 @@ res = 7;
               solutions)))))
 
 (defmethod space-delete-fn ((engine ds-pr-engine)) (lambda (arg) (declare (ignore arg))))
+
+(defmethod search-statistics ((engine ds-pr-engine))
+  ;; for now
+  nil)
 ;;; END DS-PR
 
 
