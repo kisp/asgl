@@ -40,13 +40,13 @@
              `(defun ,name ,(if (eql 2 (length task))
                                 '(graph a)
                                 '(graph))
-                (let ((task (oo:make-task ,@task))
-                      (semantic (oo:make-semantic ,semantic)))
+                (let ((task (make-task ,@task))
+                      (semantic (make-semantic ,semantic)))
                   (multiple-value-bind (task semantic)
-                      (oo:translate-problem task semantic)
-                    (oo:collect-answer graph
-                                       task
-                                       semantic))))))
+                      (translate-problem task semantic)
+                    (collect-answer graph
+                                    task
+                                    semantic))))))
   ;; all
   (frob $$complete-all :co (:ee))
   (frob $$stable-all :st (:ee))
