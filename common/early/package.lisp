@@ -26,6 +26,9 @@
    #:graph
    #:make-graph-from-adj
    #:order
+   #:size
+   #:indegrees
+   #:outdegrees
    #:do-edges
    #:do-parents
    #:do-parents-grandparents)
