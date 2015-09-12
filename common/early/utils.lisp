@@ -103,16 +103,27 @@ directory designated by PATHSPEC does actually exist."
   form)
 
 ;;; logging
-(defvar *with-logging* #+logging t #-logging nil)
+(defvar *log-level* #+logging t #-logging nil)
 
-(defmacro log* (&rest args)
+(deftype log-level () '(or (integer 0) boolean))
+
+(defmacro log* (level &rest args)
+  (check-type level (integer 0))
   #+logging
-  `(when *with-logging*
-     (fresh-line *error-output*)
-     (write-string "[log] " *error-output*)
-     (format *error-output* ,@args)
-     (terpri *error-output*)
-     nil)
+  `(let ((current-level *log-level*))
+     (declare (log-level current-level))
+     (when (and current-level
+                (or (eql t current-level)
+                    (<= ,level current-level)))
+       (fresh-line *error-output*)
+       (write-string ,(format nil "[log~D " level) *error-output*)
+       (multiple-value-bind (second minute hour) (get-decoded-time)
+         (format *error-output* "~2,'0D:~2,'0D:~2,'0D"
+                 hour minute second))
+       (write-string ,(format nil "] " level) *error-output*)
+       (format *error-output* ,@args)
+       (terpri *error-output*)
+       nil))
   #-logging
   nil)
 
