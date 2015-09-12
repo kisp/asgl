@@ -69,6 +69,12 @@
 (defun order (graph)
   (%%order graph))
 
+(defun size (graph)
+  (reduce #'+ graph :key #'length))
+
+(defun indegrees (graph)
+  (map 'vector #'length graph))
+
 (defmacro do-edges ((from to graph) &body body)
   `(map-edges (lambda (,from ,to) ,@body) ,graph))
 
@@ -77,6 +83,13 @@
 
 (defmacro do-parents-grandparents ((node parents-grandparents graph) &body body)
   `(map-parents-grandparents (lambda (,node ,parents-grandparents) ,@body) ,graph))
+
+(defun outdegrees (graph)
+  (let ((vector (make-array (order graph) :initial-element 0)))
+    (do-edges (from to graph)
+      (declare (ignore to))
+      (incf (aref vector from)))
+    vector))
 
 (defun add-edge (graph from to)
   (%%push-parents from (%%parents graph to)))
