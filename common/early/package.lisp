@@ -18,7 +18,9 @@
 (defpackage #:early
   (:use #:cl)
   (:export #:asgl-home)
-  (:export #:with-timing #:log* #:aif #:it
+  (:export #:with-timing #:*with-timing*
+           #:*log-level* #:log* #:log-level
+           #:aif #:it
            #:print-error-log
            #:compile-file-if-needed
            #:summary)
