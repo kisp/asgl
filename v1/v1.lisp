@@ -1235,14 +1235,21 @@ res = 7;
                    (semantic-change (not (eql from-semantic to-semantic))))
                `(defmethod translate-problem ((task ,from-task-type)
                                               (semantic ,from-semantic-type))
-                  (values ,(if task-change
+                  (let ((new-task
+                          ,(if task-change
                                (if (subtypep from-task-type 'decision-task)
                                    `(make-task ,to-task (task-arg-name task))
                                    `(make-task ,to-task))
-                               'task)
+                               'task))
+                        (new-semantic
                           ,(if semantic-change
                                `(make-semantic ,to-semantic)
-                               'semantic))))))
+                               'semantic)))
+                    ,@ (when (or task-change semantic-change)
+                         '((log* 1 "translate from ~A ~A to ~A ~A"
+                            (type-of task) (type-of semantic)
+                            (type-of new-task) (type-of new-semantic))))
+                    (values new-task new-semantic))))))
   (translate (:se :co) -> (:se :gr))
   (translate (:ds :co) -> (:ds :gr))
   (translate (:dc :pr) -> (:dc :co))
