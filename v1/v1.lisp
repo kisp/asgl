@@ -35,7 +35,8 @@
 (defun make-dfs-space (n)
   (check-type n alexandria:non-negative-fixnum)
   ;; c-inline00001
-  (ffi:c-inline (n) (:int) :pointer-void "{ @(return 0) = new v1::DfsSpace(#0); }"))
+  (ffi:c-inline (n) (:int) :pointer-void
+                "{ @(return 0) = new v1::DfsSpace(#0); }"))
 
 (defun make-pr-bab-space (n)
   (check-type n alexandria:non-negative-fixnum)
@@ -205,8 +206,8 @@ rel(*dfsSpace, vars[i], Gecode::IRT_EQ, 1);
                 "
 v1::DfsSpace* dfsSpace = ((v1::DfsSpace*)(#0));
 
-rel(*dfsSpace, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ, *((Gecode::BoolVar*)(#2)));
-
+rel(*dfsSpace, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ,
+               *((Gecode::BoolVar*)(#2)));
 "))
 
 (defun constrain-not-subset (space other)
@@ -354,7 +355,8 @@ default: @(return 0) = 100; break;
   ;; c-inline00022
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = new Gecode::DFS<v1::DfsSpace>(((v1::DfsSpace*)(#0)));}"))
+                "
+{ @(return 0) = new Gecode::DFS<v1::DfsSpace>(((v1::DfsSpace*)(#0)));}"))
 
 (defun make-dfs-or-gist (space)
   (if (not *use-gist*)
@@ -369,7 +371,8 @@ default: @(return 0) = 100; break;
   (let ((solution
           ;; c-inline00023
           (ffi:c-inline (dfs) (:pointer-void) :pointer-void
-                "{ @(return 0) = ((Gecode::DFS<v1::DfsSpace>*)(#0))->next(); }")))
+                        "
+{ @(return 0) = ((Gecode::DFS<v1::DfsSpace>*)(#0))->next(); }")))
     (if (si:null-pointer-p solution)
         nil
         solution)))
@@ -378,7 +381,8 @@ default: @(return 0) = 100; break;
   ;; c-inline00024
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = new Gecode::BAB<v1::DfsSpace>(((v1::DfsSpace*)(#0)));}"))
+                "
+{ @(return 0) = new Gecode::BAB<v1::DfsSpace>(((v1::DfsSpace*)(#0)));}"))
 
 (defun make-bab-or-gist (space)
   (if (not *use-gist*)
@@ -1187,7 +1191,8 @@ res = 7;
         (some (lambda (solution) (not (member arg solution)))
               solutions)))))
 
-(defmethod space-delete-fn ((engine ds-pr-engine)) (lambda (arg) (declare (ignore arg))))
+(defmethod space-delete-fn ((engine ds-pr-engine))
+  (lambda (arg) (declare (ignore arg))))
 
 (defmethod search-statistics ((engine ds-pr-engine))
   ;; for now
