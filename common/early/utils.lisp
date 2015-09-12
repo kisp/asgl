@@ -147,5 +147,35 @@ directory designated by PATHSPEC does actually exist."
     (load (compile-file-pathname filename)))
   (compile-file-pathname filename))
 
+;;; statistics
+(defun mean (sequence)
+  (/ (reduce #'+ sequence) (length sequence)))
+
+(defun median (sequence)
+  (percentile sequence 50))
+
+(defun percentile (sequence percent)
+  (let* ((sorted-vect (coerce (sort (copy-seq sequence) #'<) 'simple-vector))
+         (n (length sorted-vect))
+         (k (* n (/ percent 100)))
+         (floor-k (floor k)))
+    (if (= k floor-k)
+        (/ (+ (aref sorted-vect k)
+              (aref sorted-vect (1- k)))
+           2)
+        (aref sorted-vect floor-k))))
+
+(defun summary (sequence)
+  (if (< (length sequence) 1000)
+      `(:min ,(reduce #'min sequence)
+        :1st-qu ,(format nil "~,1F" (percentile sequence 25))
+        :median ,(format nil "~,1F" (median sequence))
+        :mean ,(format nil "~,1F" (mean sequence))
+        :3rd-qu ,(format nil "~,1F" (percentile sequence 75))
+        :max ,(reduce #'max sequence))
+      `(:min ,(reduce #'min sequence)
+        :mean ,(format nil "~,1F" (mean sequence))
+        :max ,(reduce #'max sequence))))
+
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))

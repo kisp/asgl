@@ -20,7 +20,8 @@
   (:export #:asgl-home)
   (:export #:with-timing #:log* #:aif #:it
            #:print-error-log
-           #:compile-file-if-needed)
+           #:compile-file-if-needed
+           #:summary)
   ;; graph
   (:export
    #:graph
