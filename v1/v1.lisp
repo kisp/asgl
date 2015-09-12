@@ -754,25 +754,27 @@ res = 7;
   (make-instance 'search-one-decision-driver
                  :no-solution-found-means-yes t))
 
-(defun print-answer (input task semantic)
+(defun solve (input task semantic drive-fn)
   (check-type input input)
   (check-type task task)
   (check-type semantic semantic)
+  (check-type drive-fn function)
   (multiple-value-bind (space vector)
       (with-timing (prepare-space input task semantic))
     (let ((engine (with-timing (make-search-engine space task semantic vector)))
           (driver (with-timing (make-driver semantic task))))
-      (with-timing (drive-search-and-print driver engine)))))
+      (log* 1 "driver: ~A" driver)
+      (log* 1 "engine: ~A" engine)
+      (log* 1 "STARTING SEARCH")
+      (with-timing (funcall drive-fn driver engine)))))
+
+(defun print-answer (input task semantic)
+  (solve input task semantic
+         #'drive-search-and-print))
 
 (defun collect-answer (input task semantic)
-  (check-type input input)
-  (check-type task task)
-  (check-type semantic semantic)
-  (multiple-value-bind (space vector)
-      (prepare-space input task semantic)
-    (let ((engine (make-search-engine space task semantic vector))
-          (driver (make-driver semantic task)))
-      (drive-search-and-collect driver engine))))
+  (solve input task semantic
+         #'drive-search-and-collect))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-semantic (semantic)
