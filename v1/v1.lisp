@@ -943,6 +943,20 @@ res = 7;
    :space-print-fn   #'space-print-in
    :space-collect-fn #'space-collect-in))
 
+(defmethod print-object ((engine search-engine) stream)
+  (print-unreadable-object (engine stream :identity t :type t)
+    (let ((*standard-output* stream))
+      (pprint-logical-block
+          (*standard-output*
+           (list (list :next-solution-fn (next-solution-fn engine))
+                 (list :space-delete-fn (space-delete-fn engine))
+                 (list :space-print-fn (space-print-fn engine))
+                 (list :space-collect-fn (space-collect-fn engine))))
+        (loop
+          for item = (pprint-pop)
+          do (format t "~20A~A ~_" (first item) (second item))
+          do (pprint-exit-if-list-exhausted))))))
+
 (defstruct gecode-engine-space-wrapper
   space)
 
