@@ -708,6 +708,10 @@ res = 7;
   (multiple-value-bind (graph vector hash)
       (with-timing (read-graph-input input))
     (setf (task-hash task) hash)
+    (log* 1 "input AF consisting of ~A arguments and ~A attacks"
+          (order graph) (size graph))
+    (log* 2 "indegrees:  ~A" (summary (indegrees graph)))
+    (log* 2 "outdegrees: ~A" (summary (outdegrees graph)))
     (let ((space (make-initial-space graph task semantic)))
       (with-post-env-setup (space)
         (constrain-space space semantic task graph)
@@ -788,26 +792,31 @@ res = 7;
 
 (defmethod make-initial-space (graph (task task) (semantic semantic))
   (check-type graph graph)
+  (log* 1 "creating initial dfs-space")
   (make-dfs-space (order graph)))
 
 (defmethod make-initial-space (graph (task se-task) (semantic preferred))
   (check-type graph graph)
+  (log* 1 "creating initial pr-bab-space")
   (make-pr-bab-space (order graph)))
 
 (defmethod make-initial-space (graph (task ee-task) (semantic preferred))
   (check-type graph graph)
+  (log* 1 "creating initial pr-bab-space")
   (make-pr-bab-space (order graph)))
 
 (defmethod constrain-space (space (semantic complete) task graph)
   (check-type space SI:FOREIGN-DATA)
   (check-type task task)
   (check-type graph graph)
+  (log* 1 "constrain-complete")
   (constrain-complete graph))
 
 (defmethod constrain-space :after (space (semantic stable) task graph)
   (check-type space SI:FOREIGN-DATA)
   (check-type task task)
   (check-type graph graph)
+  (log* 1 "constrain-stable")
   (constrain-stable graph))
 
 (defmethod constrain-arg-if-needed (space semantic task)
@@ -851,18 +860,21 @@ res = 7;
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
+  (log* 1 "dfs-space-branch/l/int-var-degree-max/int-val-min")
   (dfs-space-branch/l/int-var-degree-max/int-val-min space))
 
 (defmethod branch-space (space (task se-task) (semantic preferred))
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
+  (log* 1 "dfs-space-branch/l/int-var-degree-max/int-val-max")
   (dfs-space-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod branch-space (space (task ee-task) (semantic preferred))
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
+  (log* 1 "dfs-space-branch/l/int-var-degree-max/int-val-max")
   (dfs-space-branch/l/int-var-degree-max/int-val-max space))
 
 (defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
@@ -975,10 +987,9 @@ res = 7;
   (check-type driver driver)
   (check-type engine engine)
   (call-next-method)
-  (values
-   (search-statistics engine)
-   driver
-   engine))
+  (let ((statistics (search-statistics engine)))
+    (log* 1 "search statistics: ~A" statistics)
+    (values statistics driver engine)))
 
 (defmethod drive-search-and-collect :around (driver engine)
   (check-type driver driver)
