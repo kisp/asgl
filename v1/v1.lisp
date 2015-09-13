@@ -17,7 +17,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :asgl
-  (:use :cl :early))
+  (:use :cl :early :alexandria))
 
 (in-package :asgl)
 
@@ -33,13 +33,13 @@
 (defvar *use-gist* nil)
 
 (defun make-dfs-space (n)
-  (check-type n alexandria:non-negative-fixnum)
+  (check-type n non-negative-fixnum)
   ;; c-inline00001
   (ffi:c-inline (n) (:int) :pointer-void
                 "{ @(return 0) = new v1::DfsSpace(#0); }"))
 
 (defun make-pr-bab-space (n)
-  (check-type n alexandria:non-negative-fixnum)
+  (check-type n non-negative-fixnum)
   ;; c-inline00002
   (ffi:c-inline (n) (:int) :pointer-void
                 "{ @(return 0) = new v1::PrBABSpace(#0); }"))
@@ -126,8 +126,8 @@ rel(*dfsSpace, *a, Gecode::IRT_NQ, *u);
 (defun post-nand (space i j)
   ;; c-inline00006
   (check-type space SI:FOREIGN-DATA)
-  (check-type i alexandria:non-negative-fixnum)
-  (check-type j alexandria:non-negative-fixnum)
+  (check-type i non-negative-fixnum)
+  (check-type j non-negative-fixnum)
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
                 "{
 
@@ -164,7 +164,7 @@ rel(*dfsSpace, *a, Gecode::BOT_IMP, *b, 1);
   "Post that i can only be 0."
   ;; c-inline00008
   (check-type space SI:FOREIGN-DATA)
-  (check-type i alexandria:non-negative-fixnum)
+  (check-type i non-negative-fixnum)
   (ffi:c-inline (space i) (:pointer-void :int) :void
                 "{
 
@@ -182,7 +182,7 @@ rel(*dfsSpace, vars[i], Gecode::IRT_EQ, 0);
   "Post that i can only be 1."
   ;; c-inline00009
   (check-type space SI:FOREIGN-DATA)
-  (check-type i alexandria:non-negative-fixnum)
+  (check-type i non-negative-fixnum)
   (ffi:c-inline (space i) (:pointer-void :int) :void
                 "{
 
@@ -307,7 +307,7 @@ default: @(return 0) = 100; break;
   (check-type space SI:FOREIGN-DATA)
   (check-type vector vector)
   (every (lambda (x) (check-type x (or string
-                                       alexandria:non-negative-fixnum)))
+                                       non-negative-fixnum)))
          vector)
   (write-string "[")
   (loop with first-time = t
@@ -324,7 +324,7 @@ default: @(return 0) = 100; break;
   (check-type space SI:FOREIGN-DATA)
   (check-type vector vector)
   (every (lambda (x) (check-type x (or string
-                                       alexandria:non-negative-fixnum)))
+                                       non-negative-fixnum)))
          vector)
   (loop for tail on (space-to-list space)
      for i upfrom 0
@@ -346,7 +346,7 @@ default: @(return 0) = 100; break;
 (defun vars-nth (vars n)
   ;; c-inline00021
   (check-type vars SI:FOREIGN-DATA)
-  (check-type n alexandria:non-negative-fixnum)
+  (check-type n non-negative-fixnum)
   (ffi:c-inline
    (vars n) (:pointer-void :int) :pointer-void
    "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
@@ -699,7 +699,7 @@ res = 7;
   (or (gethash (task-arg-name task) (task-hash task))
       (error "task-arg-name ~S not found in task-hash ~S containing~%~S"
              (task-arg-name task) (task-hash task)
-             (alexandria:hash-table-alist (task-hash task)))))
+             (hash-table-alist (task-hash task)))))
 
 (defun prepare-space (input task semantic)
   (check-type input input)
@@ -785,7 +785,7 @@ res = 7;
       (:pr (make-instance 'preferred))))
 
   (defun make-task (task &optional arg)
-    (check-type arg (or null string alexandria:non-negative-fixnum))
+    (check-type arg (or null string non-negative-fixnum))
     (ecase task
       (:ee (make-instance 'ee-task))
       (:se (make-instance 'se-task))
@@ -1205,7 +1205,7 @@ res = 7;
                  (engine-space ds-pr-engine)
                  (make-task :ee)
                  (make-semantic :pr)
-                 (coerce (alexandria:iota (length (engine-vector ds-pr-engine)))
+                 (coerce (iota (length (engine-vector ds-pr-engine)))
                          'vector))))
     (lambda (arg)
       (declare (ignore arg))
@@ -1288,7 +1288,7 @@ res = 7;
                 (log-level "1") (timing "t")
                 (eval "nil") (load nil))
   (assert (equal fo "apx"))
-  (assert (alexandria:xor f g))
+  (assert (xor f g))
   (let* ((*use-gist* (read-from-string gist))
          (*log-level* (read-from-string log-level))
          (*with-timing* (read-from-string timing))
