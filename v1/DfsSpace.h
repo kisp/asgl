@@ -36,8 +36,6 @@ namespace v1 {
     DfsSpace(int x);
     DfsSpace(bool share, DfsSpace& s);
 
-    int getN();
-
     Gecode::Space* copy(bool share);
 
     Gecode::BoolVarArray* getVars();
