@@ -19,10 +19,10 @@ sudo: required
 
 env:
   matrix:
-    - VARIANT=v1 CUKE_ARGS="--tags ~@slow"
+    - VARIANT=asgl CUKE_ARGS="--tags ~@slow"
     - VARIANT=ref
-    - VARIANT=v1
-    - VARIANT=v1 ASGL_COVER=yes
+    - VARIANT=asgl
+    - VARIANT=asgl ASGL_COVER=yes
     - VARIANT=dist CUKE_ARGS="--tags ~@slow"
 
 install:
