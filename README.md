@@ -28,7 +28,7 @@ Run `./configure`. Depending on your GECODE installation, you might want to pass
 Files involved:
 
 - Makefile.in
-- lisp-scripts/compile-v1.lisp.in
+- lisp-scripts/compile-asgl.lisp.in
 
 ## generate make .mk files
 
