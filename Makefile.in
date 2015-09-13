@@ -29,20 +29,20 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
-v1/v1.fas: v1/v1.o v1/BoolSpace.o v1/PrBABSpace.o v1/IntSpace.o
-	rm -f v1/v1.fas
+asgl.fas: asgl.o v1/BoolSpace.o v1/PrBABSpace.o v1/IntSpace.o
+	rm -f asgl.fas
 	ecl -norc \
 	  -eval "(require 'cmp)" \
 	  -eval "(defvar *lisp-files* nil)" \
-	  -eval '(push "v1/v1.o" *lisp-files*)' \
+	  -eval '(push "asgl.o" *lisp-files*)' \
 	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
-	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/BoolSpace.o" "v1/PrBABSpace.o" "v1/IntSpace.o"))' \
+	  -eval '(c:build-fasl "asgl.fas" :lisp-files *lisp-files* :ld-flags (list "v1/BoolSpace.o" "v1/PrBABSpace.o" "v1/IntSpace.o"))' \
 	  -eval '(quit)'
-	test -f v1/v1.fas
+	test -f asgl.fas
 
-v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early.fas \
+asgl.o: gecode asgl.lisp common/asgl-config/asgl-config.fas common/early/early.fas \
 	  lib/myam/myam.fas lib/alexandria/alexandria.fas lib/arnesi-list-match/arnesi-list-match.fas
-	rm -f v1/v1.o
+	rm -f asgl.o
 	ecl -norc \
 	  -load common/asgl-config/asgl-config.fas \
 	  -load common/early/early.fas \
@@ -50,14 +50,14 @@ v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early
 	  -load lib/arnesi-list-match/arnesi-list-match.fas \
 	  -load lib/myam/myam.fas \
 	  -load lisp-scripts/compile-v1.lisp
-	test -f v1/v1.o
+	test -f asgl.o
 
-v1/v1: v1/v1.o v1/BoolSpace.o v1/PrBABSpace.o v1/IntSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
+asgl: asgl.o v1/BoolSpace.o v1/PrBABSpace.o v1/IntSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
 	  common/asgl-config/asgl-config.fas lib/myam/libmyam.a lib/alexandria/libalexandria.a \
 	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
 	  -load common/asgl-config/asgl-config.fas \
-	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libapxparse.a" "v1/BoolSpace.o" "v1/PrBABSpace.o" "v1/IntSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -eval '(c:build-program "asgl" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "asgl.o") :ld-flags (list "common/early/libapxparse.a" "v1/BoolSpace.o" "v1/PrBABSpace.o" "v1/IntSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 v1/BoolSpace.o: v1/BoolSpace.cpp v1/BoolSpace.h asgl_config.h
@@ -69,8 +69,8 @@ v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h v1/BoolSpace.h asgl_config.h
 v1/IntSpace.o: v1/IntSpace.cpp v1/IntSpace.h v1/BoolSpace.h asgl_config.h
 	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c v1/IntSpace.cpp -o v1/IntSpace.o
 
-install-v1: v1/v1
-	cp v1/v1 bin/asgl
+install-v1: asgl
+	cp asgl bin/asgl
 
 test-v1: install-v1 data/iccma15_solutions data/iccma15_testcases
 	bundle exec cucumber ${CUKE_ARGS}
@@ -129,7 +129,7 @@ data/real-ee-gr-solutions: data/real-ee-gr-solutions.tar.xz
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	  common/early/clean common/asgl-config/clean
 	rm -f bin/asgl
-	rm -f v1/v1 v1/v1.o v1/BoolSpace.o v1/v1.data v1/v1.eclh v1/v1.c v1/PrBABSpace.o
+	rm -f asgl asgl.o v1/BoolSpace.o asgl.data asgl.eclh asgl.c v1/PrBABSpace.o
 	rm -rf gecode tmp
 	rm -rf data/iccma15_solutions data/iccma15_testcases data/real-ee-gr-solutions
 	rm -f cover.data

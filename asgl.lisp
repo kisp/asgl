@@ -24,9 +24,9 @@
 #+nil(declaim (optimize (debug 3) (safety 3) (speed 0)))
 (declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
 
-(ffi:clines "#include \"BoolSpace.h\"")
-(ffi:clines "#include \"PrBABSpace.h\"")
-(ffi:clines "#include \"IntSpace.h\"")
+(ffi:clines "#include \"v1/BoolSpace.h\"")
+(ffi:clines "#include \"v1/PrBABSpace.h\"")
+(ffi:clines "#include \"v1/IntSpace.h\"")
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))

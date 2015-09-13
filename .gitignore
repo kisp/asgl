@@ -1,3 +1,4 @@
+asgl
 Makefile
 lisp-scripts/compile-v1.lisp
 tmp
@@ -16,8 +17,7 @@ common/early/count_args.cpp
 common/early/ragel_apx_parse.cpp
 data/iccma15_solutions
 data/iccma15_testcases
-v1/v1
-v1/v1.c
+asgl.c
 TAGS
 data/real-ee-gr-solutions
 configure

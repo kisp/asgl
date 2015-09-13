@@ -27,6 +27,6 @@
        (format nil "~A -L~A -lquux -lgecodesearch -lgecodeint -lgecodeset -lgecodeminimodel -lgecodekernel -lgecodesupport -lgecodegist -O3 @CXXFLAGS@"
                c::*ld-bundle-flags*
                *default-pathname-defaults*)))
-  (compile-file-system-p "v1/v1.lisp"))
+  (compile-file-system-p "asgl.lisp"))
 
 (ext:quit)
