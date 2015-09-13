@@ -29,14 +29,14 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 
 
 # v1
-v1/v1.fas: v1/v1.o v1/DfsSpace.o v1/PrBABSpace.o
+v1/v1.fas: v1/v1.o v1/DfsSpace.o v1/PrBABSpace.o v1/IntSpace.o
 	rm -f v1/v1.fas
 	ecl -norc \
 	  -eval "(require 'cmp)" \
 	  -eval "(defvar *lisp-files* nil)" \
 	  -eval '(push "v1/v1.o" *lisp-files*)' \
 	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
-	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/DfsSpace.o" "v1/PrBABSpace.o"))' \
+	  -eval '(c:build-fasl "v1/v1.fas" :lisp-files *lisp-files* :ld-flags (list "v1/DfsSpace.o" "v1/PrBABSpace.o" "v1/IntSpace.o"))' \
 	  -eval '(quit)'
 	test -f v1/v1.fas
 
@@ -52,12 +52,12 @@ v1/v1.o: gecode v1/v1.lisp common/asgl-config/asgl-config.fas common/early/early
 	  -load lisp-scripts/compile-v1.lisp
 	test -f v1/v1.o
 
-v1/v1: v1/v1.o v1/DfsSpace.o v1/PrBABSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
+v1/v1: v1/v1.o v1/DfsSpace.o v1/PrBABSpace.o v1/IntSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
 	  common/asgl-config/asgl-config.fas lib/myam/libmyam.a lib/alexandria/libalexandria.a \
 	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
 	  -load common/asgl-config/asgl-config.fas \
-	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libapxparse.a" "v1/DfsSpace.o" "v1/PrBABSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -eval '(c:build-program "v1/v1" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "v1/v1.o") :ld-flags (list "common/early/libapxparse.a" "v1/DfsSpace.o" "v1/PrBABSpace.o" "v1/IntSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 v1/DfsSpace.o: v1/DfsSpace.cpp v1/DfsSpace.h asgl_config.h
@@ -65,6 +65,9 @@ v1/DfsSpace.o: v1/DfsSpace.cpp v1/DfsSpace.h asgl_config.h
 
 v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h v1/DfsSpace.h asgl_config.h
 	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c v1/PrBABSpace.cpp -o v1/PrBABSpace.o
+
+v1/IntSpace.o: v1/IntSpace.cpp v1/IntSpace.h v1/DfsSpace.h asgl_config.h
+	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c v1/IntSpace.cpp -o v1/IntSpace.o
 
 install-v1: v1/v1
 	cp v1/v1 bin/asgl

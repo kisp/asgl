@@ -21,28 +21,245 @@
 
 (in-package :asgl)
 
-(declaim (optimize (debug 3) (safety 3) (speed 0)))
-#+nil(declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
+#+nil(declaim (optimize (debug 3) (safety 3) (speed 0)))
+(declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
 
 (ffi:clines "#include \"DfsSpace.h\"")
 (ffi:clines "#include \"PrBABSpace.h\"")
+(ffi:clines "#include \"IntSpace.h\"")
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
 (defvar *use-gist* nil)
 
-(defun make-dfs-space (n)
-  (check-type n non-negative-fixnum)
-  ;; c-inline00001
-  (ffi:c-inline (n) (:int) :pointer-void
-                "{ @(return 0) = new v1::DfsSpace(#0); }"))
+(defmacro define-foreign-constructor ((name cname &key tag) &body args)
+  (labels ((arg-var (arg) (first arg))
+           (arg-ctype (arg) (second arg))
+           (arg-type (arg) (let ((type (second arg)))
+                             (if (stringp (arg-ctype arg))
+                                 :pointer-void
+                                 (arg-ctype arg)))))
+    `(defun ,name ,(mapcar #'arg-var args)
+       (ffi:c-inline
+        (',tag ,@(mapcar #'arg-var args))
+        (:object ,@(mapcar #'arg-type args))
+        :object
+        ,(format nil "ecl_make_foreign_data(#0,0,new ~A(~{~A~^,~}))"
+                 cname
+                 (loop for i upfrom 1
+                       for arg in args
+                       collect (format
+                                nil "~@[(~A)~](#~D)"
+                                (when (eql :pointer-void (arg-type arg))
+                                  (arg-ctype arg))
+                                i)))
+        :one-liner t))))
 
-(defun make-pr-bab-space (n)
-  (check-type n non-negative-fixnum)
-  ;; c-inline00002
-  (ffi:c-inline (n) (:int) :pointer-void
-                "{ @(return 0) = new v1::PrBABSpace(#0); }"))
+(define-foreign-constructor (make-int-space
+                             "v1::IntSpace" :tag :int-space)
+    (n :int) (from :int) (to :int))
+
+(define-foreign-constructor (make-dfs-space
+                             "v1::DfsSpace" :tag :dfs-space)
+    (n :int))
+
+(define-foreign-constructor (make-pr-bab-space
+                             "v1::PrBABSpace" :tag :pr-bab-space)
+    (n :int))
+
+(define-foreign-constructor (make-dfs-engine
+                             "Gecode::DFS<Gecode::Space>" :tag :dfs-engine)
+    (space "Gecode::Space*"))
+
+(define-foreign-constructor (make-bab-engine
+                             "Gecode::BAB<Gecode::Space>" :tag :bab-engine)
+    (space "Gecode::Space*"))
+
+(defun dfs-next (dfs)
+  (let ((solution
+          (ffi:c-inline (dfs) (:pointer-void) :pointer-void
+                        "((Gecode::DFS<Gecode::Space>*)(#0))->next()"
+                                              :one-liner t)))
+    (if (si:null-pointer-p solution)
+        nil
+        solution)))
+
+(defun dfs-count (dfs)
+  (ffi:c-inline (dfs) (:pointer-void) :int
+                "{
+Gecode::DFS<Gecode::Space> *dfs = (Gecode::DFS<Gecode::Space>*)(#0);
+int n = 0;
+Gecode::Space *s;
+while(s = dfs->next()) {
+  n++;
+  delete s;
+}
+@(return 0) = n;
+}"))
+
+
+
+(defun dfs-space-ins (space)
+  (ffi:c-inline (space) (:pointer-void) :object
+                "{
+v1::DfsSpace *space = ((v1::DfsSpace*)(#0));
+
+Gecode::BoolVarArray vars = *(space->getVars());
+
+int n = vars.size();
+
+cl_object result = ECL_NIL;
+
+for(int i; i<n; i++) {
+Gecode::BoolVar var = vars[i];
+int min = var.min();
+int max = var.max();
+cl_object list;
+if (min != max)
+  list = cl_list(2, ecl_make_fixnum(min), ecl_make_fixnum(max));
+else
+  list = ecl_make_fixnum(min);
+result = ecl_cons(list, result);
+}
+
+@(return 0) = cl_nreverse(result);
+
+}"))
+
+(defun int-space-ins (space)
+  (ffi:c-inline (space) (:pointer-void) :object
+                "{
+v1::IntSpace *space = ((v1::IntSpace*)(#0));
+
+Gecode::IntVarArray vars = *(space->getVars());
+
+int n = vars.size();
+
+cl_object result = ECL_NIL;
+
+for(int i; i<n; i++) {
+Gecode::IntVar var = vars[i];
+int min = var.min();
+int max = var.max();
+cl_object list;
+if (min != max)
+  list = cl_list(2, ecl_make_fixnum(min), ecl_make_fixnum(max));
+else
+  list = ecl_make_fixnum(min);
+result = ecl_cons(list, result);
+}
+
+@(return 0) = cl_nreverse(result);
+
+}"))
+
+(defun pr-bab-space-ins (space)
+  (ffi:c-inline (space) (:pointer-void) :object
+                "{
+v1::PrBABSpace *space = ((v1::PrBABSpace*)(#0));
+
+Gecode::BoolVarArray vars = *(space->getVars());
+
+int n = vars.size();
+
+cl_object result = ECL_NIL;
+
+for(int i; i<n; i++) {
+Gecode::BoolVar var = vars[i];
+int min = var.min();
+int max = var.max();
+cl_object list;
+if (min != max)
+  list = cl_list(2, ecl_make_fixnum(min), ecl_make_fixnum(max));
+else
+  list = ecl_make_fixnum(min);
+result = ecl_cons(list, result);
+}
+
+@(return 0) = cl_nreverse(result);
+
+}"))
+
+
+
+(defun %int-val-min (k)
+  (ffi:c-inline (k) (:object) :void "
+Gecode::IntValBranch foo = Gecode::INT_VAL_MIN();
+cl_object toll = ecl_make_pointer((void*)&foo);
+ecl_function_dispatch(cl_env_copy,#0)(1, toll);"))
+
+(defun %int-val-max (k)
+  (ffi:c-inline (k) (:object) :void "
+Gecode::IntValBranch foo = Gecode::INT_VAL_MAX();
+cl_object toll = ecl_make_pointer((void*)&foo);
+ecl_function_dispatch(cl_env_copy,#0)(1, toll);"))
+
+(defun %int-var-degree-max (k)
+  (ffi:c-inline (k) (:object) :void "
+Gecode::IntVarBranch obj = Gecode::INT_VAR_DEGREE_MAX();
+ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun %int-var-none (k)
+  (ffi:c-inline (k) (:object) :void "
+Gecode::IntVarBranch obj = Gecode::INT_VAR_NONE();
+ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun %int-var-rnd (rnd k)
+  (ffi:c-inline (rnd k) (:pointer-void :object) :void "
+Gecode::Rnd* rnd = ((Gecode::Rnd*)(#0));
+Gecode::IntVarBranch obj = Gecode::INT_VAR_RND(*rnd);
+ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun %int-val-rnd (rnd k)
+  (ffi:c-inline (rnd k) (:pointer-void :object) :void "
+Gecode::Rnd* rnd = ((Gecode::Rnd*)(#0));
+Gecode::IntValBranch obj = Gecode::INT_VAL_RND(*rnd);
+ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun %rnd (seed k)
+  (ffi:c-inline (k seed) (:object :unsigned-int) :void "
+Gecode::Rnd obj = Gecode::Rnd(#1);
+ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun %symbol (symbol)
+  (let ((*package* (symbol-package symbol)))
+    (symbolicate "%" symbol)))
+
+(defmacro let*-heap (bindings &body body)
+  (if (null bindings)
+      `(progn ,@body)
+      (destructuring-bind ((variable (fn . args)) . rest)
+          bindings
+        `(,(%symbol fn) ,@args
+          (lambda (,variable)
+            (let*-heap ,rest
+                       ,@body))))))
+
+(defun branch (space a b)
+  (ecase (si:foreign-data-tag space)
+    ((:dfs-space :pr-bab-space)
+     (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
+                   "{
+Gecode::IntVarBranch* var = ((Gecode::IntVarBranch*)(#1));
+Gecode::IntValBranch* val = ((Gecode::IntValBranch*)(#2));
+
+v1::DfsSpace* dfsSpace = ((v1::DfsSpace*)(#0));
+
+Gecode::BoolVarArray vars = *(dfsSpace->getVars());
+
+Gecode::branch(*dfsSpace, vars, *var, *val);}"))
+    (:int-space
+     (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
+                   "{
+Gecode::IntVarBranch* var = ((Gecode::IntVarBranch*)(#1));
+Gecode::IntValBranch* val = ((Gecode::IntValBranch*)(#2));
+
+v1::IntSpace* intSpace = ((v1::IntSpace*)(#0));
+
+Gecode::IntVarArray vars = *(intSpace->getVars());
+
+Gecode::branch(*intSpace, vars, *var, *val);}"))))
 
 (defun expr-or (space boolvars)
   "Return a new boolvar that is constrained to be the OR of boolvars."
@@ -256,7 +473,7 @@ s->constrain_not_subset(*o);
   (let ((status
           ;; c-inline00016
           (ffi:c-inline (space) (:pointer-void) :int
-                       "{
+                        "{
 Gecode::SpaceStatus status = (((Gecode::Space*)(#0))->status());
 
 switch (status) {
@@ -301,7 +518,7 @@ default: @(return 0) = 100; break;
   (check-type space SI:FOREIGN-DATA)
   (let ((vars (space-vars space)))
     (loop for i from 0 below (vars-size vars)
-       collect (vars-nth vars i))))
+          collect (vars-nth vars i))))
 
 (defun space-print-in (space vector)
   (check-type space SI:FOREIGN-DATA)
@@ -311,13 +528,13 @@ default: @(return 0) = 100; break;
          vector)
   (write-string "[")
   (loop with first-time = t
-     for tail on (space-to-list space)
-     for i upfrom 0
-     do (when (eql 1 (car tail))
-          (if first-time
-              (setq first-time nil)
-              (write-string ","))
-          (princ (aref vector i))))
+        for tail on (space-to-list space)
+        for i upfrom 0
+        do (when (eql 1 (car tail))
+             (if first-time
+                 (setq first-time nil)
+                 (write-string ","))
+             (princ (aref vector i))))
   (write-string "]"))
 
 (defun space-collect-in (space vector)
@@ -327,9 +544,9 @@ default: @(return 0) = 100; break;
                                        non-negative-fixnum)))
          vector)
   (loop for tail on (space-to-list space)
-     for i upfrom 0
-     when (eql 1 (car tail))
-     collect (aref vector i)))
+        for i upfrom 0
+        when (eql 1 (car tail))
+          collect (aref vector i)))
 
 (defun space-vars (space)
   ;; c-inline00019
@@ -351,46 +568,30 @@ default: @(return 0) = 100; break;
    (vars n) (:pointer-void :int) :pointer-void
    "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
 
-(defun make-dfs (space)
-  ;; c-inline00022
-  (check-type space SI:FOREIGN-DATA)
-  (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "
-{ @(return 0) = new Gecode::DFS<v1::DfsSpace>(((v1::DfsSpace*)(#0)));}"))
 
-(defun make-dfs-or-gist (space)
+
+(defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
-      (make-dfs space)
-      (make-dfs
+      (make-dfs-engine space)
+      (make-dfs-engine
        ;; go interactive. When user is done, we just continue with
        ;; normal search. Space is returned unchanged.
        (dfs-search-gist space))))
 
-(defun dfs-next (dfs)
-  (check-type dfs SI:FOREIGN-DATA)
-  (let ((solution
-          ;; c-inline00023
-          (ffi:c-inline (dfs) (:pointer-void) :pointer-void
-                        "
-{ @(return 0) = ((Gecode::DFS<v1::DfsSpace>*)(#0))->next(); }")))
-    (if (si:null-pointer-p solution)
-        nil
-        solution)))
-
-(defun make-bab (space)
-  ;; c-inline00024
-  (check-type space SI:FOREIGN-DATA)
-  (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "
-{ @(return 0) = new Gecode::BAB<v1::DfsSpace>(((v1::DfsSpace*)(#0)));}"))
-
-(defun make-bab-or-gist (space)
+(defun make-bab-engine-or-gist (space)
   (if (not *use-gist*)
-      (make-bab space)
-      (make-bab
+      (make-bab-engine space)
+      (make-bab-engine
        ;; go interactive. When user is done, we just continue with
        ;; normal search. Space is returned unchanged.
        (bab-search-gist space))))
+
+(defun delete-dfs (dfs)
+  ;; c-inline00025
+  (check-type dfs SI:FOREIGN-DATA)
+  (ffi:c-inline (dfs) (:pointer-void) :void
+                "{ delete ((Gecode::DFS<v1::DfsSpace>*)#0); }")
+  nil)
 
 (defun delete-bab (bab)
   ;; c-inline00025
@@ -448,7 +649,7 @@ Gecode::Search::Statistics s = dfs->statistics();
   (let ((status
           ;; c-inline000028
           (ffi:c-inline (space) (:pointer-void) :int
-                       "
+                        "
 int res = 0;
 #ifdef HAVE_GECODE_GIST_HH
 v1::DfsSpace* dfsSpace = ((v1::DfsSpace*)(#0));
@@ -471,7 +672,7 @@ res = 7;
   (let ((status
           ;; c-inline000028
           (ffi:c-inline (space) (:pointer-void) :int
-                       "
+                        "
 int res = 0;
 #ifdef HAVE_GECODE_GIST_HH
 v1::DfsSpace* dfsSpace = ((v1::DfsSpace*)(#0));
@@ -903,29 +1104,29 @@ res = 7;
              (ee-task (typecase semantic
                         (preferred
                          (make-instance 'multi-bab-engine
-                                        :gecode-engine (make-bab-or-gist space)
+                                        :gecode-engine (make-bab-engine-or-gist space)
                                         :engine-vector vector
                                         :space (progn
                                                  (space-status space)
                                                  (clone-dfs-space space))))
                         (t (make-instance
                             'search-engine
-                            :gecode-engine (make-dfs-or-gist space)
+                            :gecode-engine (make-dfs-engine-or-gist space)
                             :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
                          (make-instance 'search-engine
-                                        :gecode-engine (make-bab-or-gist space)
+                                        :gecode-engine (make-bab-engine-or-gist space)
                                         :engine-vector vector
                                         :next-solution-fn #'bab-best))
                         (t
                          (make-instance 'search-engine
-                                        :gecode-engine (make-dfs-or-gist space)
+                                        :gecode-engine (make-dfs-engine-or-gist space)
                                         :engine-vector vector))))
              (dc-task (make-instance 'search-engine
-                                     :gecode-engine (make-dfs-or-gist space)))
+                                     :gecode-engine (make-dfs-engine-or-gist space)))
              (ds-task (make-instance 'search-engine
-                                     :gecode-engine (make-dfs-or-gist space))))
+                                     :gecode-engine (make-dfs-engine-or-gist space))))
          (delete-space space)))))
 
 (defclass engine () ())
@@ -1023,13 +1224,13 @@ res = 7;
                                    (engine preferred-all-engine))
   (write-line "[")
   (loop
-     with first-time = t
-     for solution in (drive-search-and-collect task engine)
-     do (if first-time
-            (setq first-time nil)
-            (write-char #\,))
-     do (format t "[~{~A~^,~}]" solution)
-     do (terpri))
+    with first-time = t
+    for solution in (drive-search-and-collect task engine)
+    do (if first-time
+           (setq first-time nil)
+           (write-char #\,))
+    do (format t "[~{~A~^,~}]" solution)
+    do (terpri))
   (write-line "]"))
 
 (defmethod drive-search-and-collect ((task search-all-driver)
@@ -1047,15 +1248,15 @@ res = 7;
         (space-print-fn (space-print-fn engine)))
     (write-line "[")
     (loop
-       with first-time = t
-       for solution = (funcall next-solution-fn gecode-engine)
-       until (null solution)
-       do (if first-time
-              (setq first-time nil)
-              (write-char #\,))
-       do (funcall space-print-fn solution engine-vector)
-       do (funcall space-delete-fn solution)
-       do (terpri))
+      with first-time = t
+      for solution = (funcall next-solution-fn gecode-engine)
+      until (null solution)
+      do (if first-time
+             (setq first-time nil)
+             (write-char #\,))
+      do (funcall space-print-fn solution engine-vector)
+      do (funcall space-delete-fn solution)
+      do (terpri))
     (write-line "]")
     nil))
 
@@ -1066,10 +1267,10 @@ res = 7;
         (space-delete-fn (space-delete-fn engine))
         (space-collect-fn (space-collect-fn engine)))
     (loop
-       for solution = (funcall next-solution-fn gecode-engine)
-       until (null solution)
-       collect (funcall space-collect-fn solution engine-vector)
-       do (funcall space-delete-fn solution))))
+      for solution = (funcall next-solution-fn gecode-engine)
+      until (null solution)
+      collect (funcall space-collect-fn solution engine-vector)
+      do (funcall space-delete-fn solution))))
 
 (defmethod drive-search-and-print ((driver search-one-driver) engine)
   (let ((gecode-engine (gecode-engine engine))
@@ -1118,7 +1319,7 @@ res = 7;
            (let ((slave (clone-dfs-space master)))
              (delete-bab bab)
              (step1 (prog1
-                        (make-bab-or-gist slave)
+                        (make-bab-engine-or-gist slave)
                       (delete-space slave))
                     fn first-time vector master))))))))
 
@@ -1307,8 +1508,8 @@ res = 7;
             (translate-problem task semantic)
           (with-timing
               (print-answer f
-                               task
-                               semantic)))))))
+                            task
+                            semantic)))))))
 
 #+cover
 (defvar *cover-file*
