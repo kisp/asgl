@@ -45,7 +45,7 @@ echo BEGIN BUILDING ASGL
 export ASGL_HOME_PREC=`pwd`
 ASGLFLAGS="-O3 -march=native -pipe -fomit-frame-pointer"
 env CFLAGS="$ASGLFLAGS" CXXFLAGS="$ASGLFLAGS" ./configure --without-gist
-make LD_LIBRARY_PATH=`pwd`/local/lib install-v1
+make LD_LIBRARY_PATH=`pwd`/local/lib install-asgl
 mv bin/asgl bin/asgl_kernel
 echo '#!/bin/bash' >bin/asgl
 echo "export LD_LIBRARY_PATH=`pwd`/local/lib:$LD_LIBRARY_PATH" >>bin/asgl

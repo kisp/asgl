@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-all: install-v1
-test: test-v1 check
+all: install-asgl
+test: test-asgl check
 
 # ref
 install-ref:
@@ -69,10 +69,10 @@ v1/PrBABSpace.o: v1/PrBABSpace.cpp v1/PrBABSpace.h v1/BoolSpace.h asgl_config.h
 v1/IntSpace.o: v1/IntSpace.cpp v1/IntSpace.h v1/BoolSpace.h asgl_config.h
 	g++ -O3 -Wall -Werror -fPIC @CXXFLAGS@ -c v1/IntSpace.cpp -o v1/IntSpace.o
 
-install-v1: asgl
+install-asgl: asgl
 	cp asgl bin/asgl
 
-test-v1: install-v1 data/iccma15_solutions data/iccma15_testcases
+test-asgl: install-asgl data/iccma15_solutions data/iccma15_testcases
 	bundle exec cucumber ${CUKE_ARGS}
 
 test-dist: data/iccma15_solutions data/iccma15_testcases
