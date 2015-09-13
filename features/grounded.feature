@@ -342,7 +342,7 @@ Feature: grounded
     |    0 | 100 |
     |    0 | 101 |
 
-    @big
+    @slow
     Examples: big
     | from |     to |
     |    0 |    300 |
