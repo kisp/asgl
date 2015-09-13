@@ -14,30 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef IntSpace_HEADER_
-#define IntSpace_HEADER_
-#include "../asgl_config.h"
+#ifndef BoolSpace_HEADER_
+#define BoolSpace_HEADER_
+#include "asgl_config.h"
 #include <gecode/int.hh>
 #include <gecode/search.hh>
 #ifdef HAVE_GECODE_GIST_HH
 #include <gecode/gist.hh>
 #endif
 
-class IntSpace : public Gecode::Space
+class BoolSpace : public Gecode::Space
 {
  private:
   int n;
 
  protected:
-  Gecode::IntVarArray l;
+  Gecode::BoolVarArray l;
 
  public:
-  IntSpace(int x, int from, int to);
-  IntSpace(bool share, IntSpace& s);
+  BoolSpace(int x);
+  BoolSpace(bool share, BoolSpace& s);
 
   Gecode::Space* copy(bool share);
 
-  Gecode::IntVarArray* getVars();
+  Gecode::BoolVarArray* getVars();
 
   void print(std::ostream&) const;
 };

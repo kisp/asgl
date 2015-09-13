@@ -93,12 +93,12 @@ Files involved:
 - lib/myam/src/utils.lisp
 - lisp-scripts/compile-file-system-p.lisp
 - support/gecode-patched-headers.tgz
-- v1/BoolSpace.cpp
-- v1/BoolSpace.h
-- v1/IntSpace.cpp
-- v1/IntSpace.h
-- v1/PrBABSpace.cpp
-- v1/PrBABSpace.h
+- BoolSpace.cpp
+- BoolSpace.h
+- IntSpace.cpp
+- IntSpace.h
+- PrBABSpace.cpp
+- PrBABSpace.h
 - asgl.lisp
 
 
