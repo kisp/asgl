@@ -1504,7 +1504,7 @@ res = 7;
   (merge-pathnames "cover.data" (asgl-home)))
 
 (defun print-informational-message ()
-  (write-line "ASGL version 0.1.3")
+  (write-line "ASGL version 0.1.4")
   (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
   (terpri)
   (write-line "Copyright (C) 2015  Kilian Sprotte")
