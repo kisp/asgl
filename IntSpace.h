@@ -14,29 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef MYPrBABSpaceHEADER_
-#define MYPrBABSpaceHEADER_
-#include "../asgl_config.h"
+#ifndef IntSpace_HEADER_
+#define IntSpace_HEADER_
+#include "asgl_config.h"
 #include <gecode/int.hh>
 #include <gecode/search.hh>
-#include <gecode/minimodel.hh>
-#include <gecode/set.hh>
-#include "BoolSpace.h"
 #ifdef HAVE_GECODE_GIST_HH
 #include <gecode/gist.hh>
 #endif
 
-class PrBABSpace : public BoolSpace
+class IntSpace : public Gecode::Space
 {
+ private:
+  int n;
+
  protected:
-  Gecode::IntVar card;
-  Gecode::SetVar ext;
+  Gecode::IntVarArray l;
 
  public:
-  PrBABSpace(int x);
-  PrBABSpace(bool share, PrBABSpace& s);
+  IntSpace(int x, int from, int to);
+  IntSpace(bool share, IntSpace& s);
+
   Gecode::Space* copy(bool share);
-  virtual void constrain(const Gecode::Space& _b);
-  void constrain_not_subset(const PrBABSpace& b);
+
+  Gecode::IntVarArray* getVars();
+
+  void print(std::ostream&) const;
 };
 #endif
