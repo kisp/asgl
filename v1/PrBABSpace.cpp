@@ -18,12 +18,12 @@
 
 namespace v1 {
 
-  PrBABSpace::PrBABSpace(int _n) : DfsSpace(_n), card(*this, 0, _n), ext(*this, Gecode::IntSet::empty, Gecode::IntSet(0, _n)) {
+  PrBABSpace::PrBABSpace(int _n) : BoolSpace(_n), card(*this, 0, _n), ext(*this, Gecode::IntSet::empty, Gecode::IntSet(0, _n)) {
     cardinality(*this, ext, card);
     channel(*this, l, ext);
   }
 
-  PrBABSpace::PrBABSpace(bool share, PrBABSpace& s) : DfsSpace(share, s) {
+  PrBABSpace::PrBABSpace(bool share, PrBABSpace& s) : BoolSpace(share, s) {
     card.update(*this, share, s.card);
     ext.update(*this, share, s.ext);
   }

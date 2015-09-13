@@ -10,37 +10,37 @@
 #+nil
 (deftest huhu
   (dotimes (i 500)
-    (let ((space (asgl::make-dfs-space 1000000)))
+    (let ((space (asgl::make-bool-space 1000000)))
       (format t "~A~%" i)
       (asgl::delete-space space))))
 
-(deftest make-dfs-space.1
+(deftest make-bool-space.1
   (let (space)
-    (finishes (setq space (asgl::make-dfs-space 3)))
+    (finishes (setq space (asgl::make-bool-space 3)))
     (asgl::delete-space space)))
 
-(deftest make-dfs-space.2
-  (let ((space (asgl::make-dfs-space 3)))
+(deftest make-bool-space.2
+  (let ((space (asgl::make-bool-space 3)))
     (is (eql :solved (asgl::space-status space)))
     (asgl::delete-space space)))
 
-(deftest make-dfs-space.3
-  (let ((space (asgl::make-dfs-space 3)))
+(deftest make-bool-space.3
+  (let ((space (asgl::make-bool-space 3)))
     (is (eql :solved (asgl::space-status space)))
     (is (equal '((0 1) (0 1) (0 1))
-               (asgl::dfs-space-ins space)))
+               (asgl::bool-space-ins space)))
     (asgl::delete-space space)))
 
-(deftest make-dfs-space.4
-  (let ((space (asgl::make-dfs-space 3)))
+(deftest make-bool-space.4
+  (let ((space (asgl::make-bool-space 3)))
     (asgl::post-must-be-true space 0)
     (is (eql :solved (asgl::space-status space)))
     (is (equal '(1 (0 1) (0 1))
-               (asgl::dfs-space-ins space)))
+               (asgl::bool-space-ins space)))
     (asgl::delete-space space)))
 
-(deftest make-dfs-space.5
-  (let ((space (asgl::make-dfs-space 5)))
+(deftest make-bool-space.5
+  (let ((space (asgl::make-bool-space 5)))
     (asgl::post-must-be-true space 1)
     (asgl::let*-heap ((var (asgl::int-var-none))
                       (val (asgl::int-val-min)))
@@ -48,16 +48,16 @@
     (is (eql 16 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
-(deftest make-dfs-space.6
-  (let ((space (asgl::make-dfs-space 8)))
+(deftest make-bool-space.6
+  (let ((space (asgl::make-bool-space 8)))
     (asgl::let*-heap ((var (asgl::int-var-none))
                       (val (asgl::int-val-min)))
       (asgl::branch space var val))
     (is (eql 256 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
-(deftest make-dfs-space.7
-  (let ((space (asgl::make-dfs-space 8)))
+(deftest make-bool-space.7
+  (let ((space (asgl::make-bool-space 8)))
     (asgl::let*-heap ((rnd (asgl::rnd 7))
                       (var (asgl::int-var-rnd rnd))
                       (val (asgl::int-val-min)))
@@ -65,8 +65,8 @@
     (is (eql 256 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
-(deftest make-dfs-space.8
-  (let ((space (asgl::make-dfs-space 8)))
+(deftest make-bool-space.8
+  (let ((space (asgl::make-bool-space 8)))
     (asgl::let*-heap ((rnd (asgl::rnd 7))
                       (var (asgl::int-var-none))
                       (val (asgl::int-val-rnd rnd)))
@@ -116,7 +116,7 @@
     (asgl::delete-space space)))
 
 (deftest foo3
-  (let ((space (asgl::make-dfs-space 3)))
+  (let ((space (asgl::make-bool-space 3)))
     (asgl::let*-heap ((foo (asgl::int-var-none))
                       (foo2 (asgl::int-val-max)))
       (asgl::branch space foo foo2))
@@ -126,7 +126,7 @@
     (asgl::delete-space space)))
 
 (deftest rnd.1
-  (let ((space (asgl::make-dfs-space 3)))
+  (let ((space (asgl::make-bool-space 3)))
     (asgl::let*-heap ((r (asgl::rnd 0))
                       (var-selection (asgl::int-var-rnd r))
                       (val-selection (asgl::int-val-max)))
@@ -144,7 +144,7 @@
     (asgl::delete-space space)))
 
 (deftest rnd.2
-  (let ((space (asgl::make-dfs-space 3)))
+  (let ((space (asgl::make-bool-space 3)))
     (asgl::let*-heap ((r (asgl::rnd 78))
                       (var-selection (asgl::int-var-none))
                       (val-selection (asgl::int-val-rnd r)))

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef DfsSpace_HEADER_
-#define DfsSpace_HEADER_
+#ifndef BoolSpace_HEADER_
+#define BoolSpace_HEADER_
 #include "../asgl_config.h"
 #include <gecode/int.hh>
 #include <gecode/search.hh>
@@ -24,7 +24,7 @@
 #endif
 
 namespace v1 {
-  class DfsSpace : public Gecode::Space
+  class BoolSpace : public Gecode::Space
   {
   private:
     int n;
@@ -33,8 +33,8 @@ namespace v1 {
     Gecode::BoolVarArray l;
 
   public:
-    DfsSpace(int x);
-    DfsSpace(bool share, DfsSpace& s);
+    BoolSpace(int x);
+    BoolSpace(bool share, BoolSpace& s);
 
     Gecode::Space* copy(bool share);
 
