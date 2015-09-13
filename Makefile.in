@@ -25,7 +25,7 @@ install-ref:
 	chmod +x bin/asgl
 
 test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
-	bundle exec cucumber --tags ~@notref --tags ~@big ${CUKE_ARGS}
+	bundle exec cucumber --tags ~@notref --tags ~@slow ${CUKE_ARGS}
 
 
 # v1

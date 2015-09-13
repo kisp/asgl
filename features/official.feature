@@ -174,7 +174,6 @@ Feature: official
     | rdm50_4                     |
     | rdm50_5                     |
 
-    @big
     Examples: big
     | name    |
     | real_0  |
