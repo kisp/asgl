@@ -49,7 +49,8 @@ asgl.o: gecode asgl.lisp common/asgl-config/asgl-config.fas common/early/early.f
 	  -load lib/alexandria/alexandria.fas \
 	  -load lib/arnesi-list-match/arnesi-list-match.fas \
 	  -load lib/myam/myam.fas \
-	  -load lisp-scripts/compile-asgl.lisp
+	  -load lisp-scripts/compile-file-system-p.lisp \
+	  -eval '(compile-file-system-p "asgl.lisp" :dynamic-libraries t)'
 	test -f asgl.o
 
 asgl: asgl.o BoolSpace.o PrBABSpace.o IntSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
@@ -129,7 +130,7 @@ data/real-ee-gr-solutions: data/real-ee-gr-solutions.tar.xz
 clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	  common/early/clean common/asgl-config/clean
 	rm -f bin/asgl
-	rm -f asgl asgl.o BoolSpace.o asgl.data asgl.eclh asgl.c PrBABSpace.o
+	rm -f asgl asgl.o BoolSpace.o asgl.data asgl.eclh asgl.c PrBABSpace.o IntSpace.o
 	rm -rf gecode tmp
 	rm -rf data/iccma15_solutions data/iccma15_testcases data/real-ee-gr-solutions
 	rm -f cover.data
@@ -140,7 +141,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	rm -f asgl_config.h config.log config.status configure
 	rm -rf autom4te.cache
 	rm -f ecl-13.5.1.tgz gecode-4.3.3.tar.gz
-	rm -f Makefile lisp-scripts/compile-asgl.lisp
+	rm -f Makefile lisp-scripts/compile-file-system-p.lisp
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 # dist

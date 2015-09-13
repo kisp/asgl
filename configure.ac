@@ -57,6 +57,6 @@ AC_LANG_POP
 
 
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([lisp-scripts/compile-asgl.lisp])
+AC_CONFIG_FILES([lisp-scripts/compile-file-system-p.lisp])
 
 AC_OUTPUT

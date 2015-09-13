@@ -1,6 +1,6 @@
 asgl
 Makefile
-lisp-scripts/compile-asgl.lisp
+lisp-scripts/compile-file-system-p.lisp
 tmp
 bin/asgl
 gecode

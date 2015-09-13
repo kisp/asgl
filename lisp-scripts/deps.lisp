@@ -229,9 +229,7 @@
   `((ecl -norc)
     ,@(mapcar (lambda (x) `(-load ,(component-pathname x))) loads)
     (-load "lisp-scripts/compile-file-system-p.lisp")
-    (-eval ,(format nil "'(compile-file-system-p \"~A\")'" (component-pathname source)))
-    (-eval "'(fresh-line)'")
-    (-eval "'(quit)'")))
+    (-eval ,(format nil "'(compile-file-system-p \"~A\")'" (component-pathname source)))))
 
 (defun %static-lib-rule (sorted-components)
   (let* ((system (asdf/component:component-system (first sorted-components)))
