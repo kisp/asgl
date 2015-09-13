@@ -223,11 +223,11 @@ s->constrain_not_subset(*o);
 
 "))
 
-(defun delete-dfs-space (space)
+(defun delete-space (space)
   ;; c-inline00012
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :void
-                "{ delete ((v1::DfsSpace*)#0); }")
+                "{ delete ((Gecode::Space*)#0); }")
   nil)
 
 (defun clone-dfs-space (space)
@@ -411,7 +411,7 @@ default: @(return 0) = 100; break;
     (loop
       for prev-solution = nil then
                               (progn (when prev-solution
-                                       (delete-dfs-space prev-solution))
+                                       (delete-space prev-solution))
                                      solution)
       for solution = (bab-next bab)
       until (si:null-pointer-p solution)
@@ -926,7 +926,7 @@ res = 7;
                                      :gecode-engine (make-dfs-or-gist space)))
              (ds-task (make-instance 'search-engine
                                      :gecode-engine (make-dfs-or-gist space))))
-         (delete-dfs-space space)))))
+         (delete-space space)))))
 
 (defclass engine () ())
 
@@ -939,7 +939,7 @@ res = 7;
    (space-collect-fn :reader space-collect-fn :initarg :space-collect-fn))
   (:default-initargs
    :next-solution-fn #'dfs-next
-   :space-delete-fn  #'delete-dfs-space
+   :space-delete-fn  #'delete-space
    :space-print-fn   #'space-print-in
    :space-collect-fn #'space-collect-in))
 
@@ -966,7 +966,7 @@ res = 7;
     (when space
       (prog1
           (case (space-status space)
-            (:failed (delete-dfs-space space))
+            (:failed (delete-space space))
             (t space))
         (setf (gecode-engine-space-wrapper-space wrapper)
               nil)))))
@@ -1109,7 +1109,7 @@ res = 7;
       (constrain-not-subset master next)
       (let ((status (prog1
                         (space-status master)
-                      (delete-dfs-space next))))
+                      (delete-space next))))
         (ecase status
           (:failed)
           (:solved
@@ -1119,7 +1119,7 @@ res = 7;
              (delete-bab bab)
              (step1 (prog1
                         (make-bab-or-gist slave)
-                      (delete-dfs-space slave))
+                      (delete-space slave))
                     fn first-time vector master))))))))
 
 (defun multi-bab-helper (engine fn)
