@@ -1294,7 +1294,8 @@ res = 7;
          (*with-timing* (read-from-string timing))
          (g (when g (parse-g-arg g)))
          (f (or f g))
-         (a (if g (read-from-string a) a))
+         (a (when a
+              (if g (parse-integer a) a)))
          (eval (read-from-string eval)))
     (check-type *log-level* log-level)
     (when load (load load))
