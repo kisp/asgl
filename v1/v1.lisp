@@ -181,60 +181,64 @@ result = ecl_cons(list, result);
 
 }"))
 
-
-
+(defun int-val-min () (error "only within let*-heap"))
 (defun %int-val-min (k)
   (ffi:c-inline (k) (:object) :void "
 Gecode::IntValBranch foo = Gecode::INT_VAL_MIN();
 cl_object toll = ecl_make_pointer((void*)&foo);
 ecl_function_dispatch(cl_env_copy,#0)(1, toll);"))
 
+(defun int-val-max () (error "only within let*-heap"))
 (defun %int-val-max (k)
   (ffi:c-inline (k) (:object) :void "
 Gecode::IntValBranch foo = Gecode::INT_VAL_MAX();
 cl_object toll = ecl_make_pointer((void*)&foo);
 ecl_function_dispatch(cl_env_copy,#0)(1, toll);"))
 
+(defun int-var-degree-max () (error "only within let*-heap"))
 (defun %int-var-degree-max (k)
   (ffi:c-inline (k) (:object) :void "
 Gecode::IntVarBranch obj = Gecode::INT_VAR_DEGREE_MAX();
 ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
 
+(defun int-var-none () (error "only within let*-heap"))
 (defun %int-var-none (k)
   (ffi:c-inline (k) (:object) :void "
 Gecode::IntVarBranch obj = Gecode::INT_VAR_NONE();
 ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
 
+(defun int-var-rnd (rnd) (declare (ignore rnd)) (error "only within let*-heap"))
 (defun %int-var-rnd (rnd k)
   (ffi:c-inline (rnd k) (:pointer-void :object) :void "
 Gecode::Rnd* rnd = ((Gecode::Rnd*)(#0));
 Gecode::IntVarBranch obj = Gecode::INT_VAR_RND(*rnd);
 ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
 
+(defun int-val-rnd (rnd) (declare (ignore rnd)) (error "only within let*-heap"))
 (defun %int-val-rnd (rnd k)
   (ffi:c-inline (rnd k) (:pointer-void :object) :void "
 Gecode::Rnd* rnd = ((Gecode::Rnd*)(#0));
 Gecode::IntValBranch obj = Gecode::INT_VAL_RND(*rnd);
 ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
 
+(defun rnd (seed) (declare (ignore seed)) (error "only within let*-heap"))
 (defun %rnd (seed k)
   (ffi:c-inline (k seed) (:object :unsigned-int) :void "
 Gecode::Rnd obj = Gecode::Rnd(#1);
 ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
 
-(defun %symbol (symbol)
-  (let ((*package* (symbol-package symbol)))
-    (symbolicate "%" symbol)))
-
 (defmacro let*-heap (bindings &body body)
-  (if (null bindings)
-      `(progn ,@body)
-      (destructuring-bind ((variable (fn . args)) . rest)
-          bindings
-        `(,(%symbol fn) ,@args
-          (lambda (,variable)
-            (let*-heap ,rest
-                       ,@body))))))
+  (labels ((%symbol (symbol)
+             (let ((*package* (symbol-package symbol)))
+               (symbolicate "%" symbol))))
+    (if (null bindings)
+        `(progn ,@body)
+        (destructuring-bind ((variable (fn . args)) . rest)
+            bindings
+          `(,(%symbol fn) ,@args
+            (lambda (,variable)
+              (let*-heap ,rest
+                ,@body)))))))
 
 (defun branch (space a b)
   (ecase (si:foreign-data-tag space)
@@ -452,21 +456,6 @@ s->constrain_not_subset(*o);
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
                 "{ @(return 0) = ((v1::DfsSpace*)#0)->clone(); }"))
-
-(defun dfs-space-branch/l/int-var-degree-max/int-val-min (space)
-  ;; c-inline00014
-  (check-type space SI:FOREIGN-DATA)
-  (ffi:c-inline
-   (space)
-   (:pointer-void) :void
-   "{ ((v1::DfsSpace*)(#0))->branch__l__int_var_degree_max__int_val_min(); }"))
-
-(defun dfs-space-branch/l/int-var-degree-max/int-val-max (space)
-  ;; c-inline00015
-  (check-type space SI:FOREIGN-DATA)
-  (ffi:c-inline
-   (space) (:pointer-void) :void
-   "{ ((v1::DfsSpace*)(#0))->branch__l__int_var_degree_max__int_val_max(); }"))
 
 (defun space-status (space)
   (check-type space SI:FOREIGN-DATA)
@@ -1059,26 +1048,25 @@ res = 7;
   (log* 3 "task arg is ~S" (task-arg task))
   (post-must-be-true space (task-arg task)))
 
+(defmacro branch-with-logging (space &body body)
+  `(let*-heap (,@body)
+     (log* 1 "branch ~{~A~^ ~}" ',body)
+     (branch ,space var val)))
+
 (defmethod branch-space (space task semantic)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
-  (log* 1 "dfs-space-branch/l/int-var-degree-max/int-val-min")
-  (dfs-space-branch/l/int-var-degree-max/int-val-min space))
+  (branch-with-logging space
+                       (var (int-var-degree-max))
+                       (val (int-val-min))))
 
 (defmethod branch-space (space (task se-task) (semantic preferred))
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
-  (log* 1 "dfs-space-branch/l/int-var-degree-max/int-val-max")
-  (dfs-space-branch/l/int-var-degree-max/int-val-max space))
+  (branch-with-logging space
+                       (var (int-var-degree-max))
+                       (val (int-val-max))))
 
 (defmethod branch-space (space (task ee-task) (semantic preferred))
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
-  (log* 1 "dfs-space-branch/l/int-var-degree-max/int-val-max")
-  (dfs-space-branch/l/int-var-degree-max/int-val-max space))
+  (branch-with-logging space
+                       (var (int-var-degree-max))
+                       (val (int-val-max))))
 
 (defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
   (check-type space SI:FOREIGN-DATA)

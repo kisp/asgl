@@ -22,14 +22,6 @@ namespace v1 {
     n = _n;
   }
 
-  void DfsSpace::branch__l__int_var_degree_max__int_val_min() {
-    Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MIN());
-  }
-
-  void DfsSpace::branch__l__int_var_degree_max__int_val_max() {
-    Gecode::branch(*this, l, Gecode::INT_VAR_DEGREE_MAX(), Gecode::INT_VAL_MAX());
-  }
-
   DfsSpace::DfsSpace(bool share, DfsSpace& s) : Gecode::Space(share, s) {
     l.update(*this, share, s.l);
   }
