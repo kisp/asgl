@@ -34,10 +34,6 @@ namespace v1 {
     l.update(*this, share, s.l);
   }
 
-  int DfsSpace::getN() {
-    return n;
-  }
-
   Gecode::Space* DfsSpace::copy(bool share) {
     return new DfsSpace(share, *this);
   }
