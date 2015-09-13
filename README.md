@@ -99,7 +99,7 @@ Files involved:
 - v1/IntSpace.h
 - v1/PrBABSpace.cpp
 - v1/PrBABSpace.h
-- v1/v1.lisp
+- asgl.lisp
 
 
 ## make test
@@ -129,5 +129,5 @@ At some point in time, it was possible to load ASGL via fas files.
                  "libgecodesupport.so.40"
                  "libgecodegist.so.40"))
     (ffi:load-foreign-library (merge-pathnames lib lib-dir))))
-(load "v1/v1.fas")
+(load "asgl.fas")
 ```
