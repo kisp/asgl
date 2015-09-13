@@ -21,13 +21,13 @@
 #include <gecode/search.hh>
 #include <gecode/minimodel.hh>
 #include <gecode/set.hh>
-#include "DfsSpace.h"
+#include "BoolSpace.h"
 #ifdef HAVE_GECODE_GIST_HH
 #include <gecode/gist.hh>
 #endif
 
 namespace v1 {
-  class PrBABSpace : public DfsSpace
+  class PrBABSpace : public BoolSpace
   {
   protected:
     Gecode::IntVar card;

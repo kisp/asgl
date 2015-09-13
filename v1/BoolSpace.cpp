@@ -14,27 +14,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "DfsSpace.h"
+#include "BoolSpace.h"
 
 namespace v1 {
 
-  DfsSpace::DfsSpace(int _n) : l(*this, _n, 0, 1) {
+  BoolSpace::BoolSpace(int _n) : l(*this, _n, 0, 1) {
     n = _n;
   }
 
-  DfsSpace::DfsSpace(bool share, DfsSpace& s) : Gecode::Space(share, s) {
+  BoolSpace::BoolSpace(bool share, BoolSpace& s) : Gecode::Space(share, s) {
     l.update(*this, share, s.l);
   }
 
-  Gecode::Space* DfsSpace::copy(bool share) {
-    return new DfsSpace(share, *this);
+  Gecode::Space* BoolSpace::copy(bool share) {
+    return new BoolSpace(share, *this);
   }
 
-  Gecode::BoolVarArray* DfsSpace::getVars(void) {
+  Gecode::BoolVarArray* BoolSpace::getVars(void) {
     return &l;
   }
 
-  void DfsSpace::print(std::ostream& os) const {
+  void BoolSpace::print(std::ostream& os) const {
     os << l << std::endl;
   }
 
