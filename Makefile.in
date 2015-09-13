@@ -49,7 +49,7 @@ asgl.o: gecode asgl.lisp common/asgl-config/asgl-config.fas common/early/early.f
 	  -load lib/alexandria/alexandria.fas \
 	  -load lib/arnesi-list-match/arnesi-list-match.fas \
 	  -load lib/myam/myam.fas \
-	  -load lisp-scripts/compile-v1.lisp
+	  -load lisp-scripts/compile-asgl.lisp
 	test -f asgl.o
 
 asgl: asgl.o v1/BoolSpace.o v1/PrBABSpace.o v1/IntSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
@@ -140,7 +140,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	rm -f asgl_config.h config.log config.status configure
 	rm -rf autom4te.cache
 	rm -f ecl-13.5.1.tgz gecode-4.3.3.tar.gz
-	rm -f Makefile lisp-scripts/compile-v1.lisp
+	rm -f Makefile lisp-scripts/compile-asgl.lisp
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
 # dist
