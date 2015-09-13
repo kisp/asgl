@@ -16,26 +16,23 @@
 
 #include "BoolSpace.h"
 
-namespace v1 {
 
-  BoolSpace::BoolSpace(int _n) : l(*this, _n, 0, 1) {
-    n = _n;
-  }
+BoolSpace::BoolSpace(int _n) : l(*this, _n, 0, 1) {
+  n = _n;
+}
 
-  BoolSpace::BoolSpace(bool share, BoolSpace& s) : Gecode::Space(share, s) {
-    l.update(*this, share, s.l);
-  }
+BoolSpace::BoolSpace(bool share, BoolSpace& s) : Gecode::Space(share, s) {
+  l.update(*this, share, s.l);
+}
 
-  Gecode::Space* BoolSpace::copy(bool share) {
-    return new BoolSpace(share, *this);
-  }
+Gecode::Space* BoolSpace::copy(bool share) {
+  return new BoolSpace(share, *this);
+}
 
-  Gecode::BoolVarArray* BoolSpace::getVars(void) {
-    return &l;
-  }
+Gecode::BoolVarArray* BoolSpace::getVars(void) {
+  return &l;
+}
 
-  void BoolSpace::print(std::ostream& os) const {
-    os << l << std::endl;
-  }
-
+void BoolSpace::print(std::ostream& os) const {
+  os << l << std::endl;
 }

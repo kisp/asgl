@@ -16,30 +16,27 @@
 
 #include "PrBABSpace.h"
 
-namespace v1 {
+PrBABSpace::PrBABSpace(int _n) : BoolSpace(_n), card(*this, 0, _n), ext(*this, Gecode::IntSet::empty, Gecode::IntSet(0, _n)) {
+  cardinality(*this, ext, card);
+  channel(*this, l, ext);
+}
 
-  PrBABSpace::PrBABSpace(int _n) : BoolSpace(_n), card(*this, 0, _n), ext(*this, Gecode::IntSet::empty, Gecode::IntSet(0, _n)) {
-    cardinality(*this, ext, card);
-    channel(*this, l, ext);
-  }
+PrBABSpace::PrBABSpace(bool share, PrBABSpace& s) : BoolSpace(share, s) {
+  card.update(*this, share, s.card);
+  ext.update(*this, share, s.ext);
+}
 
-  PrBABSpace::PrBABSpace(bool share, PrBABSpace& s) : BoolSpace(share, s) {
-    card.update(*this, share, s.card);
-    ext.update(*this, share, s.ext);
-  }
+Gecode::Space* PrBABSpace::copy(bool share) {
+  return new PrBABSpace(share, *this);
+}
 
-  Gecode::Space* PrBABSpace::copy(bool share) {
-    return new PrBABSpace(share, *this);
-  }
+void PrBABSpace::constrain(const Gecode::Space& _b) {
+  const PrBABSpace& b = static_cast<const PrBABSpace&>(_b);
+  rel(*this, card > b.card);
+  rel(*this, ext >= b.ext);
+  // rel(*this, ext != b.ext);
+}
 
-  void PrBABSpace::constrain(const Gecode::Space& _b) {
-    const PrBABSpace& b = static_cast<const PrBABSpace&>(_b);
-    rel(*this, card > b.card);
-    rel(*this, ext >= b.ext);
-    // rel(*this, ext != b.ext);
-  }
-
-  void PrBABSpace::constrain_not_subset(const PrBABSpace& b) {
-    rel(*this, (ext - b.ext) != Gecode::IntSet::empty);
-  }
+void PrBABSpace::constrain_not_subset(const PrBABSpace& b) {
+  rel(*this, (ext - b.ext) != Gecode::IntSet::empty);
 }

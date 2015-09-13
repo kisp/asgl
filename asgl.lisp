@@ -57,15 +57,15 @@
         :one-liner t))))
 
 (define-foreign-constructor (make-int-space
-                             "v1::IntSpace" :tag :int-space)
+                             "IntSpace" :tag :int-space)
     (n :int) (from :int) (to :int))
 
 (define-foreign-constructor (make-bool-space
-                             "v1::BoolSpace" :tag :bool-space)
+                             "BoolSpace" :tag :bool-space)
     (n :int))
 
 (define-foreign-constructor (make-pr-bab-space
-                             "v1::PrBABSpace" :tag :pr-bab-space)
+                             "PrBABSpace" :tag :pr-bab-space)
     (n :int))
 
 (define-foreign-constructor (make-dfs-engine
@@ -103,7 +103,7 @@ while(s = dfs->next()) {
 (defun bool-space-ins (space)
   (ffi:c-inline (space) (:pointer-void) :object
                 "{
-v1::BoolSpace *space = ((v1::BoolSpace*)(#0));
+BoolSpace *space = ((BoolSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(space->getVars());
 
@@ -130,7 +130,7 @@ result = ecl_cons(list, result);
 (defun int-space-ins (space)
   (ffi:c-inline (space) (:pointer-void) :object
                 "{
-v1::IntSpace *space = ((v1::IntSpace*)(#0));
+IntSpace *space = ((IntSpace*)(#0));
 
 Gecode::IntVarArray vars = *(space->getVars());
 
@@ -157,7 +157,7 @@ result = ecl_cons(list, result);
 (defun pr-bab-space-ins (space)
   (ffi:c-inline (space) (:pointer-void) :object
                 "{
-v1::PrBABSpace *space = ((v1::PrBABSpace*)(#0));
+PrBABSpace *space = ((PrBABSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(space->getVars());
 
@@ -248,7 +248,7 @@ ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
 Gecode::IntVarBranch* var = ((Gecode::IntVarBranch*)(#1));
 Gecode::IntValBranch* val = ((Gecode::IntValBranch*)(#2));
 
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(boolSpace->getVars());
 
@@ -259,7 +259,7 @@ Gecode::branch(*boolSpace, vars, *var, *val);}"))
 Gecode::IntVarBranch* var = ((Gecode::IntVarBranch*)(#1));
 Gecode::IntValBranch* val = ((Gecode::IntValBranch*)(#2));
 
-v1::IntSpace* intSpace = ((v1::IntSpace*)(#0));
+IntSpace* intSpace = ((IntSpace*)(#0));
 
 Gecode::IntVarArray vars = *(intSpace->getVars());
 
@@ -273,7 +273,7 @@ Gecode::branch(*intSpace, vars, *var, *val);}"))))
   (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
                 "
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 int len = (int)ecl_length(#1);
 Gecode::BoolVarArgs a(len);
@@ -303,7 +303,7 @@ rel(*boolSpace, Gecode::BOT_OR, a, *u);
   (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
   (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
                 "
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 int len = (int)ecl_length(#1);
 Gecode::BoolVarArgs a(len);
@@ -332,7 +332,7 @@ rel(*boolSpace, Gecode::BOT_AND, a, *u);
   (check-type boolvar SI:FOREIGN-DATA)
   (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :pointer-void
                 "
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVar* a = ((Gecode::BoolVar*)(#1));
 
@@ -352,7 +352,7 @@ rel(*boolSpace, *a, Gecode::IRT_NQ, *u);
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
                 "{
 
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(boolSpace->getVars());
 
@@ -372,7 +372,7 @@ rel(*boolSpace, vars[i], Gecode::BOT_AND, vars[j], 0);
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
                 "{
 
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVar* a = (Gecode::BoolVar*)#1;
 Gecode::BoolVar* b = (Gecode::BoolVar*)#2;
@@ -389,7 +389,7 @@ rel(*boolSpace, *a, Gecode::BOT_IMP, *b, 1);
   (ffi:c-inline (space i) (:pointer-void :int) :void
                 "{
 
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(boolSpace->getVars());
 
@@ -407,7 +407,7 @@ rel(*boolSpace, vars[i], Gecode::IRT_EQ, 0);
   (ffi:c-inline (space i) (:pointer-void :int) :void
                 "{
 
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(boolSpace->getVars());
 
@@ -425,7 +425,7 @@ rel(*boolSpace, vars[i], Gecode::IRT_EQ, 1);
   (check-type b SI:FOREIGN-DATA)
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
                 "
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 rel(*boolSpace, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ,
                *((Gecode::BoolVar*)(#2)));
@@ -437,8 +437,8 @@ rel(*boolSpace, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ,
   (check-type other SI:FOREIGN-DATA)
   (ffi:c-inline (space other) (:pointer-void :pointer-void) :void
                 "
-v1::PrBABSpace* s = ((v1::PrBABSpace*)(#0));
-v1::PrBABSpace* o = ((v1::PrBABSpace*)(#1));
+PrBABSpace* s = ((PrBABSpace*)(#0));
+PrBABSpace* o = ((PrBABSpace*)(#1));
 
 s->constrain_not_subset(*o);
 
@@ -455,7 +455,7 @@ s->constrain_not_subset(*o);
   ;; c-inline00013
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = ((v1::BoolSpace*)#0)->clone(); }"))
+                "{ @(return 0) = ((BoolSpace*)#0)->clone(); }"))
 
 (defun space-status (space)
   (check-type space SI:FOREIGN-DATA)
@@ -541,7 +541,7 @@ default: @(return 0) = 100; break;
   ;; c-inline00019
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = (void*)(((v1::BoolSpace*)(#0))->getVars());}"))
+                "{ @(return 0) = (void*)(((BoolSpace*)(#0))->getVars());}"))
 
 (defun vars-size (vars)
   ;; c-inline00020
@@ -579,14 +579,14 @@ default: @(return 0) = 100; break;
   ;; c-inline00025
   (check-type dfs SI:FOREIGN-DATA)
   (ffi:c-inline (dfs) (:pointer-void) :void
-                "{ delete ((Gecode::DFS<v1::BoolSpace>*)#0); }")
+                "{ delete ((Gecode::DFS<BoolSpace>*)#0); }")
   nil)
 
 (defun delete-bab (bab)
   ;; c-inline00025
   (check-type bab SI:FOREIGN-DATA)
   (ffi:c-inline (bab) (:pointer-void) :void
-                "{ delete ((Gecode::BAB<v1::BoolSpace>*)#0); }")
+                "{ delete ((Gecode::BAB<BoolSpace>*)#0); }")
   nil)
 
 (defun bab-best (bab)
@@ -596,7 +596,7 @@ default: @(return 0) = 100; break;
          ;; c-inline00026
          (ffi:c-inline
           (bab) (:pointer-void) :pointer-void
-          "{ @(return 0) = ((Gecode::BAB<v1::BoolSpace>*)(#0))->next(); }")))
+          "{ @(return 0) = ((Gecode::BAB<BoolSpace>*)(#0))->next(); }")))
     (declare (inline bab-next))
     (loop
       for prev-solution = nil then
@@ -618,7 +618,7 @@ default: @(return 0) = 100; break;
                             :unsigned-long-long
                             :unsigned-long-long)
                     "
-Gecode::DFS<v1::BoolSpace>* dfs = (Gecode::DFS<v1::BoolSpace>*)(#0);
+Gecode::DFS<BoolSpace>* dfs = (Gecode::DFS<BoolSpace>*)(#0);
 
 Gecode::Search::Statistics s = dfs->statistics();
 
@@ -641,8 +641,8 @@ Gecode::Search::Statistics s = dfs->statistics();
                         "
 int res = 0;
 #ifdef HAVE_GECODE_GIST_HH
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
-Gecode::Gist::Print<v1::BoolSpace> p(\"Print solution\");
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+Gecode::Gist::Print<BoolSpace> p(\"Print solution\");
 Gecode::Gist::Options o;
 o.inspect.click(&p);
 Gecode::Gist::dfs(boolSpace,o);
@@ -664,8 +664,8 @@ res = 7;
                         "
 int res = 0;
 #ifdef HAVE_GECODE_GIST_HH
-v1::BoolSpace* boolSpace = ((v1::BoolSpace*)(#0));
-Gecode::Gist::Print<v1::BoolSpace> p(\"Print solution\");
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+Gecode::Gist::Print<BoolSpace> p(\"Print solution\");
 Gecode::Gist::Options o;
 o.inspect.click(&p);
 Gecode::Gist::bab(boolSpace,o);

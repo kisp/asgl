@@ -16,26 +16,22 @@
 
 #include "IntSpace.h"
 
-namespace v1 {
+IntSpace::IntSpace(int _n, int _from, int _to) : l(*this, _n, _from, _to) {
+  n = _n;
+}
 
-  IntSpace::IntSpace(int _n, int _from, int _to) : l(*this, _n, _from, _to) {
-    n = _n;
-  }
+IntSpace::IntSpace(bool share, IntSpace& s) : Gecode::Space(share, s) {
+  l.update(*this, share, s.l);
+}
 
-  IntSpace::IntSpace(bool share, IntSpace& s) : Gecode::Space(share, s) {
-    l.update(*this, share, s.l);
-  }
+Gecode::Space* IntSpace::copy(bool share) {
+  return new IntSpace(share, *this);
+}
 
-  Gecode::Space* IntSpace::copy(bool share) {
-    return new IntSpace(share, *this);
-  }
+Gecode::IntVarArray* IntSpace::getVars(void) {
+  return &l;
+}
 
-  Gecode::IntVarArray* IntSpace::getVars(void) {
-    return &l;
-  }
-
-  void IntSpace::print(std::ostream& os) const {
-    os << l << std::endl;
-  }
-
+void IntSpace::print(std::ostream& os) const {
+  os << l << std::endl;
 }
