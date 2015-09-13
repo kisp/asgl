@@ -34,7 +34,7 @@
       (is (eql (every (lambda (solution) (member a solution)) solutions)
                (funcall ds-fn graph a))))))
 
-(in-package :cl-user)
+(in-package :asgl)
 
 (macrolet ((frob (name semantic task)
              `(defun ,name ,(if (eql 2 (length task))
@@ -72,31 +72,31 @@
 
 (defun check-complete (expected graph)
   (check-semantic (early:make-graph-from-adj graph) expected
-                  #'cl-user::$$complete-all
-                  #'cl-user::$$complete-one
-                  #'cl-user::$$complete-dc
-                  #'cl-user::$$complete-ds))
+                  #'asgl::$$complete-all
+                  #'asgl::$$complete-one
+                  #'asgl::$$complete-dc
+                  #'asgl::$$complete-ds))
 
 (defun check-grounded (expected graph)
   (check-semantic (early:make-graph-from-adj graph) expected
-                  #'cl-user::$$grounded-all
-                  #'cl-user::$$grounded-one
-                  #'cl-user::$$grounded-dc
-                  #'cl-user::$$grounded-ds))
+                  #'asgl::$$grounded-all
+                  #'asgl::$$grounded-one
+                  #'asgl::$$grounded-dc
+                  #'asgl::$$grounded-ds))
 
 (defun check-preferred (expected graph)
   (check-semantic (early:make-graph-from-adj graph) expected
-                  #'cl-user::$$preferred-all
-                  #'cl-user::$$preferred-one
-                  #'cl-user::$$preferred-dc
-                  #'cl-user::$$preferred-ds))
+                  #'asgl::$$preferred-all
+                  #'asgl::$$preferred-one
+                  #'asgl::$$preferred-dc
+                  #'asgl::$$preferred-ds))
 
 (defun check-stable (expected graph)
   (check-semantic (early:make-graph-from-adj graph) expected
-                  #'cl-user::$$stable-all
-                  #'cl-user::$$stable-one
-                  #'cl-user::$$stable-dc
-                  #'cl-user::$$stable-ds))
+                  #'asgl::$$stable-all
+                  #'asgl::$$stable-one
+                  #'asgl::$$stable-dc
+                  #'asgl::$$stable-ds))
 
 (defun seql (a b)
   (assert (alexandria:setp a))
@@ -144,7 +144,7 @@
     (with-tmp-file-of-lines (pathname lines)
       (let ((result
              (with-output-to-string (*standard-output*)
-               (cl-user::main% :fo "apx" :p problem :f pathname))))
+               (asgl::main% :fo "apx" :p problem :f pathname))))
         (myam:is
          (seql (read-extensions-from-string
                 expexted)

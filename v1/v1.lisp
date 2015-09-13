@@ -16,16 +16,16 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :cl-user)
+(defpackage :asgl
+  (:use :cl :early))
 
-#+nil(declaim (optimize (debug 3) (safety 3) (speed 0)))
-(declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
+(in-package :asgl)
+
+(declaim (optimize (debug 3) (safety 3) (speed 0)))
+#+nil(declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
 
 (ffi:clines "#include \"DfsSpace.h\"")
 (ffi:clines "#include \"PrBABSpace.h\"")
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (use-package :early))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
@@ -1356,9 +1356,9 @@ res = 7;
         (format t "~&**********************************~%")
         (format t "~&SELF-CHECK FAILED something is wrong~%")
         (format t "~&**********************************~%")
-        (quit 1))))
+        (ext:quit 1))))
 
-(defun main ()
+(defun cl-user::main ()
   (setq *debugger-hook* (lambda (c old)
                           (declare (ignore old))
                           (let ((*print-length* 3)
