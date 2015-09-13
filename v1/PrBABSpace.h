@@ -26,19 +26,17 @@
 #include <gecode/gist.hh>
 #endif
 
-namespace v1 {
-  class PrBABSpace : public BoolSpace
-  {
-  protected:
-    Gecode::IntVar card;
-    Gecode::SetVar ext;
+class PrBABSpace : public BoolSpace
+{
+ protected:
+  Gecode::IntVar card;
+  Gecode::SetVar ext;
 
-  public:
-    PrBABSpace(int x);
-    PrBABSpace(bool share, PrBABSpace& s);
-    Gecode::Space* copy(bool share);
-    virtual void constrain(const Gecode::Space& _b);
-    void constrain_not_subset(const PrBABSpace& b);
-  };
-}
+ public:
+  PrBABSpace(int x);
+  PrBABSpace(bool share, PrBABSpace& s);
+  Gecode::Space* copy(bool share);
+  virtual void constrain(const Gecode::Space& _b);
+  void constrain_not_subset(const PrBABSpace& b);
+};
 #endif

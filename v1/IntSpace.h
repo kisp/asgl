@@ -23,24 +23,22 @@
 #include <gecode/gist.hh>
 #endif
 
-namespace v1 {
-  class IntSpace : public Gecode::Space
-  {
-  private:
-    int n;
+class IntSpace : public Gecode::Space
+{
+ private:
+  int n;
 
-  protected:
-    Gecode::IntVarArray l;
+ protected:
+  Gecode::IntVarArray l;
 
-  public:
-    IntSpace(int x, int from, int to);
-    IntSpace(bool share, IntSpace& s);
+ public:
+  IntSpace(int x, int from, int to);
+  IntSpace(bool share, IntSpace& s);
 
-    Gecode::Space* copy(bool share);
+  Gecode::Space* copy(bool share);
 
-    Gecode::IntVarArray* getVars();
+  Gecode::IntVarArray* getVars();
 
-    void print(std::ostream&) const;
-  };
-}
+  void print(std::ostream&) const;
+};
 #endif
