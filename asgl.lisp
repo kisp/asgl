@@ -852,7 +852,7 @@
          (*log-level* (read-from-string log-level))
          (*with-timing* (read-from-string timing))
          (g (when g (parse-g-arg g)))
-         (f (or f g))
+         (input (or f g))
          (a (when a
               (if g (parse-integer a) a)))
          (eval (read-from-string eval)))
@@ -864,10 +864,7 @@
             (semantic (make-semantic semantic)))
         (multiple-value-bind (task semantic)
             (translate-problem task semantic)
-          (with-timing
-              (print-answer f
-                            task
-                            semantic)))))))
+          (with-timing (print-answer input task semantic)))))))
 
 #+cover
 (defvar *cover-file*
