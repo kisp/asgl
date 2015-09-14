@@ -52,13 +52,14 @@
        (bab-search-gist space))))
 
 (defmacro with-post-env-setup ((space) &body body)
-  (check-type space symbol)             ;keep this one
-  `(let ((*space* ,space)
-         (*vars-vector* (coerce (space-vars-as-list ,space) 'vector))
-         (*nand-table* (make-hash-table :test #'equal))
-         (*expr-or-table* (make-hash-table :test #'equal))
-         (*imp-or-table* (make-hash-table :test #'equal)))
-     ,@body))
+  (once-only
+   (space)
+   `(let ((*space* ,space)
+          (*vars-vector* (coerce (space-vars-as-list ,space) 'vector))
+          (*nand-table* (make-hash-table :test #'equal))
+          (*expr-or-table* (make-hash-table :test #'equal))
+          (*imp-or-table* (make-hash-table :test #'equal)))
+      ,@body)))
 
 (defmacro with-local-post-env (() &body body)
   `(let ((space *space*)
