@@ -233,8 +233,9 @@
 (defclass preferred (complete) ())
 (defclass stable (preferred) ())
 
-(defclass ee-task (task) ())
-(defclass se-task (task) ())
+(defclass extension-task (task) ())
+(defclass ee-task (extension-task) ())
+(defclass se-task (extension-task) ())
 
 (defmethod (setf task-hash) (value (task task))
   (check-type value hash-table)
