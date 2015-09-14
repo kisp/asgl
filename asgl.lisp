@@ -245,13 +245,13 @@
 (defclass decision-task (task)
   ((hash :accessor task-hash :initform nil)
    (arg-name :reader task-arg-name :initarg :arg-name)
-   (no-solution-found-means-yes :reader no-solution-found-means-yes)))
+   (inferred-on-no-solution :reader inferred-on-no-solution)))
 
 (defclass dc-task (decision-task)
-  ((no-solution-found-means-yes :initform nil)))
+  ((inferred-on-no-solution :initform nil)))
 
 (defclass ds-task (decision-task)
-  ((no-solution-found-means-yes :initform t)))
+  ((inferred-on-no-solution :initform t)))
 
 (defmethod task-arg ((task decision-task))
   (or (gethash (task-arg-name task) (task-hash task))
@@ -286,9 +286,14 @@
   ())
 
 (defclass search-one-decision-driver (driver)
-  ((no-solution-found-means-yes
-    :reader no-solution-found-means-yes
-    :initarg :no-solution-found-means-yes)))
+  ((inferred-on-no-solution
+    :reader inferred-on-no-solution
+    :initarg :inferred-on-no-solution)))
+
+(defmethod print-object ((driver search-one-decision-driver) stream)
+  (print-unreadable-object (driver stream :identity nil :type t)
+    (format stream "inferred-on-no-solution ~A"
+            (inferred-on-no-solution driver))))
 
 (defmethod make-driver (semantic (task ee-task))
   (check-type semantic semantic)
@@ -301,16 +306,16 @@
 (defmethod make-driver (semantic (task dc-task))
   (check-type semantic semantic)
   (make-instance 'search-one-decision-driver
-                 :no-solution-found-means-yes nil))
+                 :inferred-on-no-solution nil))
 
 (defmethod make-driver (semantic (task ds-task))
   (check-type semantic semantic)
   (make-instance 'search-one-decision-driver
-                 :no-solution-found-means-yes t))
+                 :inferred-on-no-solution t))
 
 (defmethod make-driver ((semantic grounded) (task decision-task))
   (make-instance 'search-one-decision-driver
-                 :no-solution-found-means-yes t))
+                 :inferred-on-no-solution t))
 
 (defun solve (input task semantic drive-fn)
   (check-type input input)
@@ -709,14 +714,14 @@
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
          (solution (funcall next-solution-fn gecode-engine))
-         (no-solution-found-means-yes
-           (no-solution-found-means-yes task)))
+         (inferred-on-no-solution
+           (inferred-on-no-solution task)))
     (if (null solution)
-        (write-string (if no-solution-found-means-yes
+        (write-string (if inferred-on-no-solution
                           "YES"
                           "NO"))
         (progn
-          (write-string (if no-solution-found-means-yes
+          (write-string (if inferred-on-no-solution
                             "NO"
                             "YES"))
           (funcall space-delete-fn solution)))
@@ -728,12 +733,12 @@
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
          (solution (funcall next-solution-fn gecode-engine))
-         (no-solution-found-means-yes
-           (no-solution-found-means-yes task)))
+         (inferred-on-no-solution
+           (inferred-on-no-solution task)))
     (if (null solution)
-        no-solution-found-means-yes
+        inferred-on-no-solution
         (prog1
-            (not no-solution-found-means-yes)
+            (not inferred-on-no-solution)
           (funcall space-delete-fn solution)))))
 
 ;;; DS-PR
