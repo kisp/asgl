@@ -317,7 +317,8 @@
   (make-instance 'search-one-decision-driver
                  :inferred-on-no-solution t))
 
-(defun solve (input task semantic drive-fn)
+(defun solve (strategy input task semantic drive-fn)
+  (check-type strategy strategy)
   (check-type input input)
   (check-type task task)
   (check-type semantic semantic)
@@ -325,14 +326,14 @@
   (multiple-value-bind (space vector)
       (with-timing (prepare-space input task semantic))
     (let ((engine (with-timing (make-search-engine space task semantic vector)))
-          (driver (with-timing (make-driver semantic task))))
+          (driver (strategy-make-driver strategy)))
       (log* 1 "driver: ~A" driver)
       (log* 1 "engine: ~A" engine)
       (log* 1 "STARTING SEARCH")
       (with-timing (funcall drive-fn driver engine)))))
 
-(defun print-answer (input task semantic)
-  (solve input task semantic
+(defun print-answer (strategy input task semantic)
+  (solve strategy input task semantic
          #'drive-search-and-print))
 
 (defun collect-answer (input task semantic)
@@ -836,6 +837,104 @@
   (translate (:ee :st) -> (:ee :st))
   (translate (:se :st) -> (:se :st)))
 
+
+(defclass strategy () ())
+
+(defmethod strategy-task-class ((strategy ee-task)) (find-class 'ee-task))
+(defmethod strategy-task-class ((strategy se-task)) (find-class 'se-task))
+(defmethod strategy-task-class ((strategy dc-task)) (find-class 'dc-task))
+(defmethod strategy-task-class ((strategy ds-task)) (find-class 'ds-task))
+
+(defmethod strategy-semantic-class ((strategy complete)) (find-class 'complete))
+(defmethod strategy-semantic-class ((strategy preferred)) (find-class 'preferred))
+(defmethod strategy-semantic-class ((strategy grounded)) (find-class 'grounded))
+(defmethod strategy-semantic-class ((strategy stable)) (find-class 'stable))
+
+(defgeneric driver-class (strategy))
+(defgeneric driver-initargs (strategy) (:method-combination append))
+
+(defmethod driver-class ((strategy asgl::ee-task)) (find-class 'asgl::search-all-driver))
+(defmethod driver-class ((strategy asgl::se-task)) (find-class 'asgl::search-one-driver))
+(defmethod driver-class ((strategy asgl::decision-task)) (find-class 'asgl::search-one-decision-driver))
+
+(defmethod driver-initargs append ((strategy asgl::extension-task)) nil)
+(defmethod driver-initargs append ((strategy asgl::dc-task))
+  '(:inferred-on-no-solution nil))
+(defmethod driver-initargs append ((strategy asgl::ds-task))
+  '(:inferred-on-no-solution t))
+
+;; vielleicht erstmal als hilfsfunction
+(defun strategy-make-driver (strategy)
+  (apply #'make-instance (driver-class strategy)
+         (driver-initargs strategy)))
+
+(macrolet ((frob (tasks semantics)
+             `(progn
+                ,@(map-product (lambda (task semantic)
+                                 `(frob2 ,task ,semantic))
+                               tasks semantics)))
+           (frob2 (task semantic)
+             (let ((name (symbolicate task "-" semantic "-STRATEGY"))
+                   (task-type (type-of (asgl::make-task task)))
+                   (semantic-type (type-of (asgl::make-semantic semantic))))
+               `(progn
+                  (defclass ,name (,task-type ,semantic-type strategy)
+                    ())
+                  ))))
+  (frob (:ee :se :dc :ds)
+        (:co :pr :gr :st)))
+
+(defmethod driver-initargs append ((strategy dc-gr-strategy))
+  '(:inferred-on-no-solution t))
+
+(defun subclasses (class)
+  (cons class
+        (mappend #'subclasses
+                 (clos:class-direct-subclasses class))))
+
+(defun proper-subclasses (class)
+  (cdr (subclasses class)))
+
+(defun list-strategy-classes ()
+  (proper-subclasses (find-class 'strategy)))
+
+(defun list-strategies ()
+  (mapcar #'make-instance (list-strategy-classes)))
+
+(defmethod find-applicable-strategies ((task standard-class) (semantic standard-class))  
+  (remove-if (lambda (strategy)
+               (or (not (eql task (strategy-task-class strategy)))
+                   (not (eql semantic (strategy-semantic-class strategy)))))
+             (list-strategies)))
+
+(defmethod find-applicable-strategies ((task asgl::task) (semantic asgl::semantic))
+  (find-applicable-strategies (class-of task) (class-of semantic)))
+
+(defun choose-strategy (task semantic)
+  (let ((strategies (find-applicable-strategies task semantic)))
+    (when (null strategies)
+      (error "no strategies found"))
+    (unless (eql 1 (length strategies))
+      (cerror "take first" "more than one strategy ~S" strategies))
+    (first strategies)))
+
+(defun choose-strategy* (task semantic)
+  (handler-bind ((error (lambda (c) (continue c))))
+    (choose-strategy task semantic)))
+
+
+(defmethod describe-object ((strategy strategy) stream)
+  (format stream "~S~%~@{  ~A~30T~A~%~}"
+          (type-of strategy)
+          'strategy-task-class (strategy-task-class strategy)
+          'strategy-semantic-class (strategy-semantic-class strategy)
+          'driver-class (driver-class strategy)
+          'driver-initargs (driver-initargs strategy)))
+
+(defun describe-strategies ()
+  (mapc #'describe (list-strategies))
+  nil)
+
 (defun parse-g-arg (string)
   (let ((form (read-from-string string)))
     (cond
@@ -845,6 +944,15 @@
          (cons (parse-integer string :end pos)
                (parse-integer string :start (1+ pos)))))
       (t form))))
+
+(defun main%% (input p a)
+  (multiple-value-bind (task semantic) (parse-problem p)
+    (let ((task (make-task task a))
+          (semantic (make-semantic semantic)))
+      (multiple-value-bind (task semantic)
+          (translate-problem task semantic)
+        (let ((strategy (choose-strategy* task semantic)))
+          (with-timing (print-answer strategy input task semantic)))))))
 
 (defun main% (&key (fo "apx") f p a g (gist "nil")
                 (log-level "1") (timing "t")
@@ -862,12 +970,7 @@
     (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))
-    (multiple-value-bind (task semantic) (parse-problem p)
-      (let ((task (make-task task a))
-            (semantic (make-semantic semantic)))
-        (multiple-value-bind (task semantic)
-            (translate-problem task semantic)
-          (with-timing (print-answer input task semantic)))))))
+    (main%% input p a)))
 
 #+cover
 (defvar *cover-file*
@@ -938,6 +1041,8 @@
           (print-supported-graph-formats))
          ((equal "--problems" (second ext:*command-args*))
           (print-supported-problems))
+         ((equal "--strategies" (second ext:*command-args*))
+          (describe-strategies))
          #+cover
          ((equal "--cover-report" (second ext:*command-args*))
           (cover:report :out *standard-output*
