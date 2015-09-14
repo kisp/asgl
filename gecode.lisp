@@ -24,6 +24,7 @@
    #:make-int-space
    #:branch
    #:space-status
+   #:clone-space
    #:delete-space)
   (:export
    #:make-dfs-engine
@@ -501,8 +502,16 @@ s->constrain_not_subset(*o);
 (defun clone-bool-space (space)
   ;; c-inline00013
   (check-type space SI:FOREIGN-DATA)
+  (assert (eql :bool-space (si:foreign-data-tag space)))
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = ((BoolSpace*)#0)->clone(); }"))
+    "{ @(return 0) = ((BoolSpace*)#0)->clone(); }"))
+
+(defun clone-space (space)
+  (ffi:c-inline ((si:foreign-data-tag space) space)
+      (:object :pointer-void)
+      :object
+    "ecl_make_foreign_data(#0,0,((Gecode::Space*)#1)->clone())"
+    :one-liner t))
 
 (defun space-status (space)
   (check-type space SI:FOREIGN-DATA)
