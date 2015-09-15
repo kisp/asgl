@@ -35,6 +35,20 @@
 (defvar *expr-or-table*)
 (defvar *imp-or-table*)
 
+(defclass abstract-space ()
+  ((foreign-constructor :allocation :class)
+   (foreign-space :reader foreign-space)))
+
+(defclass bool-space (abstract-space)
+  ((foreign-constructor :initform #'make-bool-space)))
+
+(defclass pr-bab-space (abstract-space)
+  ((foreign-constructor :initform #'make-pr-bab-space)))
+
+(defmethod initialize-instance :after ((space abstract-space) &key n)
+  (setf (slot-value space 'foreign-space)
+        (funcall (slot-value space 'foreign-constructor) n)))
+
 (defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
       (make-dfs-engine space)
@@ -61,12 +75,15 @@
           (*imp-or-table* (make-hash-table :test #'equal)))
       ,@body)))
 
-(defmacro with-local-post-env (() &body body)
-  `(let ((space *space*)
+(defmacro with-local-post-env ((space-var space) &body body)
+  ;; we only pretend a user could choose a space-var other than space
+  (assert (eql space-var 'space))
+  `(let ((,space-var ,space)
          (vars-vector *vars-vector*)
          (nand-table *nand-table*)
          (expr-or-table *expr-or-table*)
          (imp-or-table *imp-or-table*))
+     (assert (eql ,space-var *space*))
      (macrolet ((%%var%% (i) `(aref vars-vector ,i)))
        (labels ((!!var!! (i) (%%var%% i))
                 (!!post-nand!! (a b)
@@ -103,8 +120,6 @@
 (defun safe-sort (list)
   (check-type list list)
   (sort (copy-list list) #'<))
-
-
 
 (defun constrain-conflict-free (graph constrain-nand)
   (check-type graph graph)
@@ -153,9 +168,9 @@
                              (mapcar expr-or (mapcar #'cdr pg)))
                     (funcall var node)))))))
 
-(defun constrain-complete (graph)
+(defun constrain-complete (space graph)
   (check-type graph graph)
-  (with-local-post-env ()
+  (with-local-post-env (space (foreign-space space))
     (constrain-conflict-free graph #'!!post-nand!!)
     #+nil
     (constrain-not-attacked-are-in
@@ -181,9 +196,9 @@
        #'!!expr-or!!
        #'!!var!!))))
 
-(defun constrain-stable (graph)
+(defun constrain-stable (space graph)
   (check-type graph graph)
-  (with-local-post-env ()
+  (with-local-post-env (space (foreign-space space))
     (with-timing
         (do-parents (node parents graph)
           (when parents
@@ -209,16 +224,13 @@
 
 (deftype input () '(or string pathname vector cons))
 
-(defgeneric make-initial-space (graph task semantic))
-
-(defgeneric constrain-space (space semantic task graph))
+(defgeneric constrain-space (strategy space graph))
 (defgeneric constrain-arg-if-needed (space semantic task))
 (defgeneric constrain-arg (space semantic task))
 
 (defgeneric branch-space (space task semantic))
 
-(defgeneric make-search-engine (space task semantic vector))
-(defgeneric make-driver (semantic task))
+(defgeneric make-search-engine (strategy space task semantic vector))
 
 (defgeneric drive-search-and-print (task engine))
 (defgeneric drive-search-and-collect (task engine))
@@ -245,13 +257,13 @@
 (defclass decision-task (task)
   ((hash :accessor task-hash :initform nil)
    (arg-name :reader task-arg-name :initarg :arg-name)
-   (inferred-on-no-solution :reader inferred-on-no-solution)))
+   (no-solution-means-inferred :reader no-solution-means-inferred)))
 
 (defclass dc-task (decision-task)
-  ((inferred-on-no-solution :initform nil)))
+  ((no-solution-means-inferred :initform nil)))
 
 (defclass ds-task (decision-task)
-  ((inferred-on-no-solution :initform t)))
+  ((no-solution-means-inferred :initform t)))
 
 (defmethod task-arg ((task decision-task))
   (or (gethash (task-arg-name task) (task-hash task))
@@ -259,7 +271,7 @@
              (task-arg-name task) (task-hash task)
              (hash-table-alist (task-hash task)))))
 
-(defun prepare-space (input task semantic)
+(defun prepare-space (strategy input task semantic)
   (check-type input input)
   (check-type task task)
   (check-type semantic semantic)
@@ -270,10 +282,14 @@
           (order graph) (size graph))
     (log* 2 "indegrees:  ~A" (summary (indegrees graph)))
     (log* 2 "outdegrees: ~A" (summary (outdegrees graph)))
-    (let ((space (make-initial-space graph task semantic)))
-      (with-post-env-setup (space)
-        (constrain-space space semantic task graph)
-        (constrain-arg-if-needed space semantic task))
+    (let ((space (strategy-make-space strategy (order graph))))
+      (with-post-env-setup ((foreign-space space))
+        (dolist (constraint (strategy-constraints strategy))
+          (funcall constraint space graph))
+        (let ((constraint-arg (strategy-constraint-arg strategy)))
+          (when constraint-arg
+            (funcall constraint-arg
+                     (foreign-space space) (task-arg task)))))
       (branch-space space task semantic)
       (values space vector))))
 
@@ -286,36 +302,14 @@
   ())
 
 (defclass search-one-decision-driver (driver)
-  ((inferred-on-no-solution
-    :reader inferred-on-no-solution
-    :initarg :inferred-on-no-solution)))
+  ((no-solution-means-inferred
+    :reader no-solution-means-inferred
+    :initarg :no-solution-means-inferred)))
 
 (defmethod print-object ((driver search-one-decision-driver) stream)
   (print-unreadable-object (driver stream :identity nil :type t)
-    (format stream "inferred-on-no-solution ~A"
-            (inferred-on-no-solution driver))))
-
-(defmethod make-driver (semantic (task ee-task))
-  (check-type semantic semantic)
-  (make-instance 'search-all-driver))
-
-(defmethod make-driver (semantic (task se-task))
-  (check-type semantic semantic)
-  (make-instance 'search-one-driver))
-
-(defmethod make-driver (semantic (task dc-task))
-  (check-type semantic semantic)
-  (make-instance 'search-one-decision-driver
-                 :inferred-on-no-solution nil))
-
-(defmethod make-driver (semantic (task ds-task))
-  (check-type semantic semantic)
-  (make-instance 'search-one-decision-driver
-                 :inferred-on-no-solution t))
-
-(defmethod make-driver ((semantic grounded) (task decision-task))
-  (make-instance 'search-one-decision-driver
-                 :inferred-on-no-solution t))
+    (format stream "no-solution-means-inferred ~A"
+            (no-solution-means-inferred driver))))
 
 (defun solve (strategy input task semantic drive-fn)
   (check-type strategy strategy)
@@ -324,8 +318,8 @@
   (check-type semantic semantic)
   (check-type drive-fn function)
   (multiple-value-bind (space vector)
-      (with-timing (prepare-space input task semantic))
-    (let ((engine (with-timing (make-search-engine space task semantic vector)))
+      (with-timing (prepare-space strategy input task semantic))
+    (let ((engine (with-timing (make-search-engine strategy space task semantic vector)))
           (driver (strategy-make-driver strategy)))
       (log* 1 "driver: ~A" driver)
       (log* 1 "engine: ~A" engine)
@@ -336,8 +330,8 @@
   (solve strategy input task semantic
          #'drive-search-and-print))
 
-(defun collect-answer (input task semantic)
-  (solve input task semantic
+(defun collect-answer (strategy input task semantic)
+  (solve strategy input task semantic
          #'drive-search-and-collect))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -356,34 +350,8 @@
       (:dc (make-instance 'dc-task :arg-name arg))
       (:ds (make-instance 'ds-task :arg-name arg)))))
 
-(defmethod make-initial-space (graph (task task) (semantic semantic))
-  (check-type graph graph)
-  (log* 1 "creating initial bool-space")
-  (make-bool-space (order graph)))
-
-(defmethod make-initial-space (graph (task se-task) (semantic preferred))
-  (check-type graph graph)
-  (log* 1 "creating initial pr-bab-space")
-  (make-pr-bab-space (order graph)))
-
-(defmethod make-initial-space (graph (task ee-task) (semantic preferred))
-  (check-type graph graph)
-  (log* 1 "creating initial pr-bab-space")
-  (make-pr-bab-space (order graph)))
-
-(defmethod constrain-space (space (semantic complete) task graph)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type task task)
-  (check-type graph graph)
-  (log* 1 "constrain-complete")
-  (constrain-complete graph))
-
-(defmethod constrain-space :after (space (semantic stable) task graph)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type task task)
-  (check-type graph graph)
-  (log* 1 "constrain-stable")
-  (constrain-stable graph))
+(defmethod constrain-arg-if-needed ((space abstract-space) semantic task)
+  (constrain-arg-if-needed (foreign-space space) semantic task))
 
 (defmethod constrain-arg-if-needed (space semantic task)
   (check-type space SI:FOREIGN-DATA)
@@ -424,8 +392,8 @@
 
 (defmacro branch-with-logging (space &body body)
   `(let*-heap (,@body)
-     (log* 1 "branch ~{~A~^ ~}" ',body)
-     (branch ,space var val)))
+              (log* 1 "branch ~{~A~^ ~}" ',body)
+              (branch ,space var val)))
 
 (defmethod branch-space (space task semantic)
   (branch-with-logging space
@@ -442,23 +410,65 @@
                        (var (int-var-degree-max))
                        (val (int-val-max))))
 
-(defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
-  (check-type space SI:FOREIGN-DATA)
+(defmethod branch-space ((space abstract-space) task semantic)
+  (branch-space (foreign-space space) task semantic))
+
+(defmethod make-search-engine (strategy (space abstract-space) task semantic vector)
+  (make-search-engine strategy (foreign-space space) task semantic vector))
+
+(defmethod make-search-engine ((strategy ds-st-strategy) (space abstract-space) task semantic vector)
+  (make-search-engine strategy (foreign-space space) task semantic vector))
+
+(defmethod make-search-engine ((strategy ee-st-strategy) (space abstract-space) task semantic vector)
+  (make-search-engine strategy (foreign-space space) task semantic vector))
+
+(defmacro e-class-by-strategy (class)
+  `(let ((class (find-class ,class)))
+     (unless (eql class (strategy-engine-class strategy))
+       (error "(strategy-engine-class strategy) for ~S suggests ~S ~% but should be ~S"
+              strategy (strategy-engine-class strategy) class))
+     class))
+
+(defmethod make-search-engine ((strategy ee-pr-strategy) space (task ee-task) (semantic preferred) vector)
   (check-type semantic semantic)
   (check-type task task)
   (check-type vector vector)
-  (make-instance 'preferred-all-engine
-                 :sub-engine (make-search-engine space task
-                                                 (make-semantic :co) vector)))
+  (make-instance (e-class-by-strategy 'preferred-all-engine)
+                 :sub-engine (let ((task task)
+                                   (semantic (make-semantic :co)))
+                               (make-search-engine (choose-strategy* task semantic)
+                                                   space task
+                                                   (make-semantic :co) vector))))
 
-(defmethod make-search-engine (space task semantic vector)
+(defun make-normal-engine (strategy space vector)
+  (make-instance (e-class-by-strategy 'search-engine)
+                 :gecode-engine (make-dfs-engine-or-gist space)
+                 :engine-vector vector))
+
+
+(defun make-normal-engine-bab (strategy space vector)
+  (make-instance (e-class-by-strategy 'search-engine)
+                 :gecode-engine (make-bab-engine-or-gist space)
+                 :engine-vector vector
+                 :next-solution-fn #'bab-best))
+
+
+(defmethod make-search-engine ((strategy ds-st-strategy)
+                               space task semantic vector)
+  (make-normal-engine strategy space vector))
+
+(defmethod make-search-engine ((strategy ee-st-strategy)
+                               space task semantic vector)
+  (make-normal-engine strategy space vector))
+
+(defmethod make-search-engine (strategy space task semantic vector)
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
   (check-type vector vector)
   (typecase semantic
     (grounded
-     (make-instance 'propagate-only-engine
+     (make-instance (e-class-by-strategy 'propagate-only-engine)
                     :space space
                     :engine-vector vector))
     (t (prog1
@@ -470,25 +480,18 @@
                                         :engine-vector vector
                                         :space (progn
                                                  (space-status space)
-                                                 (clone-bool-space space))))
+                                                 (clone-space space))))
                         (t (make-instance
                             'search-engine
                             :gecode-engine (make-dfs-engine-or-gist space)
                             :engine-vector vector))))
              (se-task (typecase semantic
                         (preferred
-                         (make-instance 'search-engine
-                                        :gecode-engine (make-bab-engine-or-gist space)
-                                        :engine-vector vector
-                                        :next-solution-fn #'bab-best))
+                         (make-normal-engine-bab strategy space vector))
                         (t
-                         (make-instance 'search-engine
-                                        :gecode-engine (make-dfs-engine-or-gist space)
-                                        :engine-vector vector))))
-             (dc-task (make-instance 'search-engine
-                                     :gecode-engine (make-dfs-engine-or-gist space)))
-             (ds-task (make-instance 'search-engine
-                                     :gecode-engine (make-dfs-engine-or-gist space))))
+                         (make-normal-engine strategy space vector))))
+             (dc-task (make-normal-engine strategy space vector))
+             (ds-task (make-normal-engine strategy space vector)))
          (delete-space space)))))
 
 (defclass engine () ())
@@ -690,7 +693,7 @@
         (engine-vector (engine-vector engine)))
     (step1 gecode-engine fn t engine-vector (engine-space engine))))
 
-(defmethod drive-search-and-print (task (engine multi-bab-engine))
+(defun multi-bab-search-and-print (engine)
   (write-line "[")
   (multi-bab-helper
    engine
@@ -701,7 +704,7 @@
      (terpri)))
   (write-line "]"))
 
-(defmethod drive-search-and-collect (task (engine multi-bab-engine))
+(defun multi-bab-search-and-collect (engine)
   (let (list)
     (multi-bab-helper
      engine
@@ -710,19 +713,31 @@
        (push (space-collect-in next vector) list)))
     list))
 
+(defmethod drive-search-and-print (task (engine multi-bab-engine))
+  (multi-bab-search-and-print engine))
+
+(defmethod drive-search-and-collect (task (engine multi-bab-engine))
+  (multi-bab-search-and-collect engine))
+
+(defmethod drive-search-and-print ((task search-all-driver) (engine multi-bab-engine))
+  (multi-bab-search-and-print engine))
+
+(defmethod drive-search-and-collect ((task search-all-driver) (engine multi-bab-engine))
+  (multi-bab-search-and-collect engine))
+
 (defmethod drive-search-and-print ((task search-one-decision-driver) engine)
   (let* ((gecode-engine (gecode-engine engine))
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
          (solution (funcall next-solution-fn gecode-engine))
-         (inferred-on-no-solution
-           (inferred-on-no-solution task)))
+         (no-solution-means-inferred
+           (no-solution-means-inferred task)))
     (if (null solution)
-        (write-string (if inferred-on-no-solution
+        (write-string (if no-solution-means-inferred
                           "YES"
                           "NO"))
         (progn
-          (write-string (if inferred-on-no-solution
+          (write-string (if no-solution-means-inferred
                             "NO"
                             "YES"))
           (funcall space-delete-fn solution)))
@@ -734,16 +749,16 @@
          (next-solution-fn (next-solution-fn engine))
          (space-delete-fn (space-delete-fn engine))
          (solution (funcall next-solution-fn gecode-engine))
-         (inferred-on-no-solution
-           (inferred-on-no-solution task)))
+         (no-solution-means-inferred
+           (no-solution-means-inferred task)))
     (if (null solution)
-        inferred-on-no-solution
+        no-solution-means-inferred
         (prog1
-            (not inferred-on-no-solution)
+            (not no-solution-means-inferred)
           (funcall space-delete-fn solution)))))
 
 ;;; DS-PR
-(defmethod make-search-engine (space (task ds-task) (semantic preferred) vector)
+(defmethod make-search-engine (strategy space (task ds-task) (semantic preferred) vector)
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
@@ -765,6 +780,8 @@
 
 (defmethod next-solution-fn ((ds-pr-engine ds-pr-engine))
   (let ((engine (make-search-engine
+                 (choose-strategy* (make-task :ee)
+                                   (make-semantic :pr))
                  (engine-space ds-pr-engine)
                  (make-task :ee)
                  (make-semantic :pr)
@@ -837,7 +854,6 @@
   (translate (:ee :st) -> (:ee :st))
   (translate (:se :st) -> (:se :st)))
 
-
 (defclass strategy () ())
 
 (defmethod strategy-task-class ((strategy ee-task)) (find-class 'ee-task))
@@ -850,23 +866,40 @@
 (defmethod strategy-semantic-class ((strategy grounded)) (find-class 'grounded))
 (defmethod strategy-semantic-class ((strategy stable)) (find-class 'stable))
 
-(defgeneric driver-class (strategy))
-(defgeneric driver-initargs (strategy) (:method-combination append))
+(defgeneric strategy-driver-class (strategy))
+(defgeneric strategy-driver-initargs (strategy) (:method-combination append))
 
-(defmethod driver-class ((strategy asgl::ee-task)) (find-class 'asgl::search-all-driver))
-(defmethod driver-class ((strategy asgl::se-task)) (find-class 'asgl::search-one-driver))
-(defmethod driver-class ((strategy asgl::decision-task)) (find-class 'asgl::search-one-decision-driver))
+(defmethod strategy-driver-class ((strategy ee-task)) (find-class 'search-all-driver))
+(defmethod strategy-driver-class ((strategy se-task)) (find-class 'search-one-driver))
+(defmethod strategy-driver-class ((strategy decision-task)) (find-class 'search-one-decision-driver))
 
-(defmethod driver-initargs append ((strategy asgl::extension-task)) nil)
-(defmethod driver-initargs append ((strategy asgl::dc-task))
-  '(:inferred-on-no-solution nil))
-(defmethod driver-initargs append ((strategy asgl::ds-task))
-  '(:inferred-on-no-solution t))
+(defmethod strategy-driver-initargs append ((strategy extension-task)) nil)
+(defmethod strategy-driver-initargs append ((strategy dc-task))
+  '(:no-solution-means-inferred nil))
+(defmethod strategy-driver-initargs append ((strategy ds-task))
+  '(:no-solution-means-inferred t))
 
-;; vielleicht erstmal als hilfsfunction
+(defmethod strategy-constraints ((strategy complete))
+  (list 'constrain-complete))
+
+(defmethod strategy-constraints ((strategy stable))
+  (list 'constrain-complete 'constrain-stable))
+
+(defmethod strategy-constraint-arg ((strategy strategy))
+  nil)
+
+(defmethod strategy-constraint-arg ((strategy dc-task))
+  'post-must-be-true)
+
+(defmethod strategy-constraint-arg ((strategy ds-task))
+  'post-must-be-false)
+
 (defun strategy-make-driver (strategy)
-  (apply #'make-instance (driver-class strategy)
-         (driver-initargs strategy)))
+  (apply #'make-instance (strategy-driver-class strategy)
+         (strategy-driver-initargs strategy)))
+
+(defun strategy-make-space (strategy number-of-variables)
+  (make-instance (strategy-space-class strategy) :n number-of-variables))
 
 (macrolet ((frob (tasks semantics)
              `(progn
@@ -875,8 +908,8 @@
                                tasks semantics)))
            (frob2 (task semantic)
              (let ((name (symbolicate task "-" semantic "-STRATEGY"))
-                   (task-type (type-of (asgl::make-task task)))
-                   (semantic-type (type-of (asgl::make-semantic semantic))))
+                   (task-type (type-of (make-task task)))
+                   (semantic-type (type-of (make-semantic semantic))))
                `(progn
                   (defclass ,name (,task-type ,semantic-type strategy)
                     ())
@@ -884,8 +917,29 @@
   (frob (:ee :se :dc :ds)
         (:co :pr :gr :st)))
 
-(defmethod driver-initargs append ((strategy dc-gr-strategy))
-  '(:inferred-on-no-solution t))
+(defmethod strategy-driver-initargs append ((strategy dc-gr-strategy))
+  '(:no-solution-means-inferred t))
+
+(defmethod strategy-space-class ((strategy se-pr-strategy))
+  (find-class 'pr-bab-space))
+
+(defmethod strategy-constraint-arg ((strategy dc-gr-strategy))
+  'post-must-be-false)
+
+(defmethod strategy-constraint-arg ((strategy ds-pr-strategy))
+  nil)
+
+(defmethod strategy-engine-class ((strategy ds-pr-strategy))
+  (find-class 'ds-pr-engine))
+
+(defmethod strategy-engine-class ((strategy ee-pr-strategy))
+  (find-class 'preferred-all-engine))
+
+(defmethod strategy-engine-class ((strategy strategy))
+  (find-class 'search-engine))
+
+(defmethod strategy-engine-class ((strategy grounded))
+  (find-class 'propagate-only-engine))
 
 (defun subclasses (class)
   (cons class
@@ -901,13 +955,13 @@
 (defun list-strategies ()
   (mapcar #'make-instance (list-strategy-classes)))
 
-(defmethod find-applicable-strategies ((task standard-class) (semantic standard-class))  
+(defmethod find-applicable-strategies ((task standard-class) (semantic standard-class))
   (remove-if (lambda (strategy)
                (or (not (eql task (strategy-task-class strategy)))
                    (not (eql semantic (strategy-semantic-class strategy)))))
              (list-strategies)))
 
-(defmethod find-applicable-strategies ((task asgl::task) (semantic asgl::semantic))
+(defmethod find-applicable-strategies ((task task) (semantic semantic))
   (find-applicable-strategies (class-of task) (class-of semantic)))
 
 (defun choose-strategy (task semantic)
@@ -922,18 +976,32 @@
   (handler-bind ((error (lambda (c) (continue c))))
     (choose-strategy task semantic)))
 
-
 (defmethod describe-object ((strategy strategy) stream)
   (format stream "~S~%~@{  ~A~30T~A~%~}"
           (type-of strategy)
-          'strategy-task-class (strategy-task-class strategy)
-          'strategy-semantic-class (strategy-semantic-class strategy)
-          'driver-class (driver-class strategy)
-          'driver-initargs (driver-initargs strategy)))
+          ;; 'strategy-task-class (strategy-task-class strategy)
+          ;; 'strategy-semantic-class (strategy-semantic-class strategy)
+          'strategy-driver-class (strategy-driver-class strategy)
+          'strategy-driver-initargs (strategy-driver-initargs strategy)
+          'strategy-space-class (strategy-space-class strategy)
+          'strategy-constraints (strategy-constraints strategy)
+          'strategy-constraint-arg (strategy-constraint-arg strategy)
+          'strategy-engine-class (strategy-engine-class strategy)))
 
-(defun describe-strategies ()
-  (mapc #'describe (list-strategies))
+(defmethod strategy-space-class (strategy)
+  (find-class 'bool-space))
+
+(defun describe-strategies (&optional (strategies (list-strategies)))
+  (mapc #'describe strategies)
   nil)
+
+(defun describe-all-strategies-or-for-problem (problem)
+  (if problem
+      (multiple-value-bind (task semantic) (parse-problem problem)
+        (describe-strategies
+         (find-applicable-strategies (make-task task)
+                                     (make-semantic semantic))))
+      (describe-strategies)))
 
 (defun parse-g-arg (string)
   (let ((form (read-from-string string)))
@@ -1030,6 +1098,7 @@
                             (print-error-log *error-output* c)
                             (format t "ERROR: ~A~%" c)
                             (ext:quit 1))))
+  (setq *package* (find-package :asgl))
   #+cover
   (when (probe-file *cover-file*)
     (cover:load-points *cover-file*))
@@ -1042,7 +1111,8 @@
          ((equal "--problems" (second ext:*command-args*))
           (print-supported-problems))
          ((equal "--strategies" (second ext:*command-args*))
-          (describe-strategies))
+          (describe-all-strategies-or-for-problem
+           (third ext:*command-args*)))
          #+cover
          ((equal "--cover-report" (second ext:*command-args*))
           (cover:report :out *standard-output*

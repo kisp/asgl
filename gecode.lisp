@@ -61,6 +61,7 @@
    #:int-space-ins
    #:pr-bab-space-ins
    #:bool-space-ins)
+  (:export #:constrain-not-subset)
   ;; deprecated
   (:export
    #:space-vars-as-list
@@ -499,14 +500,9 @@ s->constrain_not_subset(*o);
                 "{ delete ((Gecode::Space*)#0); }")
   nil)
 
-(defun clone-bool-space (space)
-  ;; c-inline00013
-  (check-type space SI:FOREIGN-DATA)
-  (assert (eql :bool-space (si:foreign-data-tag space)))
-  (ffi:c-inline (space) (:pointer-void) :pointer-void
-    "{ @(return 0) = ((BoolSpace*)#0)->clone(); }"))
-
 (defun clone-space (space)
+  ;; space-status must have been called, before calling this. Also,
+  ;; space must not be failed.
   (ffi:c-inline ((si:foreign-data-tag space) space)
       (:object :pointer-void)
       :object
@@ -612,7 +608,6 @@ default: @(return 0) = 100; break;
   (ffi:c-inline
    (vars n) (:pointer-void :int) :pointer-void
    "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
-
 
 (defun delete-dfs (dfs)
   ;; c-inline00025
