@@ -441,9 +441,11 @@
   #+BEGIN_SRC lisp :tangle yes
     (defclass abstract-space ()
       ((foreign-constructor :allocation :class)
-       (foreign-space :reader foreign-space)))
+       (foreign-space       :reader     foreign-space)
+       (number-of-variables :reader number-of-variables :initarg :n)))
 
-    (defmethod foreign-space ((x si:foreign-data)) x)
+    (defmethod foreign-space ((x si:foreign-data))
+      x)
   #+END_SRC
 
 
@@ -658,8 +660,7 @@
 
 ** defmethod initialize-instance                                  :defmethod:
  #+BEGIN_SRC lisp :tangle yes
-   (defmethod initialize-instance :after
-       ((propagate-only-engine propagate-only-engine) &key space)
+   (defmethod initialize-instance :after ((propagate-only-engine propagate-only-engine) &key space)
      (setf (slot-value propagate-only-engine 'gecode-engine)
            (make-gecode-engine-space-wrapper :space space)))
  #+END_SRC
@@ -693,6 +694,177 @@
  #+END_SRC
 
  
+* new space
+
+** branching a space
+
+#+BEGIN_SRC lisp :tangle yes
+  (defmethod space-branch ((space abstract-space)
+                           (var si:foreign-data)
+                           (val si:foreign-data))
+    (branch (foreign-space space) var val))
+#+END_SRC
+
+
+
+
+
+* new engine
+
+** engine classes
+
+#+BEGIN_SRC lisp :tangle yes
+  (defclass gecode-engine ()
+    ((gecode-engine :reader   gecode-engine :initarg :gecode-engine)
+     (space         :reader   engine-space  :initarg :space)
+     (vector        :reader   engine-vector :initarg :vector)))
+
+  (defclass dfs-engine (gecode-engine)
+    ())
+#+END_SRC
+
+
+** engine creation
+
+*** make-engine
+#+BEGIN_SRC lisp :tangle yes
+  (defun make-engine (class space &key vector)
+    (let ((vector (or vector
+                      (coerce (iota (number-of-variables space))
+                              'vector)))
+          (gecode-engine (prog1
+                             (gecode:make-dfs-engine
+                              (foreign-space space))
+                           (delete-space (foreign-space space)))))
+      (make-instance 'dfs-engine
+                     :space space
+                     :vector vector
+                     :gecode-engine gecode-engine)))
+#+END_SRC
+
+** accessing solutions
+
+*** map-solutions
+
+#+BEGIN_SRC lisp :tangle yes
+  (defmethod map-solutions ((engine dfs-engine) fn &key on-no-solution)
+    "Call fn on every solution found. If on-no-solution is given, this
+  is always called with no arguments: When no solution is found.
+
+  Map-solutions ensures to finalize engine."
+    (let (statistics)
+      (unwind-protect
+           (loop
+             (let ((space (gecode:dfs-next (gecode-engine engine))))
+               (if (null space)
+                   (progn
+                     (when on-no-solution
+                       (funcall on-no-solution))
+                     (return))
+                   (progn
+                     (funcall fn (gecode::space-collect-in space (engine-vector engine)))
+                     (gecode:delete-space space)))))
+        (setq statistics (finalize-gecode-engine engine)))
+      statistics))
+#+END_SRC
+
+*** list-solutions
+
+#+BEGIN_SRC lisp :tangle yes
+  (defun list-solutions (engine)
+    (let (list)
+      (map-solutions engine (lambda (x) (push x list)))
+      (nreverse list)))
+#+END_SRC
+
+*** first-solution
+
+#+BEGIN_SRC lisp :tangle yes
+  (defmethod first-solution ((engine gecode-engine))
+    (block nil
+      (map-solutions
+       engine
+       (lambda (x)
+         (return (values x t (engine-statistics engine))))
+       :on-no-solution
+       (lambda ()
+         (return (values nil nil (engine-statistics engine)))))))
+#+END_SRC
+
+*** first-solution-exists-p
+#+BEGIN_SRC lisp :tangle yes
+  (defmethod first-solution-exists-p ((engine gecode-engine))
+    (multiple-value-bind (solution exists statistics)
+        (first-solution engine)
+      (values exists statistics)))
+#+END_SRC
+
+*** print-solutions
+
+#+BEGIN_SRC lisp :tangle yes
+  (defmethod print-solutions ((engine gecode-engine) stream)
+    (let (statistics)    
+      (unwind-protect
+           (progn
+             (write-line "[" stream)
+             (loop for first-time = t then nil
+                   do (let ((space (gecode:dfs-next (gecode-engine engine))))
+                        (if (null space)
+                            (progn                     
+                              (return))
+                            (progn
+                              (unless first-time
+                                (write-char #\, stream))
+                              (gecode::space-print-in space (engine-vector engine) stream)
+                              (terpri stream)
+                              (gecode:delete-space space)))))
+             (write-line "]" stream))
+        (setq statistics (finalize-gecode-engine engine)))
+      statistics))
+#+END_SRC
+
+*** print-first-solution
+#+BEGIN_SRC lisp :tangle yes
+  (defmethod print-first-solution ((engine gecode-engine) stream)
+    (let ((space (gecode:dfs-next (gecode-engine engine))))
+      (multiple-value-prog1
+          (if (null space)
+              (values nil (engine-statistics engine))
+              (progn          
+                (gecode::space-print-in space (engine-vector engine) stream)
+                (terpri stream)
+                (gecode:delete-space space)
+                (values t (engine-statistics engine))))
+        (finalize-gecode-engine engine))))
+#+END_SRC
+
+
+** statistics
+
+#+BEGIN_SRC lisp :tangle yes
+  (defmethod engine-statistics ((engine gecode-engine))
+    (gecode:dfs-statistics (gecode-engine engine)))
+#+END_SRC
+
+** finalization
+*** finalize-gecode-engine
+
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod finalize-gecode-engine ((engine dfs-engine))
+     (prog1
+         (dfs-statistics (gecode-engine engine))
+       (gecode:delete-dfs (gecode-engine engine))))
+ #+END_SRC
+
+
+
+
+
+
+
+
+
+
 * other
 
 
@@ -705,6 +877,7 @@
                  strategy (strategy-engine-class strategy) class))
         class))
  #+END_SRC
+
 ** defun make-dfs-engine-or-gist                                      :defun:
  #+BEGIN_SRC lisp :tangle yes
    (defun make-dfs-engine-or-gist (space)
@@ -1095,28 +1268,28 @@
 ** make-search-engine                                                :refile:
 *** defmethod make-search-engine                                  :defmethod:
   #+BEGIN_SRC lisp :tangle yes
-    (defmethod make-search-engine (strategy (space abstract-space) task semantic vector)
+    (defmethod make-search-engine ((strategy strategy) (space abstract-space) (task task) (semantic semantic) (vector vector))
       (make-search-engine strategy (foreign-space space) task semantic vector))
   #+END_SRC
 
 
 *** defmethod make-search-engine                                  :defmethod:
   #+BEGIN_SRC lisp :tangle yes
-    (defmethod make-search-engine ((strategy ds-st-strategy) (space abstract-space) task semantic vector)
+    (defmethod make-search-engine ((strategy ds-st-strategy) (space abstract-space) (task task) (semantic semantic) (vector vector))
       (make-search-engine strategy (foreign-space space) task semantic vector))
   #+END_SRC
 
 
 *** defmethod make-search-engine                                  :defmethod:
   #+BEGIN_SRC lisp :tangle yes
-    (defmethod make-search-engine ((strategy ee-st-strategy) (space abstract-space) task semantic vector)
+    (defmethod make-search-engine ((strategy ee-st-strategy) (space abstract-space) (task task) (semantic semantic) (vector vector))
       (make-search-engine strategy (foreign-space space) task semantic vector))
   #+END_SRC
 
 
 *** defmethod make-search-engine                                  :defmethod:
   #+BEGIN_SRC lisp :tangle yes
-    (defmethod make-search-engine ((strategy ee-pr-strategy) space (task ee-task) (semantic preferred) vector)
+    (defmethod make-search-engine ((strategy ee-pr-strategy) (space abstract-space) (task ee-task) (semantic preferred) (vector vector))
       (check-type semantic semantic)
       (check-type task task)
       (check-type vector vector)
@@ -1132,7 +1305,7 @@
 *** defmethod make-search-engine                                  :defmethod:
   #+BEGIN_SRC lisp :tangle yes
     (defmethod make-search-engine ((strategy ds-st-strategy)
-                                   space task semantic vector)
+                                   (space abstract-space) (task task) (semantic semantic) (vector vector))
       (make-normal-engine strategy space vector))
   #+END_SRC
 
@@ -1140,7 +1313,7 @@
 *** defmethod make-search-engine                                  :defmethod:
   #+BEGIN_SRC lisp :tangle yes
     (defmethod make-search-engine ((strategy ee-st-strategy)
-                                   space task semantic vector)
+                                   (space abstract-space) (task task) (semantic semantic) (vector vector))
       (make-normal-engine strategy space vector))
   #+END_SRC
 
@@ -1543,8 +1716,7 @@
 ** ds-pr-engine                                                      :refile:
 ** defmethod constrain-arg-if-needed                              :defmethod:
  #+BEGIN_SRC lisp :tangle yes
-   (defmethod constrain-arg-if-needed
-       ((space abstract-space) (semantic preferred) (task ds-task))
+   (defmethod constrain-arg-if-needed ((space abstract-space) (semantic preferred) (task ds-task))
      ;; noop
      )
  #+END_SRC
@@ -2069,7 +2241,13 @@
                               (ext:quit 1))))
     (setq *package* (find-package :asgl))
     (ext:install-bytecodes-compiler)
-    (load "/home/paul/unis/github/asgl/foo.lisp")
+    (let ((*error-output* (make-broadcast-stream))
+          (*standard-output* (make-broadcast-stream))
+          (*trace-output* (make-broadcast-stream))
+          (*terminal-io* (make-broadcast-stream))
+          (*debug-io* (make-broadcast-stream))
+          (*query-io* (make-broadcast-stream)))
+      (load "/home/paul/unis/github/asgl/foo.lisp"))
     ,#+cover
     (when (probe-file *cover-file*)
       (cover:load-points *cover-file*))
