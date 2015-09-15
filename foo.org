@@ -1,0 +1,1826 @@
+* header
+#+BEGIN_SRC lisp :tangle yes
+  ;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; -*-
+
+  ;;; ASGL an abstract argumentation solver in ECL and GECODE.
+  ;;; Copyright (C) 2015  Kilian Sprotte
+
+  ;;; This program is free software: you can redistribute it and/or modify
+  ;;; it under the terms of the GNU General Public License as published by
+  ;;; the Free Software Foundation, either version 3 of the License, or
+  ;;; (at your option) any later version.
+
+  ;;; This program is distributed in the hope that it will be useful,
+  ;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ;;; GNU General Public License for more details.
+
+  ;;; You should have received a copy of the GNU General Public License
+  ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#+END_SRC
+
+* package definition                                                :package:
+#+BEGIN_SRC lisp :tangle yes
+  (defpackage :asgl
+    (:use :cl :early :alexandria :gecode))
+
+  (in-package :asgl)
+#+END_SRC
+
+* optimization settings                                        :optimization:
+#+BEGIN_SRC lisp :tangle yes
+  (declaim (optimize (debug 3) (safety 3) (speed 0)))
+  #+nil(declaim (optimize (debug 0) (safety 1) (speed 3) (space 0)))
+#+END_SRC
+
+* cover annotate t                                                    :cover:
+#+BEGIN_SRC lisp :tangle yes
+  (eval-when (:compile-toplevel :execute)
+    (cover:annotate t))
+#+END_SRC
+
+* all
+
+** defvars                                                           :refile:
+
+*** defvar *use-gist*                                                :defvar:
+  #+BEGIN_SRC lisp :tangle yes
+    (defvar *use-gist* nil)
+  #+END_SRC
+
+*** defvar *space*                                                   :defvar:
+  #+BEGIN_SRC lisp :tangle yes
+    (defvar *space*)
+  #+END_SRC
+
+*** defvar *vars-vector*                                             :defvar:
+  #+BEGIN_SRC lisp :tangle yes
+    (defvar *vars-vector*)
+  #+END_SRC
+
+*** defvar *nand-table*                                              :defvar:
+  #+BEGIN_SRC lisp :tangle yes
+    (defvar *nand-table*)
+  #+END_SRC
+
+*** defvar *expr-or-table*                                           :defvar:
+  #+BEGIN_SRC lisp :tangle yes
+    (defvar *expr-or-table*)
+  #+END_SRC
+
+*** defvar *imp-or-table*                                            :defvar:
+  #+BEGIN_SRC lisp :tangle yes
+    (defvar *imp-or-table*)
+  #+END_SRC
+
+
+** defclass abstract-space                                         :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass abstract-space ()
+     ((foreign-constructor :allocation :class)
+      (foreign-space :reader foreign-space)))
+ #+END_SRC
+
+
+** defclass bool-space                                             :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass bool-space (abstract-space)
+     ((foreign-constructor :initform #'make-bool-space)))
+ #+END_SRC
+
+
+** defclass pr-bab-space                                           :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass pr-bab-space (abstract-space)
+     ((foreign-constructor :initform #'make-pr-bab-space)))
+ #+END_SRC
+
+
+** defmethod initialize-instance                                  :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod initialize-instance :after ((space abstract-space) &key n)
+     (setf (slot-value space 'foreign-space)
+           (funcall (slot-value space 'foreign-constructor) n)))
+ #+END_SRC
+
+
+** defun make-dfs-engine-or-gist                                      :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun make-dfs-engine-or-gist (space)
+     (if (not *use-gist*)
+         (make-dfs-engine space)
+         (make-dfs-engine
+          ;; go interactive. When user is done, we just continue with
+          ;; normal search. Space is returned unchanged.
+          (dfs-search-gist space))))
+ #+END_SRC
+
+
+** defun make-bab-engine-or-gist                                      :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun make-bab-engine-or-gist (space)
+     (if (not *use-gist*)
+         (make-bab-engine space)
+         (make-bab-engine
+          ;; go interactive. When user is done, we just continue with
+          ;; normal search. Space is returned unchanged.
+          (bab-search-gist space))))
+ #+END_SRC
+
+
+** defmacro with-post-env-setup                                    :defmacro:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmacro with-post-env-setup ((space) &body body)
+     (once-only
+      (space)
+      `(let ((*space* ,space)
+             (*vars-vector* (coerce (space-vars-as-list ,space) 'vector))
+             (*nand-table* (make-hash-table :test #'equal))
+             (*expr-or-table* (make-hash-table :test #'equal))
+             (*imp-or-table* (make-hash-table :test #'equal)))
+         ,@body)))
+ #+END_SRC
+
+
+** defmacro with-local-post-env                                    :defmacro:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmacro with-local-post-env ((space-var space) &body body)
+     ;; we only pretend a user could choose a space-var other than space
+     (assert (eql space-var 'space))
+     `(let ((,space-var ,space)
+            (vars-vector *vars-vector*)
+            (nand-table *nand-table*)
+            (expr-or-table *expr-or-table*)
+            (imp-or-table *imp-or-table*))
+        (assert (eql ,space-var *space*))
+        (macrolet ((%%var%% (i) `(aref vars-vector ,i)))
+          (labels ((!!var!! (i) (%%var%% i))
+                   (!!post-nand!! (a b)
+                     (sortf2 a b)
+                     (let ((key (list a b)))
+                       (unless (gethash key nand-table)
+                         (log* 3 "NAND ~D ~D" a b)
+                         (post-nand space a b)
+                         (setf (gethash key nand-table) t))))
+                   (!!expr-or!! (indices)
+                     (if (eql 1 (length indices))
+                         (%%var%% (first indices))
+                         (let ((key (safe-sort indices)))
+                           (or (gethash key expr-or-table)
+                               (progn
+                                 (log* 3 "EXPR-OR ~D ~A" (length key) key)
+                                 (setf (gethash key expr-or-table)
+                                       (expr-or space
+                                                (mapcar #'!!var!! indices))))))))
+                   (!!expr-and-vars!! (vars)
+                     (log* 3 "EXPR-AND-VARS ~D ..." (length vars))
+                     (expr-and space vars))
+                   (!!imp-or!! (index indices)
+                     (let ((key (cons index (safe-sort indices))))
+                       (unless (gethash key imp-or-table)
+                         (assert-imp space (%%var%% index) (!!expr-or!! indices))
+                         (setf (gethash key imp-or-table) t)))))
+            ,@body))))
+ #+END_SRC
+
+
+** defmacro sortf2                                                 :defmacro:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmacro sortf2 (a b)
+     `(unless (< ,a ,b)
+        (rotatef ,a ,b)))
+ #+END_SRC
+
+
+** defun safe-sort                                                    :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun safe-sort (list)
+     (check-type list list)
+     (sort (copy-list list) #'<))
+ #+END_SRC
+
+
+** defun constrain-conflict-free                                      :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun constrain-conflict-free (graph constrain-nand)
+     (check-type graph graph)
+     (check-type constrain-nand function)
+     (with-timing
+         (do-edges (from to graph)
+           (funcall constrain-nand from to))))
+ #+END_SRC
+
+
+** defun constrain-in-eqv-acceptable                                  :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun constrain-in-eqv-acceptable (graph
+                                       post-must-be-false
+                                       post-must-be-true
+                                       post-eql-indices
+                                       post-eql-vars
+                                       expr-and-vars
+                                       expr-or
+                                       var)
+     (check-type graph graph)
+     (check-type post-must-be-false function)
+     (check-type post-must-be-true function)
+     (check-type post-eql-indices function)
+     (check-type post-eql-vars function)
+     (check-type expr-and-vars function)
+     (check-type expr-or function)
+     (check-type var function)
+     (with-timing
+         (do-parents-grandparents (node pg graph)
+           (cond
+             ((equal `((,node ,node)) pg)
+              (funcall post-must-be-false node))
+             ((null pg)
+              (funcall post-must-be-true node))
+             ((some #'null (mapcar #'cdr pg))
+              (funcall post-must-be-false node))
+             ((and (eql 1 (length pg))
+                   (eql 1 (length (cdr (first pg)))))
+              (funcall post-eql-indices node (second (first pg))))
+             ((eql 1 (length pg))
+              (destructuring-bind ((parent . grandparents)) pg
+                (declare (ignore parent))
+                (funcall post-eql-vars
+                         (funcall expr-or grandparents)
+                         (funcall var node))))
+             (t
+              (funcall post-eql-vars
+                       (funcall expr-and-vars
+                                (mapcar expr-or (mapcar #'cdr pg)))
+                       (funcall var node)))))))
+ #+END_SRC
+
+
+** defun constrain-complete                                           :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun constrain-complete (space graph)
+     (check-type graph graph)
+     (with-local-post-env (space (foreign-space space))
+       (constrain-conflict-free graph #'!!post-nand!!)
+       ,#+nil
+       (constrain-not-attacked-are-in
+        graph (lambda (node) (post-must-be-true space node)))
+       (flet ((post-must-be-false (node)
+                (post-must-be-false space node))
+              (post-must-be-true (node)
+                (post-must-be-true space node))
+              (post-eql-indices (a b)
+                (boolvar-post-eql
+                 space
+                 (!!var!! a)
+                 (!!var!! b)))
+              (post-eql-vars (a b)
+                (boolvar-post-eql space a b)))
+         (constrain-in-eqv-acceptable
+          graph
+          #'post-must-be-false
+          #'post-must-be-true
+          #'post-eql-indices
+          #'post-eql-vars
+          #'!!expr-and-vars!!
+          #'!!expr-or!!
+          #'!!var!!))))
+ #+END_SRC
+
+
+** defun constrain-stable                                             :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun constrain-stable (space graph)
+     (check-type graph graph)
+     (with-local-post-env (space (foreign-space space))
+       (with-timing
+           (do-parents (node parents graph)
+             (when parents
+               (assert-imp
+                space
+                (expr-not space (!!var!! node))
+                (!!expr-or!! parents)))))))
+ #+END_SRC
+
+
+** defun adopt-keywords                                               :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun adopt-keywords (list)
+     (check-type list list)
+     (mapcar (lambda (x)
+               (if (char= #\- (char x 0))
+                   (intern (string-upcase (subseq x 1)) "KEYWORD")
+                   x))
+             list))
+ #+END_SRC
+
+
+** defun parse-problem                                                :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun parse-problem (string)
+     (check-type string string)
+     (let ((pos (position #\- string)))
+       (values
+        (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
+        (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
+ #+END_SRC
+
+
+** deftype input                                                    :deftype:
+ #+BEGIN_SRC lisp :tangle yes
+   (deftype input () '(or string pathname vector cons))
+ #+END_SRC
+
+
+** defgeneric constrain-space                                    :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric constrain-space (strategy space graph))
+ #+END_SRC
+
+** defgeneric constrain-arg-if-needed                            :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric constrain-arg-if-needed (space semantic task))
+ #+END_SRC
+
+** defgeneric constrain-arg                                      :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric constrain-arg (space semantic task))
+ #+END_SRC
+
+
+** defgeneric branch-space                                       :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric branch-space (space task semantic))
+ #+END_SRC
+
+
+** defgeneric make-search-engine                                 :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric make-search-engine (strategy space task semantic vector))
+ #+END_SRC
+
+
+** defgeneric drive-search-and-print                             :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric drive-search-and-print (task engine))
+ #+END_SRC
+
+** defgeneric drive-search-and-collect                           :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric drive-search-and-collect (task engine))
+ #+END_SRC
+
+
+** defgeneric translate-problem                                  :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric translate-problem (task semantic))
+ #+END_SRC
+
+
+** defclass task                                                   :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass task () ())
+ #+END_SRC
+
+** defclass semantic                                               :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass semantic () ())
+ #+END_SRC
+
+
+** defclass complete                                               :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass complete (semantic) ())
+ #+END_SRC
+
+** defclass grounded                                               :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass grounded (complete) ())
+ #+END_SRC
+
+** defclass preferred                                              :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass preferred (complete) ())
+ #+END_SRC
+
+** defclass stable                                                 :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass stable (preferred) ())
+ #+END_SRC
+
+
+** defclass extension-task                                         :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass extension-task (task) ())
+ #+END_SRC
+
+** defclass ee-task                                                :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass ee-task (extension-task) ())
+ #+END_SRC
+
+** defclass se-task                                                :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass se-task (extension-task) ())
+ #+END_SRC
+
+
+** defmethod (setf task-hash)                                     :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod (setf task-hash) (value (task task))
+     (check-type value hash-table)
+     ;; noop
+     )
+ #+END_SRC
+
+
+** defclass decision-task                                          :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass decision-task (task)
+     ((hash :accessor task-hash :initform nil)
+      (arg-name :reader task-arg-name :initarg :arg-name)
+      (no-solution-means-inferred :reader no-solution-means-inferred)))
+ #+END_SRC
+
+
+** defclass dc-task                                                :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass dc-task (decision-task)
+     ((no-solution-means-inferred :initform nil)))
+ #+END_SRC
+
+
+** defclass ds-task                                                :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass ds-task (decision-task)
+     ((no-solution-means-inferred :initform t)))
+ #+END_SRC
+
+
+** defmethod task-arg                                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod task-arg ((task decision-task))
+     (or (gethash (task-arg-name task) (task-hash task))
+         (error "task-arg-name ~S not found in task-hash ~S containing~%~S"
+                (task-arg-name task) (task-hash task)
+                (hash-table-alist (task-hash task)))))
+ #+END_SRC
+
+
+** defun prepare-space                                                :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun prepare-space (strategy input task semantic)
+     (check-type input input)
+     (check-type task task)
+     (check-type semantic semantic)
+     (multiple-value-bind (graph vector hash)
+         (with-timing (read-graph-input input))
+       (setf (task-hash task) hash)
+       (log* 1 "input AF consisting of ~A arguments and ~A attacks"
+             (order graph) (size graph))
+       (log* 2 "indegrees:  ~A" (summary (indegrees graph)))
+       (log* 2 "outdegrees: ~A" (summary (outdegrees graph)))
+       (let ((space (strategy-make-space strategy (order graph))))
+         (with-post-env-setup ((foreign-space space))
+           (dolist (constraint (strategy-constraints strategy))
+             (funcall constraint space graph))
+           (let ((constraint-arg (strategy-constraint-arg strategy)))
+             (when constraint-arg
+               (funcall constraint-arg
+                        (foreign-space space) (task-arg task)))))
+         (branch-space space task semantic)
+         (values space vector))))
+ #+END_SRC
+
+
+** defclass driver                                                 :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass driver () ())
+ #+END_SRC
+
+
+** defclass search-all-driver                                      :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass search-all-driver (driver)
+     ())
+ #+END_SRC
+
+
+** defclass search-one-driver                                      :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass search-one-driver (driver)
+     ())
+ #+END_SRC
+
+
+** defclass search-one-decision-driver                             :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass search-one-decision-driver (driver)
+     ((no-solution-means-inferred
+       :reader no-solution-means-inferred
+       :initarg :no-solution-means-inferred)))
+ #+END_SRC
+
+
+** defmethod print-object                                         :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod print-object ((driver search-one-decision-driver) stream)
+     (print-unreadable-object (driver stream :identity nil :type t)
+       (format stream "no-solution-means-inferred ~A"
+               (no-solution-means-inferred driver))))
+ #+END_SRC
+
+
+** defun solve                                                        :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun solve (strategy input task semantic drive-fn)
+     (check-type strategy strategy)
+     (check-type input input)
+     (check-type task task)
+     (check-type semantic semantic)
+     (check-type drive-fn function)
+     (multiple-value-bind (space vector)
+         (with-timing (prepare-space strategy input task semantic))
+       (let ((engine (with-timing (make-search-engine strategy space task semantic vector)))
+             (driver (strategy-make-driver strategy)))
+         (log* 1 "driver: ~A" driver)
+         (log* 1 "engine: ~A" engine)
+         (log* 1 "STARTING SEARCH")
+         (with-timing (funcall drive-fn driver engine)))))
+ #+END_SRC
+
+
+** defun print-answer                                                 :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun print-answer (strategy input task semantic)
+     (solve strategy input task semantic
+            #'drive-search-and-print))
+ #+END_SRC
+
+
+** defun collect-answer                                               :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun collect-answer (strategy input task semantic)
+     (solve strategy input task semantic
+            #'drive-search-and-collect))
+ #+END_SRC
+
+
+** eval-when (:compile-toplevel :load-toplevel :execute)          :eval:when:
+ #+BEGIN_SRC lisp :tangle yes
+   (eval-when (:compile-toplevel :load-toplevel :execute)
+     (defun make-semantic (semantic)
+       (ecase semantic
+         (:co (make-instance 'complete))
+         (:gr (make-instance 'grounded))
+         (:st (make-instance 'stable))
+         (:pr (make-instance 'preferred))))
+
+     (defun make-task (task &optional arg)
+       (check-type arg (or null string non-negative-fixnum))
+       (ecase task
+         (:ee (make-instance 'ee-task))
+         (:se (make-instance 'se-task))
+         (:dc (make-instance 'dc-task :arg-name arg))
+         (:ds (make-instance 'ds-task :arg-name arg)))))
+ #+END_SRC
+
+
+** defmethod constrain-arg-if-needed                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod constrain-arg-if-needed ((space abstract-space) semantic task)
+     (constrain-arg-if-needed (foreign-space space) semantic task))
+ #+END_SRC
+
+
+** defmethod constrain-arg-if-needed                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod constrain-arg-if-needed (space semantic task)
+     (check-type space SI:FOREIGN-DATA)
+     (check-type semantic semantic)
+     (check-type task task)
+     ;; noop
+     )
+ #+END_SRC
+
+
+** defmethod constrain-arg-if-needed                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod constrain-arg-if-needed (space semantic (task decision-task))
+     (check-type space SI:FOREIGN-DATA)
+     (check-type semantic semantic)
+     (check-type task task)
+     (constrain-arg space semantic task))
+ #+END_SRC
+
+
+** defmethod constrain-arg                                        :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod constrain-arg (space (semantic grounded) (task decision-task))
+     (check-type space SI:FOREIGN-DATA)
+     (check-type semantic semantic)
+     (check-type task task)
+     (log* 1 "constrain arg not to be in")
+     (log* 3 "task arg is ~S" (task-arg task))
+     (post-must-be-false space (task-arg task)))
+ #+END_SRC
+
+
+** defmethod constrain-arg                                        :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod constrain-arg (space semantic (task ds-task))
+     (check-type space SI:FOREIGN-DATA)
+     (check-type semantic semantic)
+     (check-type task task)
+     (log* 1 "constrain arg not to be in")
+     (log* 3 "task arg is ~S" (task-arg task))
+     (post-must-be-false space (task-arg task)))
+ #+END_SRC
+
+
+** defmethod constrain-arg                                        :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod constrain-arg (space semantic (task dc-task))
+     (check-type space SI:FOREIGN-DATA)
+     (check-type semantic semantic)
+     (check-type task task)
+     (log* 1 "constrain arg to be in")
+     (log* 3 "task arg is ~S" (task-arg task))
+     (post-must-be-true space (task-arg task)))
+ #+END_SRC
+
+
+** defmacro branch-with-logging                                    :defmacro:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmacro branch-with-logging (space &body body)
+     `(let*-heap (,@body)
+                 (log* 1 "branch ~{~A~^ ~}" ',body)
+                 (branch ,space var val)))
+ #+END_SRC
+
+
+** defmethod branch-space                                         :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod branch-space (space task semantic)
+     (branch-with-logging space
+                          (var (int-var-degree-max))
+                          (val (int-val-min))))
+ #+END_SRC
+
+
+** defmethod branch-space                                         :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod branch-space (space (task se-task) (semantic preferred))
+     (branch-with-logging space
+                          (var (int-var-degree-max))
+                          (val (int-val-max))))
+ #+END_SRC
+
+
+** defmethod branch-space                                         :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod branch-space (space (task ee-task) (semantic preferred))
+     (branch-with-logging space
+                          (var (int-var-degree-max))
+                          (val (int-val-max))))
+ #+END_SRC
+
+
+** defmethod branch-space                                         :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod branch-space ((space abstract-space) task semantic)
+     (branch-space (foreign-space space) task semantic))
+ #+END_SRC
+
+
+** defmethod make-search-engine                                   :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod make-search-engine (strategy (space abstract-space) task semantic vector)
+     (make-search-engine strategy (foreign-space space) task semantic vector))
+ #+END_SRC
+
+
+** defmethod make-search-engine                                   :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod make-search-engine ((strategy ds-st-strategy) (space abstract-space) task semantic vector)
+     (make-search-engine strategy (foreign-space space) task semantic vector))
+ #+END_SRC
+
+
+** defmethod make-search-engine                                   :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod make-search-engine ((strategy ee-st-strategy) (space abstract-space) task semantic vector)
+     (make-search-engine strategy (foreign-space space) task semantic vector))
+ #+END_SRC
+
+
+** defmacro e-class-by-strategy                                    :defmacro:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmacro e-class-by-strategy (class)
+     `(let ((class (find-class ,class)))
+        (unless (eql class (strategy-engine-class strategy))
+          (error "(strategy-engine-class strategy) for ~S suggests ~S ~% but should be ~S"
+                 strategy (strategy-engine-class strategy) class))
+        class))
+ #+END_SRC
+
+
+** defmethod make-search-engine                                   :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod make-search-engine ((strategy ee-pr-strategy) space (task ee-task) (semantic preferred) vector)
+     (check-type semantic semantic)
+     (check-type task task)
+     (check-type vector vector)
+     (make-instance (e-class-by-strategy 'preferred-all-engine)
+                    :sub-engine (let ((task task)
+                                      (semantic (make-semantic :co)))
+                                  (make-search-engine (choose-strategy* task semantic)
+                                                      space task
+                                                      (make-semantic :co) vector))))
+ #+END_SRC
+
+
+** defun make-normal-engine                                           :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun make-normal-engine (strategy space vector)
+     (make-instance (e-class-by-strategy 'search-engine)
+                    :gecode-engine (make-dfs-engine-or-gist space)
+                    :engine-vector vector))
+ #+END_SRC
+
+
+
+** defun make-normal-engine-bab                                       :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun make-normal-engine-bab (strategy space vector)
+     (make-instance (e-class-by-strategy 'search-engine)
+                    :gecode-engine (make-bab-engine-or-gist space)
+                    :engine-vector vector
+                    :next-solution-fn #'bab-best))
+ #+END_SRC
+
+
+
+** defmethod make-search-engine                                   :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod make-search-engine ((strategy ds-st-strategy)
+                                  space task semantic vector)
+     (make-normal-engine strategy space vector))
+ #+END_SRC
+
+
+** defmethod make-search-engine                                   :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod make-search-engine ((strategy ee-st-strategy)
+                                  space task semantic vector)
+     (make-normal-engine strategy space vector))
+ #+END_SRC
+
+
+** defmethod make-search-engine                                   :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod make-search-engine (strategy space task semantic vector)
+     (check-type space SI:FOREIGN-DATA)
+     (check-type semantic semantic)
+     (check-type task task)
+     (check-type vector vector)
+     (typecase semantic
+       (grounded
+        (make-instance (e-class-by-strategy 'propagate-only-engine)
+                       :space space
+                       :engine-vector vector))
+       (t (prog1
+              (etypecase task
+                (ee-task (typecase semantic
+                           (preferred
+                            (make-instance 'multi-bab-engine
+                                           :gecode-engine (make-bab-engine-or-gist space)
+                                           :engine-vector vector
+                                           :space (progn
+                                                    (space-status space)
+                                                    (clone-space space))))
+                           (t (make-instance
+                               'search-engine
+                               :gecode-engine (make-dfs-engine-or-gist space)
+                               :engine-vector vector))))
+                (se-task (typecase semantic
+                           (preferred
+                            (make-normal-engine-bab strategy space vector))
+                           (t
+                            (make-normal-engine strategy space vector))))
+                (dc-task (make-normal-engine strategy space vector))
+                (ds-task (make-normal-engine strategy space vector)))
+            (delete-space space)))))
+ #+END_SRC
+
+
+** defclass engine                                                 :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass engine () ())
+ #+END_SRC
+
+
+** defclass search-engine                                          :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass search-engine (engine)
+     ((gecode-engine    :reader gecode-engine    :initarg :gecode-engine)
+      (engine-vector    :reader engine-vector    :initarg :engine-vector)
+      (next-solution-fn :reader next-solution-fn :initarg :next-solution-fn)
+      (space-delete-fn  :reader space-delete-fn  :initarg :space-delete-fn)
+      (space-print-fn   :reader space-print-fn   :initarg :space-print-fn)
+      (space-collect-fn :reader space-collect-fn :initarg :space-collect-fn))
+     (:default-initargs
+      :next-solution-fn #'dfs-next
+      :space-delete-fn  #'delete-space
+      :space-print-fn   #'space-print-in
+      :space-collect-fn #'space-collect-in))
+ #+END_SRC
+
+
+** defmethod print-object                                         :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod print-object ((engine search-engine) stream)
+     (print-unreadable-object (engine stream :identity t :type t)
+       (let ((*standard-output* stream))
+         (pprint-logical-block
+             (*standard-output*
+              (list (list :next-solution-fn (next-solution-fn engine))
+                    (list :space-delete-fn (space-delete-fn engine))
+                    (list :space-print-fn (space-print-fn engine))
+                    (list :space-collect-fn (space-collect-fn engine))))
+           (loop
+             for item = (pprint-pop)
+             do (format t "~20A~A ~_" (first item) (second item))
+             do (pprint-exit-if-list-exhausted))))))
+ #+END_SRC
+
+
+** defstruct gecode-engine-space-wrapper                          :defstruct:
+ #+BEGIN_SRC lisp :tangle yes
+   (defstruct gecode-engine-space-wrapper
+     space)
+ #+END_SRC
+
+
+** defun gecode-engine-space-wrapper-next                             :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun gecode-engine-space-wrapper-next (wrapper)
+     (check-type wrapper gecode-engine-space-wrapper)
+     (let ((space (gecode-engine-space-wrapper-space wrapper)))
+       (when space
+         (prog1
+             (case (space-status space)
+               (:failed (delete-space space))
+               (t space))
+           (setf (gecode-engine-space-wrapper-space wrapper)
+                 nil)))))
+ #+END_SRC
+
+
+** defclass propagate-only-engine                                  :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass propagate-only-engine (search-engine)
+     ()
+     (:default-initargs :next-solution-fn #'gecode-engine-space-wrapper-next))
+ #+END_SRC
+
+
+** defmethod initialize-instance                                  :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod initialize-instance :after
+       ((propagate-only-engine propagate-only-engine) &key space)
+     (setf (slot-value propagate-only-engine 'gecode-engine)
+           (make-gecode-engine-space-wrapper :space space)))
+ #+END_SRC
+
+
+** defclass multi-bab-engine                                       :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass multi-bab-engine (engine)
+     ((gecode-engine :reader gecode-engine :initarg :gecode-engine)
+      (engine-vector :reader engine-vector :initarg :engine-vector)
+      (space :reader engine-space :initarg :space)))
+ #+END_SRC
+
+
+** defclass preferred-all-engine                                   :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass preferred-all-engine (engine)
+     ((sub-engine :reader sub-engine :initarg :sub-engine)))
+ #+END_SRC
+
+
+** defgeneric search-statistics                                  :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric search-statistics (engine))
+ #+END_SRC
+
+
+** defmethod search-statistics                                    :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod search-statistics ((engine search-engine))
+     (dfs-statistics (gecode-engine engine)))
+ #+END_SRC
+
+
+** defmethod search-statistics                                    :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod search-statistics ((engine preferred-all-engine))
+     (search-statistics (sub-engine engine)))
+ #+END_SRC
+
+
+** defmethod search-statistics                                    :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod search-statistics ((engine propagate-only-engine))
+     nil)
+ #+END_SRC
+
+
+** defmethod drive-search-and-print                               :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-print :around (driver engine)
+     (check-type driver driver)
+     (check-type engine engine)
+     (call-next-method)
+     (let ((statistics (search-statistics engine)))
+       (log* 1 "search statistics: ~A" statistics)
+       (values statistics driver engine)))
+ #+END_SRC
+
+
+** defmethod drive-search-and-collect                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-collect :around (driver engine)
+     (check-type driver driver)
+     (check-type engine engine)
+     (multiple-value-bind (extension exists-p)
+         (call-next-method)
+       (values
+        extension
+        exists-p
+        (search-statistics engine)
+        driver
+        engine)))
+ #+END_SRC
+
+
+** defmethod drive-search-and-print                               :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-print ((task search-all-driver)
+                                      (engine preferred-all-engine))
+     (write-line "[")
+     (loop
+       with first-time = t
+       for solution in (drive-search-and-collect task engine)
+       do (if first-time
+              (setq first-time nil)
+              (write-char #\,))
+       do (format t "[~{~A~^,~}]" solution)
+       do (terpri))
+     (write-line "]"))
+ #+END_SRC
+
+
+** defmethod drive-search-and-collect                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-collect ((task search-all-driver)
+                                        (engine preferred-all-engine))
+     (let ((complete-all (drive-search-and-collect task (sub-engine engine))))
+       (remove-duplicates
+        (sort complete-all #'< :key #'length)
+        :test #'subsetp)))
+ #+END_SRC
+
+
+** defmethod drive-search-and-print                               :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-print ((driver search-all-driver) engine)
+     (let ((gecode-engine (gecode-engine engine))
+           (engine-vector (engine-vector engine))
+           (next-solution-fn (next-solution-fn engine))
+           (space-delete-fn (space-delete-fn engine))
+           (space-print-fn (space-print-fn engine)))
+       (write-line "[")
+       (loop
+         with first-time = t
+         for solution = (funcall next-solution-fn gecode-engine)
+         until (null solution)
+         do (if first-time
+                (setq first-time nil)
+                (write-char #\,))
+         do (funcall space-print-fn solution engine-vector)
+         do (funcall space-delete-fn solution)
+         do (terpri))
+       (write-line "]")
+       nil))
+ #+END_SRC
+
+
+** defmethod drive-search-and-collect                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-collect ((driver search-all-driver) engine)
+     (let ((gecode-engine (gecode-engine engine))
+           (engine-vector (engine-vector engine))
+           (next-solution-fn (next-solution-fn engine))
+           (space-delete-fn (space-delete-fn engine))
+           (space-collect-fn (space-collect-fn engine)))
+       (loop
+         for solution = (funcall next-solution-fn gecode-engine)
+         until (null solution)
+         collect (funcall space-collect-fn solution engine-vector)
+         do (funcall space-delete-fn solution))))
+ #+END_SRC
+
+
+** defmethod drive-search-and-print                               :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-print ((driver search-one-driver) engine)
+     (let ((gecode-engine (gecode-engine engine))
+           (engine-vector (engine-vector engine))
+           (next-solution-fn (next-solution-fn engine))
+           (space-delete-fn (space-delete-fn engine))
+           (space-print-fn (space-print-fn engine)))
+       (let ((space (funcall next-solution-fn gecode-engine)))
+         (if (null space)
+             (write-string "NO")
+             (progn
+               (funcall space-print-fn space engine-vector)
+               (funcall space-delete-fn space))))
+       (terpri)
+       nil))
+ #+END_SRC
+
+
+** defmethod drive-search-and-collect                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-collect ((driver search-one-driver) engine)
+     (let ((gecode-engine (gecode-engine engine))
+           (engine-vector (engine-vector engine))
+           (next-solution-fn (next-solution-fn engine))
+           (space-delete-fn (space-delete-fn engine))
+           (space-collect-fn (space-collect-fn engine)))
+       (let ((space (funcall next-solution-fn gecode-engine)))
+         (if (null space)
+             (values nil nil)
+             (values (prog1
+                         (funcall space-collect-fn space engine-vector)
+                       (funcall space-delete-fn space))
+                     t)))))
+ #+END_SRC
+
+
+** defun step1                                                        :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun step1 (bab fn first-time vector master)
+     (let ((next (bab-best bab)))
+       (when next
+         (funcall fn next vector first-time)
+         (when first-time
+           (setq first-time nil))
+         (constrain-not-subset master next)
+         (let ((status (prog1
+                           (space-status master)
+                         (delete-space next))))
+           (ecase status
+             (:failed)
+             (:solved
+              (funcall fn master vector first-time))
+             (:branch
+              (let ((slave (clone-bool-space master)))
+                (delete-bab bab)
+                (step1 (prog1
+                           (make-bab-engine-or-gist slave)
+                         (delete-space slave))
+                       fn first-time vector master))))))))
+ #+END_SRC
+
+
+** defun multi-bab-helper                                             :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun multi-bab-helper (engine fn)
+     (let ((gecode-engine (gecode-engine engine))
+           (engine-vector (engine-vector engine)))
+       (step1 gecode-engine fn t engine-vector (engine-space engine))))
+ #+END_SRC
+
+
+** defun multi-bab-search-and-print                                   :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun multi-bab-search-and-print (engine)
+     (write-line "[")
+     (multi-bab-helper
+      engine
+      (lambda (next vector first-time)
+        (unless first-time
+          (write-char #\,))
+        (space-print-in next vector)
+        (terpri)))
+     (write-line "]"))
+ #+END_SRC
+
+
+** defun multi-bab-search-and-collect                                 :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun multi-bab-search-and-collect (engine)
+     (let (list)
+       (multi-bab-helper
+        engine
+        (lambda (next vector first-time)
+          (declare (ignore first-time))
+          (push (space-collect-in next vector) list)))
+       list))
+ #+END_SRC
+
+
+** defmethod drive-search-and-print                               :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod drive-search-and-print (task (engine multi-bab-engine))
+     (multi-bab-search-and-print engine))
+ #+END_SRC
+
+
+** defmethod drive-search-and-collect                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+ (defmethod drive-search-and-collect (task (engine multi-bab-engine))
+   (multi-bab-search-and-collect engine))
+ #+END_SRC
+
+
+** defmethod drive-search-and-print                               :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+ (defmethod drive-search-and-print ((task search-all-driver) (engine multi-bab-engine))
+   (multi-bab-search-and-print engine))
+ #+END_SRC
+
+
+** defmethod drive-search-and-collect                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+ (defmethod drive-search-and-collect ((task search-all-driver) (engine multi-bab-engine))
+   (multi-bab-search-and-collect engine))
+ #+END_SRC
+
+
+** defmethod drive-search-and-print                               :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+ (defmethod drive-search-and-print ((task search-one-decision-driver) engine)
+     (let* ((gecode-engine (gecode-engine engine))
+            (next-solution-fn (next-solution-fn engine))
+            (space-delete-fn (space-delete-fn engine))
+            (solution (funcall next-solution-fn gecode-engine))
+            (no-solution-means-inferred
+              (no-solution-means-inferred task)))
+       (if (null solution)
+           (write-string (if no-solution-means-inferred
+                             "YES"
+                             "NO"))
+           (progn
+             (write-string (if no-solution-means-inferred
+                               "NO"
+                               "YES"))
+             (funcall space-delete-fn solution)))
+       (terpri)
+       nil))
+ #+END_SRC
+
+
+** defmethod drive-search-and-collect                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+ (defmethod drive-search-and-collect ((task search-one-decision-driver) engine)
+     (let* ((gecode-engine (gecode-engine engine))
+            (next-solution-fn (next-solution-fn engine))
+            (space-delete-fn (space-delete-fn engine))
+            (solution (funcall next-solution-fn gecode-engine))
+            (no-solution-means-inferred
+              (no-solution-means-inferred task)))
+       (if (null solution)
+           no-solution-means-inferred
+           (prog1
+               (not no-solution-means-inferred)
+             (funcall space-delete-fn solution)))))
+ #+END_SRC
+
+** defmethod make-search-engine ds-pr                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+ (defmethod make-search-engine (strategy space (task ds-task) (semantic preferred) vector)
+     (check-type space SI:FOREIGN-DATA)
+     (check-type semantic semantic)
+     (check-type task task)
+     (check-type vector vector)
+   (make-instance 'ds-pr-engine :task task :space space :vector vector))
+ #+END_SRC
+
+
+** defmethod constrain-arg-if-needed                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod constrain-arg-if-needed
+       (space (semantic preferred) (task ds-task))
+     ;; noop
+     )
+ #+END_SRC
+
+
+** defclass ds-pr-engine                                           :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass ds-pr-engine (engine)
+     ((task :initarg :task :reader engine-task)
+      (space :initarg :space :reader engine-space)
+      (vector :initarg :vector :reader engine-vector)))
+ #+END_SRC
+
+
+** defmethod gecode-engine                                        :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod gecode-engine ((engine ds-pr-engine))
+     engine)
+ #+END_SRC
+
+
+** defmethod next-solution-fn                                     :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod next-solution-fn ((ds-pr-engine ds-pr-engine))
+     (let ((engine (make-search-engine
+                    (choose-strategy* (make-task :ee)
+                                      (make-semantic :pr))
+                    (engine-space ds-pr-engine)
+                    (make-task :ee)
+                    (make-semantic :pr)
+                    (coerce (iota (length (engine-vector ds-pr-engine)))
+                            'vector))))
+       (lambda (arg)
+         (declare (ignore arg))
+         ;; give t here if you can find a preferred extension that does
+         ;; not contain arg
+         (let ((solutions
+                 (drive-search-and-collect
+                  (make-instance 'search-all-driver) engine))
+               (arg (task-arg (engine-task ds-pr-engine))))
+           (some (lambda (solution) (not (member arg solution)))
+                 solutions)))))
+ #+END_SRC
+
+
+** defmethod space-delete-fn                                      :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod space-delete-fn ((engine ds-pr-engine))
+     (lambda (arg) (declare (ignore arg))))
+ #+END_SRC
+
+
+** defmethod search-statistics                                    :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod search-statistics ((engine ds-pr-engine))
+     ;; for now
+     nil)
+ #+END_SRC
+
+   ;;; END DS-PR
+
+
+** translate frob                                                 :translate:
+ #+BEGIN_SRC lisp :tangle yes
+   (macrolet ((translate ((from-task from-semantic) arrow (to-task to-semantic))
+                (declare (ignore arrow))
+                (let ((from-task-type (type-of (make-task from-task)))
+                      (from-semantic-type (type-of (make-semantic from-semantic)))
+                      (task-change (not (eql from-task to-task)))
+                      (semantic-change (not (eql from-semantic to-semantic))))
+                  `(defmethod translate-problem ((task ,from-task-type)
+                                                 (semantic ,from-semantic-type))
+                     (let ((new-task
+                             ,(if task-change
+                                  (if (subtypep from-task-type 'decision-task)
+                                      `(make-task ,to-task (task-arg-name task))
+                                      `(make-task ,to-task))
+                                  'task))
+                           (new-semantic
+                             ,(if semantic-change
+                                  `(make-semantic ,to-semantic)
+                                  'semantic)))
+                       ,@ (when (or task-change semantic-change)
+                            '((log* 1 "translate from ~A ~A to ~A ~A"
+                               (type-of task) (type-of semantic)
+                               (type-of new-task) (type-of new-semantic))))
+                       (values new-task new-semantic))))))
+     (translate (:se :co) -> (:se :gr))
+     (translate (:ds :co) -> (:ds :gr))
+     (translate (:dc :pr) -> (:dc :co))
+       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     ;; standard
+       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     ;; co
+     (translate (:dc :co) -> (:dc :co))
+     (translate (:ee :co) -> (:ee :co))
+     ;; gr
+     (translate (:dc :gr) -> (:dc :gr))
+     (translate (:ds :gr) -> (:ds :gr))
+     (translate (:ee :gr) -> (:ee :gr))
+     (translate (:se :gr) -> (:se :gr))
+     ;; pr
+     (translate (:ds :pr) -> (:ds :pr))
+     (translate (:ee :pr) -> (:ee :pr))
+     (translate (:se :pr) -> (:se :pr))
+     ;; st
+     (translate (:dc :st) -> (:dc :st))
+     (translate (:ds :st) -> (:ds :st))
+     (translate (:ee :st) -> (:ee :st))
+     (translate (:se :st) -> (:se :st)))
+ #+END_SRC
+
+
+** defclass strategy                                               :defclass:
+ #+BEGIN_SRC lisp :tangle yes
+   (defclass strategy () ())
+ #+END_SRC
+
+
+** defmethod strategy-task-class                                  :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-task-class ((strategy ee-task)) (find-class 'ee-task))
+ #+END_SRC
+
+** defmethod strategy-task-class                                  :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-task-class ((strategy se-task)) (find-class 'se-task))
+ #+END_SRC
+
+** defmethod strategy-task-class                                  :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-task-class ((strategy dc-task)) (find-class 'dc-task))
+ #+END_SRC
+
+** defmethod strategy-task-class                                  :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-task-class ((strategy ds-task)) (find-class 'ds-task))
+ #+END_SRC
+
+
+** defmethod strategy-semantic-class                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-semantic-class ((strategy complete)) (find-class 'complete))
+ #+END_SRC
+
+** defmethod strategy-semantic-class                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-semantic-class ((strategy preferred)) (find-class 'preferred))
+ #+END_SRC
+
+** defmethod strategy-semantic-class                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-semantic-class ((strategy grounded)) (find-class 'grounded))
+ #+END_SRC
+
+** defmethod strategy-semantic-class                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-semantic-class ((strategy stable)) (find-class 'stable))
+ #+END_SRC
+
+
+** defgeneric strategy-driver-class                              :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric strategy-driver-class (strategy))
+ #+END_SRC
+
+** defgeneric strategy-driver-initargs                           :defgeneric:
+ #+BEGIN_SRC lisp :tangle yes
+   (defgeneric strategy-driver-initargs (strategy) (:method-combination append))
+ #+END_SRC
+
+
+** defmethod strategy-driver-class                                :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-driver-class ((strategy ee-task)) (find-class 'search-all-driver))
+ #+END_SRC
+
+** defmethod strategy-driver-class                                :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-driver-class ((strategy se-task)) (find-class 'search-one-driver))
+ #+END_SRC
+
+** defmethod strategy-driver-class                                :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-driver-class ((strategy decision-task)) (find-class 'search-one-decision-driver))
+ #+END_SRC
+
+
+** defmethod strategy-driver-initargs                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-driver-initargs append ((strategy extension-task)) nil)
+ #+END_SRC
+
+** defmethod strategy-driver-initargs                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-driver-initargs append ((strategy dc-task))
+     '(:no-solution-means-inferred nil))
+ #+END_SRC
+
+** defmethod strategy-driver-initargs                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-driver-initargs append ((strategy ds-task))
+     '(:no-solution-means-inferred t))
+ #+END_SRC
+
+
+** defmethod strategy-constraints                                 :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-constraints ((strategy complete))
+     (list 'constrain-complete))
+ #+END_SRC
+
+
+** defmethod strategy-constraints                                 :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-constraints ((strategy stable))
+     (list 'constrain-complete 'constrain-stable))
+ #+END_SRC
+
+
+** defmethod strategy-constraint-arg                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-constraint-arg ((strategy strategy))
+     nil)
+ #+END_SRC
+
+
+** defmethod strategy-constraint-arg                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-constraint-arg ((strategy dc-task))
+     'post-must-be-true)
+ #+END_SRC
+
+
+** defmethod strategy-constraint-arg                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-constraint-arg ((strategy ds-task))
+     'post-must-be-false)
+ #+END_SRC
+
+
+** defun strategy-make-driver                                         :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun strategy-make-driver (strategy)
+     (apply #'make-instance (strategy-driver-class strategy)
+            (strategy-driver-initargs strategy)))
+ #+END_SRC
+
+
+** defun strategy-make-space                                          :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun strategy-make-space (strategy number-of-variables)
+     (make-instance (strategy-space-class strategy) :n number-of-variables))
+ #+END_SRC
+
+
+** strategy classes frob                                           :strategy:
+ #+BEGIN_SRC lisp :tangle yes
+   (macrolet ((frob (tasks semantics)
+                `(progn
+                   ,@(map-product (lambda (task semantic)
+                                    `(frob2 ,task ,semantic))
+                                  tasks semantics)))
+              (frob2 (task semantic)
+                (let ((name (symbolicate task "-" semantic "-STRATEGY"))
+                      (task-type (type-of (make-task task)))
+                      (semantic-type (type-of (make-semantic semantic))))
+                  `(progn
+                     (defclass ,name (,task-type ,semantic-type strategy)
+                       ())
+                     ))))
+     (frob (:ee :se :dc :ds)
+           (:co :pr :gr :st)))
+ #+END_SRC
+
+
+** defmethod strategy-driver-initargs                             :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-driver-initargs append ((strategy dc-gr-strategy))
+     '(:no-solution-means-inferred t))
+ #+END_SRC
+
+
+** defmethod strategy-space-class                                 :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-space-class ((strategy se-pr-strategy))
+     (find-class 'pr-bab-space))
+ #+END_SRC
+
+
+** defmethod strategy-constraint-arg                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-constraint-arg ((strategy dc-gr-strategy))
+     'post-must-be-false)
+ #+END_SRC
+
+
+** defmethod strategy-constraint-arg                              :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-constraint-arg ((strategy ds-pr-strategy))
+     nil)
+ #+END_SRC
+
+
+** defmethod strategy-engine-class                                :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-engine-class ((strategy ds-pr-strategy))
+     (find-class 'ds-pr-engine))
+ #+END_SRC
+
+
+** defmethod strategy-engine-class                                :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-engine-class ((strategy ee-pr-strategy))
+     (find-class 'preferred-all-engine))
+ #+END_SRC
+
+
+** defmethod strategy-engine-class                                :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-engine-class ((strategy strategy))
+     (find-class 'search-engine))
+ #+END_SRC
+
+
+** defmethod strategy-engine-class                                :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-engine-class ((strategy grounded))
+     (find-class 'propagate-only-engine))
+ #+END_SRC
+
+
+** defun subclasses                                                   :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun subclasses (class)
+     (cons class
+           (mappend #'subclasses
+                    (clos:class-direct-subclasses class))))
+ #+END_SRC
+
+
+** defun proper-subclasses                                            :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun proper-subclasses (class)
+     (cdr (subclasses class)))
+ #+END_SRC
+
+
+** defun list-strategy-classes                                        :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun list-strategy-classes ()
+     (proper-subclasses (find-class 'strategy)))
+ #+END_SRC
+
+
+** defun list-strategies                                              :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun list-strategies ()
+     (mapcar #'make-instance (list-strategy-classes)))
+ #+END_SRC
+
+
+** defmethod find-applicable-strategies                           :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod find-applicable-strategies ((task standard-class) (semantic standard-class))
+     (remove-if (lambda (strategy)
+                  (or (not (eql task (strategy-task-class strategy)))
+                      (not (eql semantic (strategy-semantic-class strategy)))))
+                (list-strategies)))
+ #+END_SRC
+
+
+** defmethod find-applicable-strategies                           :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod find-applicable-strategies ((task task) (semantic semantic))
+     (find-applicable-strategies (class-of task) (class-of semantic)))
+ #+END_SRC
+
+
+** defun choose-strategy                                              :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun choose-strategy (task semantic)
+     (let ((strategies (find-applicable-strategies task semantic)))
+       (when (null strategies)
+         (error "no strategies found"))
+       (unless (eql 1 (length strategies))
+         (cerror "take first" "more than one strategy ~S" strategies))
+       (first strategies)))
+ #+END_SRC
+
+
+** defun choose-strategy*                                             :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun choose-strategy* (task semantic)
+     (handler-bind ((error (lambda (c) (continue c))))
+       (choose-strategy task semantic)))
+ #+END_SRC
+
+
+** defmethod describe-object                                      :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod describe-object ((strategy strategy) stream)
+     (format stream "~S~%~@{  ~A~30T~A~%~}"
+             (type-of strategy)
+             ;; 'strategy-task-class (strategy-task-class strategy)
+             ;; 'strategy-semantic-class (strategy-semantic-class strategy)
+             'strategy-driver-class (strategy-driver-class strategy)
+             'strategy-driver-initargs (strategy-driver-initargs strategy)
+             'strategy-space-class (strategy-space-class strategy)
+             'strategy-constraints (strategy-constraints strategy)
+             'strategy-constraint-arg (strategy-constraint-arg strategy)
+             'strategy-engine-class (strategy-engine-class strategy)))
+ #+END_SRC
+
+
+** defmethod strategy-space-class                                 :defmethod:
+ #+BEGIN_SRC lisp :tangle yes
+   (defmethod strategy-space-class (strategy)
+     (find-class 'bool-space))
+ #+END_SRC
+
+
+** defun describe-strategies                                          :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun describe-strategies (&optional (strategies (list-strategies)))
+     (mapc #'describe strategies)
+     nil)
+ #+END_SRC
+
+
+** defun describe-all-strategies-or-for-problem                       :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun describe-all-strategies-or-for-problem (problem)
+     (if problem
+         (multiple-value-bind (task semantic) (parse-problem problem)
+           (describe-strategies
+            (find-applicable-strategies (make-task task)
+                                        (make-semantic semantic))))
+         (describe-strategies)))
+ #+END_SRC
+
+
+** defun parse-g-arg                                                  :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun parse-g-arg (string)
+     (let ((form (read-from-string string)))
+       (cond
+         ((floatp form)
+          (let ((pos (position #\. string)))
+            (assert pos)
+            (cons (parse-integer string :end pos)
+                  (parse-integer string :start (1+ pos)))))
+         (t form))))
+ #+END_SRC
+
+
+** defun main%%                                                       :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun main%% (input p a)
+     (multiple-value-bind (task semantic) (parse-problem p)
+       (let ((task (make-task task a))
+             (semantic (make-semantic semantic)))
+         (multiple-value-bind (task semantic)
+             (translate-problem task semantic)
+           (let ((strategy (choose-strategy* task semantic)))
+             (with-timing (print-answer strategy input task semantic)))))))
+ #+END_SRC
+
+
+** defun main%                                                        :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun main% (&key (fo "apx") f p a g (gist "nil")
+                   (log-level "1") (timing "t")
+                   (eval "nil") (load nil))
+     (assert (equal fo "apx"))
+     (assert (xor f g))
+     (let* ((*use-gist* (read-from-string gist))
+            (*log-level* (read-from-string log-level))
+            (*with-timing* (read-from-string timing))
+            (g (when g (parse-g-arg g)))
+            (input (or f g))
+            (a (when a
+                 (if g (parse-integer a) a)))
+            (eval (read-from-string eval)))
+       (check-type *log-level* log-level)
+       (when load (load load))
+       (when eval (eval eval))
+       (main%% input p a)))
+ #+END_SRC
+
+** defvar *cover-file*                                               :defvar:
+ #+BEGIN_SRC lisp :tangle yes
+   ,#+cover
+   (defvar *cover-file*
+     (merge-pathnames "cover.data" (asgl-home)))
+ #+END_SRC
+
+
+** defun print-informational-message                                  :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun print-informational-message ()
+     (write-line "ASGL version 0.1.4")
+     (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
+     (terpri)
+     (write-line "Copyright (C) 2015  Kilian Sprotte")
+     (write-line "This program comes with ABSOLUTELY NO WARRANTY.")
+     (write-line "This is free software, and you are welcome to redistribute it")
+     (write-line "under certain conditions."))
+ #+END_SRC
+
+
+** defun print-supported-graph-formats                                :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun print-supported-graph-formats ()
+     (write-line "[apx]"))
+ #+END_SRC
+
+
+** defun print-supported-problems                                     :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun print-supported-problems ()
+     (format t "[DC-CO, DC-GR, DC-PR, DC-ST, ~
+                   DS-CO, DS-GR, DS-PR, DS-ST, ~
+                   EE-CO, EE-GR, EE-PR, EE-ST, ~
+                   SE-CO, SE-GR, SE-PR, SE-ST]"))
+ #+END_SRC
+
+
+** defun run-repl                                                     :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun run-repl ()
+     (let ((init-file (merge-pathnames ".asglrc" (user-homedir-pathname))))
+       (when (probe-file init-file)
+         (load init-file))
+       (si:top-level)))
+ #+END_SRC
+
+
+** defun run-self-check                                               :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun run-self-check (test-files)
+     (dolist (file (directory
+                    (merge-pathnames "tests/support/*.lisp"
+                                     (asgl-home))))
+       (compile-file-if-needed file t))
+     (let ((test-files (or test-files
+                           (directory
+                            (merge-pathnames "tests/*.lisp"
+                                             (asgl-home))))))
+       (dolist (file test-files)
+         (load file)))
+     (format t "Running self-check... This will take around 5 min.~%")
+     (if (myam:run! :tests)
+         (format t "~&SELF-CHECK PASSED SUCCESSFULLY~%")
+         (progn
+           (format t "~&**********************************~%")
+           (format t "~&SELF-CHECK FAILED something is wrong~%")
+           (format t "~&**********************************~%")
+           (ext:quit 1))))
+ #+END_SRC
+
+
+** defun cl-user::main                                                :defun:
+ #+BEGIN_SRC lisp :tangle yes
+   (defun cl-user::main ()
+     (setq *debugger-hook* (lambda (c old)
+                             (declare (ignore old))
+                             (let ((*print-length* 3)
+                                   (*print-level* 3))
+                               (ext:dump-c-backtrace 32)
+                               (terpri *error-output*)
+                               (print-error-log *error-output* c)
+                               (format t "ERROR: ~A~%" c)
+                               (ext:quit 1))))
+     (setq *package* (find-package :asgl))
+     ,#+cover
+     (when (probe-file *cover-file*)
+       (cover:load-points *cover-file*))
+     (unwind-protect
+          (cond
+            ((null (cdr ext:*command-args*))
+             (print-informational-message))
+            ((equal "--formats" (second ext:*command-args*))
+             (print-supported-graph-formats))
+            ((equal "--problems" (second ext:*command-args*))
+             (print-supported-problems))
+            ((equal "--strategies" (second ext:*command-args*))
+             (describe-all-strategies-or-for-problem
+              (third ext:*command-args*)))
+            ,#+cover
+            ((equal "--cover-report" (second ext:*command-args*))
+             (cover:report :out *standard-output*
+                           :all (find "--all" (cdr ext:*command-args*)
+                                      :test #'equal))
+             (terpri *standard-output*))
+            ((equal "--repl" (second ext:*command-args*))
+             (run-repl))
+            ((equal "--check" (second ext:*command-args*))
+             (run-self-check (cddr ext:*command-args*)))
+            (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
+       ,#+cover
+       (cover:save-points *cover-file*)))
+ #+END_SRC
+
+
+* cover annotate nil                                                  :cover:
+ #+BEGIN_SRC lisp :tangle yes
+   (eval-when (:compile-toplevel :execute)
+     (cover:annotate nil))
+ #+END_SRC
