@@ -1,6 +1,6 @@
 ;; -*- paul-nice-on-save:nil -*-
 
-(defpackage :tests (:use :cl :myam :alexandria :early))
+(defpackage :tests (:use :cl :myam :alexandria :early :af-constraints))
 
 (in-package :tests)
 

@@ -18,6 +18,19 @@
 all: install-asgl
 test: test-asgl check
 
+space_objects = BoolSpace.o PrBABSpace.o IntSpace.o
+space_object_strings = "BoolSpace.o" "PrBABSpace.o" "IntSpace.o"
+
+gecode_lib_link_strings = "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" \
+	"-lgecodeset" "-lgecodekernel" "-lgecodesupport" \#+gist"-lgecodegist"
+
+asgl_config_fas = common/asgl-config/asgl-config.fas
+early_fas = common/early/early.fas
+alexandria_fas = lib/alexandria/alexandria.fas
+
+arnesi_list_match_fas = lib/arnesi-list-match/arnesi-list-match.fas
+myam_fas = lib/myam/myam.fas
+
 # ref
 install-ref:
 	rm -f bin/asgl
@@ -28,63 +41,74 @@ test-ref: install-ref data/iccma15_solutions data/iccma15_testcases
 	bundle exec cucumber --tags ~@notref --tags ~@slow ${CUKE_ARGS}
 
 
-# asgl
-asgl.fas: asgl.o BoolSpace.o PrBABSpace.o IntSpace.o
-	rm -f asgl.fas
+# gecode
+gecode.fas: gecode.o $(space_objects) $(asgl_config_fas)
+	rm -f $@
 	ecl -norc \
+	  -load $(asgl_config_fas) \
 	  -eval "(require 'cmp)" \
-	  -eval "(defvar *lisp-files* nil)" \
-	  -eval '(push "asgl.o" *lisp-files*)' \
-	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
-	  -eval '(c:build-fasl "asgl.fas" :lisp-files *lisp-files* :ld-flags (list "BoolSpace.o" "PrBABSpace.o" "IntSpace.o"))' \
+	  -eval '(defvar *lisp-files* (list "$<"))' \
+	  -eval '(defvar *ld-flags* (list $(space_object_strings) $(gecode_lib_link_strings)))' \
+	  -eval '(c:build-fasl "$@" :lisp-files *lisp-files* :ld-flags *ld-flags*)' \
 	  -eval '(quit)'
-	test -f asgl.fas
+	test -f $@
 
-gecode.fas: gecode.o BoolSpace.o PrBABSpace.o IntSpace.o
-	rm -f gecode.fas
+gecode.o: gecode.lisp gecode $(asgl_config_fas) $(early_fas) $(alexandria_fas)
+	rm -f $@
 	ecl -norc \
-	  -load common/asgl-config/asgl-config.fas \
-	  -eval "(require 'cmp)" \
-	  -eval "(defvar *lisp-files* nil)" \
-	  -eval '(push "gecode.o" *lisp-files*)' \
-	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
-	  -eval '(c:build-fasl "gecode.fas" :lisp-files *lisp-files* :ld-flags (list "BoolSpace.o" "PrBABSpace.o" "IntSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist"))' \
-	  -eval '(quit)'
-	test -f gecode.fas
-
-gecode.o: gecode gecode.lisp common/asgl-config/asgl-config.fas common/early/early.fas \
-	  lib/myam/myam.fas lib/alexandria/alexandria.fas lib/arnesi-list-match/arnesi-list-match.fas
-	rm -f gecode.o
-	ecl -norc \
-	  -load common/asgl-config/asgl-config.fas \
-	  -load common/early/early.fas \
-	  -load lib/alexandria/alexandria.fas \
-	  -load lib/arnesi-list-match/arnesi-list-match.fas \
-	  -load lib/myam/myam.fas \
+	  -load $(asgl_config_fas) \
+	  -load $(early_fas) \
+	  -load $(alexandria_fas) \
 	  -load lisp-scripts/compile-file-system-p.lisp \
-	  -eval '(compile-file-system-p "gecode.lisp" :dynamic-libraries t)'
-	test -f gecode.o
+	  -eval '(compile-file-system-p "$<" :dynamic-libraries t)'
+	test -f $@
 
-asgl.o: gecode gecode.fas asgl.lisp common/asgl-config/asgl-config.fas common/early/early.fas \
-	  lib/myam/myam.fas lib/alexandria/alexandria.fas lib/arnesi-list-match/arnesi-list-match.fas
-	rm -f asgl.o
+# af-constraints
+af-constraints.fas: af-constraints.o $(asgl_config_fas)
+	rm -f $@
 	ecl -norc \
-	  -load common/asgl-config/asgl-config.fas \
-	  -load common/early/early.fas \
-	  -load lib/alexandria/alexandria.fas \
-	  -load lib/arnesi-list-match/arnesi-list-match.fas \
-	  -load lib/myam/myam.fas \
+	  -load $(asgl_config_fas) \
+	  -eval "(require 'cmp)" \
+	  -eval '(defvar *lisp-files* (list "$<"))' \
+	  -eval '(defvar *ld-flags* (list ))' \
+	  -eval '(c:build-fasl "$@" :lisp-files *lisp-files* :ld-flags *ld-flags*)' \
+	  -eval '(quit)'
+	test -f $@
+
+af-constraints.o: af-constraints.lisp gecode.fas $(asgl_config_fas) $(early_fas) $(alexandria_fas)
+	rm -f $@
+	ecl -norc \
+	  -load $(asgl_config_fas) \
+	  -load $(early_fas) \
+	  -load $(alexandria_fas) \
 	  -load gecode.fas \
 	  -load lisp-scripts/compile-file-system-p.lisp \
-	  -eval '(compile-file-system-p "asgl.lisp" :dynamic-libraries t)'
-	test -f asgl.o
+	  -eval '(compile-file-system-p "$<" :dynamic-libraries t)'
+	test -f $@
 
-asgl: asgl.o gecode.o BoolSpace.o PrBABSpace.o IntSpace.o common/early/libearly.a common/asgl-config/libasgl-config.a \
-	  common/asgl-config/asgl-config.fas lib/myam/libmyam.a lib/alexandria/libalexandria.a \
+asgl.o: asgl.lisp gecode.fas af-constraints.fas $(asgl_config_fas) $(early_fas) \
+	  $(myam_fas) $(alexandria_fas) $(arnesi_list_match_fas)
+	rm -f $@
+	ecl -norc \
+	  -load $(asgl_config_fas) \
+	  -load $(early_fas) \
+	  -load $(alexandria_fas) \
+	  -load $(arnesi_list_match_fas) \
+	  -load $(myam_fas) \
+	  -load gecode.fas \
+	  -load af-constraints.fas \
+	  -load lisp-scripts/compile-file-system-p.lisp \
+	  -eval '(compile-file-system-p "$<" :dynamic-libraries t)'
+	test -f $@
+
+# asgl
+asgl: asgl.o gecode.o af-constraints.o BoolSpace.o PrBABSpace.o IntSpace.o common/early/libearly.a \
+	common/asgl-config/libasgl-config.a \
+	  $(asgl_config_fas) lib/myam/libmyam.a lib/alexandria/libalexandria.a \
 	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
-	  -load common/asgl-config/asgl-config.fas \
-	  -eval '(c:build-program "asgl" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "gecode.o" "asgl.o") :ld-flags (list "common/early/libapxparse.a" "BoolSpace.o" "PrBABSpace.o" "IntSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -load $(asgl_config_fas) \
+	  -eval '(c:build-program "asgl" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "gecode.o" "af-constraints.o" "asgl.o") :ld-flags (list "common/early/libapxparse.a" $(space_object_strings) $(gecode_lib_link_strings)) :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 BoolSpace.o: BoolSpace.cpp BoolSpace.h asgl_config.h
@@ -190,9 +214,11 @@ dist:
 	autoconf
 	install configure dist/asgl/configure
 	mkdir dist/asgl/third-party
-	curl --no-progress-bar --retry 10 -o "ecl-13.5.1.tgz" -L "http://heanet.dl.sourceforge.net/project/ecls/ecls/13.5/ecl-13.5.1.tgz"
+	curl --no-progress-bar --retry 10 -o "ecl-13.5.1.tgz" -L \
+	  "http://heanet.dl.sourceforge.net/project/ecls/ecls/13.5/ecl-13.5.1.tgz"
 	install ecl-13.5.1.tgz dist/asgl/third-party
-	curl --no-progress-bar --retry 10 -o "gecode-4.3.3.tar.gz" -L "http://www.gecode.org/download/gecode-4.3.3.tar.gz"
+	curl --no-progress-bar --retry 10 -o "gecode-4.3.3.tar.gz" -L \
+	  "http://www.gecode.org/download/gecode-4.3.3.tar.gz"
 	install gecode-4.3.3.tar.gz dist/asgl/third-party
 	rm -rf dist/asgl/data
 	rm -rf dist/asgl/timings dist/asgl/features dist/asgl/tools dist/asgl/travis
