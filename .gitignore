@@ -67,3 +67,4 @@ lib/myam/src/test.c
 lib/myam/src/utils.c
 *~
 gecode.c
+af-constraints.c

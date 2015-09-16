@@ -17,7 +17,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (defpackage :asgl
-  (:use :cl :early :alexandria :gecode))
+  (:use :cl :early :alexandria :gecode :af-constraints))
 
 (in-package :asgl)
 
@@ -28,12 +28,6 @@
   (cover:annotate t))
 
 (defvar *use-gist* nil)
-
-(defvar *space*)
-(defvar *vars-vector*)
-(defvar *nand-table*)
-(defvar *expr-or-table*)
-(defvar *imp-or-table*)
 
 (defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
@@ -50,147 +44,6 @@
        ;; go interactive. When user is done, we just continue with
        ;; normal search. Space is returned unchanged.
        (bab-search-gist space))))
-
-(defmacro with-post-env-setup ((space) &body body)
-  (once-only
-   (space)
-   `(let ((*space* ,space)
-          (*vars-vector* (coerce (space-vars-as-list ,space) 'vector))
-          (*nand-table* (make-hash-table :test #'equal))
-          (*expr-or-table* (make-hash-table :test #'equal))
-          (*imp-or-table* (make-hash-table :test #'equal)))
-      ,@body)))
-
-(defmacro with-local-post-env (() &body body)
-  `(let ((space *space*)
-         (vars-vector *vars-vector*)
-         (nand-table *nand-table*)
-         (expr-or-table *expr-or-table*)
-         (imp-or-table *imp-or-table*))
-     (macrolet ((%%var%% (i) `(aref vars-vector ,i)))
-       (labels ((!!var!! (i) (%%var%% i))
-                (!!post-nand!! (a b)
-                  (sortf2 a b)
-                  (let ((key (list a b)))
-                    (unless (gethash key nand-table)
-                      (log* 3 "NAND ~D ~D" a b)
-                      (post-nand space a b)
-                      (setf (gethash key nand-table) t))))
-                (!!expr-or!! (indices)
-                  (if (eql 1 (length indices))
-                      (%%var%% (first indices))
-                      (let ((key (safe-sort indices)))
-                        (or (gethash key expr-or-table)
-                            (progn
-                              (log* 3 "EXPR-OR ~D ~A" (length key) key)
-                              (setf (gethash key expr-or-table)
-                                    (expr-or space
-                                             (mapcar #'!!var!! indices))))))))
-                (!!expr-and-vars!! (vars)
-                  (log* 3 "EXPR-AND-VARS ~D ..." (length vars))
-                  (expr-and space vars))
-                (!!imp-or!! (index indices)
-                  (let ((key (cons index (safe-sort indices))))
-                    (unless (gethash key imp-or-table)
-                      (assert-imp space (%%var%% index) (!!expr-or!! indices))
-                      (setf (gethash key imp-or-table) t)))))
-         ,@body))))
-
-(defmacro sortf2 (a b)
-  `(unless (< ,a ,b)
-     (rotatef ,a ,b)))
-
-(defun safe-sort (list)
-  (check-type list list)
-  (sort (copy-list list) #'<))
-
-
-
-(defun constrain-conflict-free (graph constrain-nand)
-  (check-type graph graph)
-  (check-type constrain-nand function)
-  (with-timing
-      (do-edges (from to graph)
-        (funcall constrain-nand from to))))
-
-(defun constrain-in-eqv-acceptable (graph
-                                    post-must-be-false
-                                    post-must-be-true
-                                    post-eql-indices
-                                    post-eql-vars
-                                    expr-and-vars
-                                    expr-or
-                                    var)
-  (check-type graph graph)
-  (check-type post-must-be-false function)
-  (check-type post-must-be-true function)
-  (check-type post-eql-indices function)
-  (check-type post-eql-vars function)
-  (check-type expr-and-vars function)
-  (check-type expr-or function)
-  (check-type var function)
-  (with-timing
-      (do-parents-grandparents (node pg graph)
-        (cond
-          ((equal `((,node ,node)) pg)
-           (funcall post-must-be-false node))
-          ((null pg)
-           (funcall post-must-be-true node))
-          ((some #'null (mapcar #'cdr pg))
-           (funcall post-must-be-false node))
-          ((and (eql 1 (length pg))
-                (eql 1 (length (cdr (first pg)))))
-           (funcall post-eql-indices node (second (first pg))))
-          ((eql 1 (length pg))
-           (destructuring-bind ((parent . grandparents)) pg
-             (declare (ignore parent))
-             (funcall post-eql-vars
-                      (funcall expr-or grandparents)
-                      (funcall var node))))
-          (t
-           (funcall post-eql-vars
-                    (funcall expr-and-vars
-                             (mapcar expr-or (mapcar #'cdr pg)))
-                    (funcall var node)))))))
-
-(defun constrain-complete (graph)
-  (check-type graph graph)
-  (with-local-post-env ()
-    (constrain-conflict-free graph #'!!post-nand!!)
-    #+nil
-    (constrain-not-attacked-are-in
-     graph (lambda (node) (post-must-be-true space node)))
-    (flet ((post-must-be-false (node)
-             (post-must-be-false space node))
-           (post-must-be-true (node)
-             (post-must-be-true space node))
-           (post-eql-indices (a b)
-             (boolvar-post-eql
-              space
-              (!!var!! a)
-              (!!var!! b)))
-           (post-eql-vars (a b)
-             (boolvar-post-eql space a b)))
-      (constrain-in-eqv-acceptable
-       graph
-       #'post-must-be-false
-       #'post-must-be-true
-       #'post-eql-indices
-       #'post-eql-vars
-       #'!!expr-and-vars!!
-       #'!!expr-or!!
-       #'!!var!!))))
-
-(defun constrain-stable (graph)
-  (check-type graph graph)
-  (with-local-post-env ()
-    (with-timing
-        (do-parents (node parents graph)
-          (when parents
-            (assert-imp
-             space
-             (expr-not space (!!var!! node))
-             (!!expr-or!! parents)))))))
 
 (defun adopt-keywords (list)
   (check-type list list)
