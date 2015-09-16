@@ -44,7 +44,7 @@
     (asgl::post-must-be-true space 1)
     (asgl::let*-heap ((var (asgl::int-var-none))
                       (val (asgl::int-val-min)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 16 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
@@ -52,7 +52,7 @@
   (let ((space (asgl::make-bool-space 8)))
     (asgl::let*-heap ((var (asgl::int-var-none))
                       (val (asgl::int-val-min)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 256 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
@@ -61,7 +61,7 @@
     (asgl::let*-heap ((rnd (asgl::rnd 7))
                       (var (asgl::int-var-rnd rnd))
                       (val (asgl::int-val-min)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 256 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
@@ -70,7 +70,7 @@
     (asgl::let*-heap ((rnd (asgl::rnd 7))
                       (var (asgl::int-var-none))
                       (val (asgl::int-val-rnd rnd)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 256 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
@@ -99,7 +99,7 @@
     (asgl::let*-heap ((rnd (asgl::rnd 7))
                       (var (asgl::int-var-none))
                       (val (asgl::int-val-rnd rnd)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 256 (asgl::dfs-count (asgl::make-dfs-engine space))))
     (asgl::delete-space space)))
 
@@ -119,7 +119,7 @@
   (let ((space (asgl::make-bool-space 3)))
     (asgl::let*-heap ((foo (asgl::int-var-none))
                       (foo2 (asgl::int-val-max)))
-      (asgl::branch space foo foo2))
+                     (asgl::branch space foo foo2))
     (let ((space (asgl::dfs-next (asgl::make-dfs-engine space))))
       (is (equal '(1 1 1) (asgl::space-to-list space)))
       (asgl::delete-space space))
@@ -130,7 +130,7 @@
     (asgl::let*-heap ((r (asgl::rnd 0))
                       (var-selection (asgl::int-var-rnd r))
                       (val-selection (asgl::int-val-max)))
-      (asgl::branch space var-selection val-selection))
+                     (asgl::branch space var-selection val-selection))
     (let ((dfs (asgl::make-dfs-engine space)))
       (is (equal '(1 1 1) (let ((space (asgl::dfs-next dfs)))
                             (prog1
@@ -148,7 +148,7 @@
     (asgl::let*-heap ((r (asgl::rnd 78))
                       (var-selection (asgl::int-var-none))
                       (val-selection (asgl::int-val-rnd r)))
-      (asgl::branch space var-selection val-selection))
+                     (asgl::branch space var-selection val-selection))
     (let ((dfs (asgl::make-dfs-engine space)))
       (is (equal '(1 0 1) (let ((space (asgl::dfs-next dfs)))
                             (prog1
@@ -165,7 +165,7 @@
   (let ((space (asgl::make-int-space 3 1 3)))
     (asgl::let*-heap ((var (asgl::int-var-none))
                       (val (asgl::int-val-max)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (let ((engine (asgl::make-dfs-engine space)))
       (is (not (null (asgl::dfs-next engine)))))))
 
@@ -173,7 +173,7 @@
   (let ((space (asgl::make-int-space 7 1 3)))
     (asgl::let*-heap ((var (asgl::int-var-none))
                       (val (asgl::int-val-max)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 2187 (asgl::dfs-count (asgl::make-dfs-engine space))))))
 
 (deftest int-space.3
@@ -181,7 +181,7 @@
     (asgl::let*-heap ((rnd (asgl::rnd 7))
                       (var (asgl::int-var-rnd rnd))
                       (val (asgl::int-val-max)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 2187 (asgl::dfs-count (asgl::make-dfs-engine space))))))
 
 (deftest int-space.4
@@ -189,5 +189,87 @@
     (asgl::let*-heap ((rnd (asgl::rnd 7))
                       (var (asgl::int-var-none))
                       (val (asgl::int-val-rnd rnd)))
-      (asgl::branch space var val))
+                     (asgl::branch space var val))
     (is (eql 2187 (asgl::dfs-count (asgl::make-dfs-engine space))))))
+
+(deftest assert-clause.1
+  (let ((space (gecode::make-bool-space 2)))
+    (gecode::assert-clause space (gecode::space-vars-as-list space) nil)
+    (asgl::let*-heap ((var (asgl::int-var-none))
+                      (val (asgl::int-val-min)))
+                     (asgl::branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 1) (1 0) (1 1)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest assert-clause.2
+  (let ((space (gecode::make-bool-space 2)))
+    (gecode::assert-clause space nil (gecode::space-vars-as-list space))
+    (asgl::let*-heap ((var (asgl::int-var-none))
+                      (val (asgl::int-val-min)))
+                     (asgl::branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0) (0 1) (1 0)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest bab-next.1
+  (let ((space (gecode::make-pr-bab-space 2)))
+    (gecode::assert-clause space nil (gecode::space-vars-as-list space))
+    (asgl::let*-heap ((var (asgl::int-var-none))
+                      (val (asgl::int-val-min)))
+                     (asgl::branch space var val))
+    (let ((dfs (gecode::make-bab-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::bab-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0) (0 1)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest bab-next.2
+  (let ((space (gecode::make-pr-bab-space 2)))
+    (asgl::let*-heap ((var (asgl::int-var-none))
+                      (val (asgl::int-val-min)))
+                     (asgl::branch space var val))
+    (let ((dfs (gecode::make-bab-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::bab-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0) (0 1) (1 1)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest bab-best.1
+  (let ((space (gecode::make-pr-bab-space 2)))
+    (gecode::assert-clause space nil (gecode::space-vars-as-list space))
+    (asgl::let*-heap ((var (asgl::int-var-none))
+                      (val (asgl::int-val-min)))
+                     (asgl::branch space var val))
+    (let ((dfs (gecode::make-bab-engine space)))
+      (gecode::delete-space space)
+      (is (equal '(0 1)
+                 (gecode::space-to-list (gecode::bab-best dfs))))
+      (gecode::delete-dfs dfs))))
+
+(deftest bab-best.2
+  (let ((space (gecode::make-pr-bab-space 2)))
+    (asgl::let*-heap ((var (asgl::int-var-none))
+                      (val (asgl::int-val-min)))
+                     (asgl::branch space var val))
+    (let ((dfs (gecode::make-bab-engine space)))
+      (gecode::delete-space space)
+      (is (equal '(1 1)
+                 (gecode::space-to-list (gecode::bab-best dfs))))
+      (gecode::delete-dfs dfs))))
