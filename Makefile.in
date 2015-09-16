@@ -48,7 +48,7 @@ gecode.fas: gecode.o BoolSpace.o PrBABSpace.o IntSpace.o
 	  -eval "(defvar *lisp-files* nil)" \
 	  -eval '(push "gecode.o" *lisp-files*)' \
 	  -eval '(setq *lisp-files* (nreverse *lisp-files*))' \
-	  -eval '(c:build-fasl "gecode.fas" :lisp-files *lisp-files* :ld-flags (list "BoolSpace.o" "PrBABSpace.o" "IntSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist"))' \
+	  -eval '(c:build-fasl "gecode.fas" :lisp-files *lisp-files* :ld-flags (list "BoolSpace.o" "PrBABSpace.o" "IntSpace.o" "-lgecodedriver" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist"))' \
 	  -eval '(quit)'
 	test -f gecode.fas
 
@@ -84,7 +84,7 @@ asgl: asgl.o gecode.o BoolSpace.o PrBABSpace.o IntSpace.o common/early/libearly.
 	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
 	  -load common/asgl-config/asgl-config.fas \
-	  -eval '(c:build-program "asgl" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "gecode.o" "asgl.o") :ld-flags (list "common/early/libapxparse.a" "BoolSpace.o" "PrBABSpace.o" "IntSpace.o" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
+	  -eval '(c:build-program "asgl" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "gecode.o" "asgl.o") :ld-flags (list "common/early/libapxparse.a" "BoolSpace.o" "PrBABSpace.o" "IntSpace.o" "-lgecodedriver" "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" "-lgecodeset" "-lgecodekernel" "-lgecodesupport" #+gist"-lgecodegist") :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 BoolSpace.o: BoolSpace.cpp BoolSpace.h asgl_config.h

@@ -10,7 +10,7 @@
   (let* ((dynamic-libraries (when dynamic-libraries
                               '("gecodesearch" "gecodeint" "gecodeset"
                                 "gecodeminimodel" "gecodekernel" "gecodesupport"
-                                "gecodegist" )))
+                                "gecodegist" "gecodedriver")))
          (c::*ld-bundle-flags*
            (format nil "~A -L~A ~{-l~A ~} @CXXFLAGS@"
                    c::*ld-bundle-flags*
