@@ -30,6 +30,7 @@
    #:make-dfs-engine
    #:make-bab-engine
    #:dfs-next
+   #:bab-next
    #:dfs-count
    #:dfs-statistics
    #:delete-dfs
@@ -61,13 +62,18 @@
    #:int-space-ins
    #:pr-bab-space-ins
    #:bool-space-ins)
+  (:export #:constrain-not-subset)
   ;; deprecated
   (:export
    #:space-vars-as-list
    #:space-print-in
    #:space-collect-in
    #:bab-best
-   #:space-to-list))
+   #:space-to-list)
+  ;; ============================================================
+  ;; clause
+  ;; ============================================================
+  (:export #:assert-clause))
 
 (in-package :gecode)
 
@@ -80,6 +86,7 @@
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
+
 
 (defmacro define-foreign-constructor ((name cname &key tag) &body args)
   (labels ((arg-var (arg) (first arg))
@@ -128,6 +135,15 @@
   (let ((solution
           (ffi:c-inline (dfs) (:pointer-void) :pointer-void
                         "((Gecode::DFS<Gecode::Space>*)(#0))->next()"
+                                              :one-liner t)))
+    (if (si:null-pointer-p solution)
+        nil
+        solution)))
+
+(defun bab-next (bab)
+  (let ((solution
+          (ffi:c-inline (bab) (:pointer-void) :pointer-void
+                        "((Gecode::BAB<Gecode::Space>*)(#0))->next()"
                                               :one-liner t)))
     (if (si:null-pointer-p solution)
         nil
@@ -499,14 +515,9 @@ s->constrain_not_subset(*o);
                 "{ delete ((Gecode::Space*)#0); }")
   nil)
 
-(defun clone-bool-space (space)
-  ;; c-inline00013
-  (check-type space SI:FOREIGN-DATA)
-  (assert (eql :bool-space (si:foreign-data-tag space)))
-  (ffi:c-inline (space) (:pointer-void) :pointer-void
-    "{ @(return 0) = ((BoolSpace*)#0)->clone(); }"))
-
 (defun clone-space (space)
+  ;; space-status must have been called, before calling this. Also,
+  ;; space must not be failed.
   (ffi:c-inline ((si:foreign-data-tag space) space)
       (:object :pointer-void)
       :object
@@ -565,22 +576,23 @@ default: @(return 0) = 100; break;
     (loop for i from 0 below (vars-size vars)
           collect (vars-nth vars i))))
 
-(defun space-print-in (space vector)
+(defun space-print-in (space vector
+                       &optional (stream *standard-output*))
   (check-type space SI:FOREIGN-DATA)
   (check-type vector vector)
   (every (lambda (x) (check-type x (or string
                                        non-negative-fixnum)))
          vector)
-  (write-string "[")
+  (write-string "[" stream)
   (loop with first-time = t
         for tail on (space-to-list space)
         for i upfrom 0
         do (when (eql 1 (car tail))
              (if first-time
                  (setq first-time nil)
-                 (write-string ","))
-             (princ (aref vector i))))
-  (write-string "]"))
+                 (write-string "," stream))
+             (princ (aref vector i) stream)))
+  (write-string "]" stream))
 
 (defun space-collect-in (space vector)
   (check-type space SI:FOREIGN-DATA)
@@ -613,7 +625,6 @@ default: @(return 0) = 100; break;
    (vars n) (:pointer-void :int) :pointer-void
    "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
 
-
 (defun delete-dfs (dfs)
   ;; c-inline00025
   (check-type dfs SI:FOREIGN-DATA)
@@ -632,7 +643,6 @@ default: @(return 0) = 100; break;
   (check-type bab SI:FOREIGN-DATA)
   (labels
       ((bab-next (bab)
-         ;; c-inline00026
          (ffi:c-inline
           (bab) (:pointer-void) :pointer-void
           "{ @(return 0) = ((Gecode::BAB<BoolSpace>*)(#0))->next(); }")))
@@ -717,6 +727,50 @@ res = 7;
     (unless (eql 1 status)
       (error "Perhaps gist is not enabled? (status is ~S)" status)))
   space)
+
+;;; ============================================================
+;;; clause
+;;; ============================================================
+
+(defun assert-clause (space pos-boolvars neg-boolvars)
+  (check-type space SI:FOREIGN-DATA)
+  (check-type pos-boolvars list)
+  (dolist (b pos-boolvars) (check-type b SI:FOREIGN-DATA))
+  (check-type neg-boolvars list)
+  (dolist (b neg-boolvars) (check-type b SI:FOREIGN-DATA))
+  (ffi:c-inline (space pos-boolvars neg-boolvars) (:pointer-void :object :object) :void
+                "
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+
+cl_object mylist = NULL;
+int __i = 0;
+int len = 0;
+
+len = (int)ecl_length(#1);
+Gecode::BoolVarArgs a(len);
+mylist = #1;
+__i = 0;
+while (!Null(mylist)) {
+  cl_object mycar = ecl_car(mylist);
+  a[__i] = *((Gecode::BoolVar*)ecl_to_pointer(mycar));
+  mylist = ecl_cdr(mylist);
+  __i++;
+}
+
+len = (int)ecl_length(#2);
+Gecode::BoolVarArgs b(len);
+mylist = #2;
+__i = 0;
+while (!Null(mylist)) {
+  cl_object mycar = ecl_car(mylist);
+  b[__i] = *((Gecode::BoolVar*)ecl_to_pointer(mycar));
+  mylist = ecl_cdr(mylist);
+  __i++;
+}
+
+clause(*boolSpace, Gecode::BOT_OR, a, b, 1);
+"))
+
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
