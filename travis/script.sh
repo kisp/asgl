@@ -13,7 +13,11 @@ function standard {
 
 function cover_for {
     rm -f cover.data
-    ./bin/asgl -p $1 -f af.apx -a 0
+    if [[ $1 =~ ^D ]]; then
+        ./bin/asgl -p $1 -f af.apx -a 0
+    else
+        ./bin/asgl -p $1 -f af.apx
+    fi
 
     ./bin/asgl --cover-report --all >report
 
