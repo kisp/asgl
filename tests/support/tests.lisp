@@ -68,6 +68,18 @@
   (frob $$grounded-ds :gr (:ds a))
   (frob $$preferred-ds :pr (:ds a)))
 
+(defmacro with-tmp-file-containing (lines pathname &body body)
+  `(let ((,pathname (pathname (format nil "/tmp/tmp~A.tmp"
+                                      (random 1000000)))))
+     (with-open-file (output ,pathname :direction :output
+                             :if-exists :supersede)
+       (dolist (line ',lines)
+         (write-line line output)))
+     (unwind-protect
+          (progn ,@body)
+       (when (probe-file ,pathname)
+         (delete-file ,pathname)))))
+
 (in-package :tests)
 
 (defun check-complete (expected graph)
