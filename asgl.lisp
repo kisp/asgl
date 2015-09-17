@@ -143,6 +143,65 @@
       (branch-space space task semantic)
       (values space vector))))
 
+
+
+;;; problem
+(defgeneric name (object)
+  (:documentation "Retrieve name of object."))
+
+(defmethod name ((object asgl::task)) (type-of object))
+(defmethod name ((object asgl::semantic)) (type-of object))
+
+(defclass problem ()
+  ((graph               :reader problem-graph               :initarg :graph)
+   (query-argument      :reader problem-query-argument      :initarg :query-argument)
+   (query-argument-name :reader problem-query-argument-name :initarg :query-argument-name)
+   (argument-names      :reader problem-argument-names      :initarg :argument-names)
+   (task                :reader problem-task                :initarg :task)
+   (semantic            :reader problem-semantic            :initarg :semantic)))
+
+(defmethod print-object ((problem problem) stream)
+  (print-unreadable-object (problem stream :type t)
+    (format stream "~A~@[ (arg ~A)~] of AF with ~r argument~:P, ~r attack~:P"
+            (asgl::task-semantic-format-as-cli-argument
+             (problem-task problem)
+             (problem-semantic problem))
+            (problem-query-argument-name problem)
+            (asgl::order (problem-graph problem))
+            (asgl::size (problem-graph problem)))))
+
+(defclass problem-with-result-printed (problem)
+  ())
+
+(defun make-problem (&key graph-input task-semantic query-argument-name
+                       (class 'problem-with-result-printed))
+  "problem constructor."
+  (typecase graph-input
+    ((or string pathname)
+     (unless (probe-file graph-input)
+       (error "graph-input ~S does not exist" graph-input))))
+  (multiple-value-bind (graph vector hash)
+      (asgl::read-graph-input graph-input)
+    (when query-argument-name
+      (unless (gethash query-argument-name hash)
+        (error "argument ~S is not part of AF" query-argument-name)))
+    (multiple-value-bind (task semantic)
+        (asgl::parse-problem* (string task-semantic))
+      (if (typep task 'asgl::decision-task)
+          (or query-argument-name
+              (error "no argument given for ~S" task))
+          (or (not query-argument-name)
+              (error "argument given for ~S. expected none." task)))
+      (make-instance class
+                     :graph graph
+                     :query-argument (gethash query-argument-name hash)
+                     :query-argument-name query-argument-name
+                     :argument-names vector
+                     :task task
+                     :semantic semantic))))
+
+
+
 (defclass driver () ())
 
 (defclass search-all-driver (driver)
@@ -730,6 +789,9 @@
     (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))
+    (make-problem :graph-input input
+                  :task-semantic p
+                  :query-argument-name a)    
     (multiple-value-bind (task semantic) (parse-problem p)
       (let ((task (make-task task a))
             (semantic (make-semantic semantic)))
