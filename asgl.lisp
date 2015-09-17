@@ -60,6 +60,19 @@
      (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
      (intern (string-upcase (subseq string (1+ pos))) "KEYWORD"))))
 
+(defun parse-problem* (string)
+  (multiple-value-bind (task semantic)
+      (parse-problem string)
+    (values (make-task task)
+            (make-semantic semantic))))
+
+(defun task-semantic-format-as-cli-argument (task semantic)
+  (format nil "~A-~A"
+          (etypecase task (ee-task "EE") (se-task "SE")
+                     (ds-task "DS") (dc-task "DC"))
+          (etypecase semantic (complete "CO") (preferred "PR")
+                     (stable "ST") (grounded "GR"))))
+
 (deftype input () '(or string pathname vector cons))
 
 (defgeneric make-initial-space (graph task semantic))
@@ -702,8 +715,10 @@
 (defun main% (&key (fo "apx") f p a g (gist "nil")
                 (log-level "1") (timing "t")
                 (eval "nil") (load nil))
-  (assert (equal fo "apx"))
-  (assert (xor f g))
+  (unless (equal fo "apx")
+    (error "unsupported format ~S" fo))
+  (unless (xor f g)
+    (error "exactly one of -f or -g must be given"))
   (let* ((*use-gist* (read-from-string gist))
          (*log-level* (read-from-string log-level))
          (*with-timing* (read-from-string timing))
