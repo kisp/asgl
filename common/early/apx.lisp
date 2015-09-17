@@ -49,6 +49,8 @@
     (read input)))
 
 (defun read-apx-file (pathname)
+  (unless (probe-file pathname)
+    (error "file ~S does not exist" pathname))
   (let ()
     (multiple-value-bind (buffer size)
         (ffi:c-inline
