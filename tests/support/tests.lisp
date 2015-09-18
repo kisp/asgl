@@ -82,29 +82,34 @@
 
 (in-package :tests)
 
+(defun make-graph-from-adj-or-cons (graph)
+  (etypecase graph
+    (cons (read-graph-input graph))
+    (array (early:make-graph-from-adj graph))))
+
 (defun check-complete (expected graph)
-  (check-semantic (early:make-graph-from-adj graph) expected
+  (check-semantic (make-graph-from-adj-or-cons graph) expected
                   #'asgl::$$complete-all
                   #'asgl::$$complete-one
                   #'asgl::$$complete-dc
                   #'asgl::$$complete-ds))
 
 (defun check-grounded (expected graph)
-  (check-semantic (early:make-graph-from-adj graph) expected
+  (check-semantic (make-graph-from-adj-or-cons graph) expected
                   #'asgl::$$grounded-all
                   #'asgl::$$grounded-one
                   #'asgl::$$grounded-dc
                   #'asgl::$$grounded-ds))
 
 (defun check-preferred (expected graph)
-  (check-semantic (early:make-graph-from-adj graph) expected
+  (check-semantic (make-graph-from-adj-or-cons graph) expected
                   #'asgl::$$preferred-all
                   #'asgl::$$preferred-one
                   #'asgl::$$preferred-dc
                   #'asgl::$$preferred-ds))
 
 (defun check-stable (expected graph)
-  (check-semantic (early:make-graph-from-adj graph) expected
+  (check-semantic (make-graph-from-adj-or-cons graph) expected
                   #'asgl::$$stable-all
                   #'asgl::$$stable-one
                   #'asgl::$$stable-dc
