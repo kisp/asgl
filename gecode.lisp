@@ -47,6 +47,7 @@
    #:expr-or
    #:expr-and
    #:expr-not)
+  (:export #:delete-boolvar)
   (:export
    #:boolvar-post-eql)
   (:export #:rnd)
@@ -87,6 +88,16 @@
 (eval-when (:compile-toplevel :execute)
   (cover:annotate t))
 
+#+fobj-leak-checks
+(progn
+  (defvar *pool* nil)
+
+  (defun pool-start ()
+    (setq *pool* nil))
+
+  (defun pool-check (msg)
+    (unless (null *pool*)
+      (error (format nil "~A~%~S" msg *pool*)))))
 
 (defmacro define-foreign-constructor ((name cname &key tag) &body args)
   (labels ((arg-var (arg) (first arg))
@@ -96,20 +107,23 @@
                                  :pointer-void
                                  (arg-ctype arg)))))
     `(defun ,name ,(mapcar #'arg-var args)
-       (ffi:c-inline
-        (',tag ,@(mapcar #'arg-var args))
-        (:object ,@(mapcar #'arg-type args))
-        :object
-        ,(format nil "ecl_make_foreign_data(#0,0,new ~A(~{~A~^,~}))"
-                 cname
-                 (loop for i upfrom 1
-                       for arg in args
-                       collect (format
-                                nil "~@[(~A)~](#~D)"
-                                (when (eql :pointer-void (arg-type arg))
-                                  (arg-ctype arg))
-                                i)))
-        :one-liner t))))
+       (let ((obj
+               (ffi:c-inline
+                   (',tag ,@(mapcar #'arg-var args))
+                   (:object ,@(mapcar #'arg-type args))
+                   :object
+                 ,(format nil "ecl_make_foreign_data(#0,0,new ~A(~{~A~^,~}))"
+                          cname
+                          (loop for i upfrom 1
+                                for arg in args
+                                collect (format
+                                         nil "~@[(~A)~](#~D)"
+                                         (when (eql :pointer-void (arg-type arg))
+                                           (arg-ctype arg))
+                                         i)))
+                 :one-liner t)))
+         #+fobj-leak-checks(push obj *pool*)
+         obj))))
 
 (define-foreign-constructor (make-int-space
                              "IntSpace" :tag :int-space)
@@ -138,7 +152,9 @@
                                               :one-liner t)))
     (if (si:null-pointer-p solution)
         nil
-        solution)))
+        (prog1
+            solution
+          #+fobj-leak-checks(push solution *pool*)))))
 
 (defun bab-next (bab)
   (let ((solution
@@ -147,7 +163,9 @@
                                               :one-liner t)))
     (if (si:null-pointer-p solution)
         nil
-        solution)))
+        (prog1
+            solution
+          #+fobj-leak-checks(push solution *pool*)))))
 
 (defun dfs-count (dfs)
   (ffi:c-inline (dfs) (:pointer-void) :int
@@ -335,8 +353,9 @@ Gecode::branch(*intSpace, vars, *var, *val);}"))))
   (check-type space SI:FOREIGN-DATA)
   (check-type boolvars list)
   (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
-  (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
-                "
+  (let ((var
+         (ffi:c-inline (space boolvars) (:pointer-void :object) :object
+                       "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 int len = (int)ecl_length(#1);
@@ -355,9 +374,20 @@ Gecode::BoolVar* u = new Gecode::BoolVar(*boolSpace, 0, 1);
 
 rel(*boolSpace, Gecode::BOT_OR, a, *u);
 
-@(return 0) = u;
+@(return 0) = ecl_make_foreign_data(ecl_make_keyword(\"BOOLVAR\"), 0, u);
 
-"))
+")))
+    #+fobj-leak-checks(push var *pool*)
+    var))
+
+(defun delete-boolvar (boolvar)
+  #+fobj-leak-checks
+  (progn
+    (assert (member boolvar *pool*))
+    (setq *pool* (delete boolvar *pool*)))
+  (ffi:c-inline (boolvar) (:pointer-void) :void
+                "delete ((Gecode::BoolVar*)(#0))"
+                :one-liner t))
 
 (defun expr-and (space boolvars)
   "Return a new boolvar that is constrained to be the AND of boolvars."
@@ -365,8 +395,9 @@ rel(*boolSpace, Gecode::BOT_OR, a, *u);
   (check-type space SI:FOREIGN-DATA)
   (check-type boolvars list)
   (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
-  (ffi:c-inline (space boolvars) (:pointer-void :object) :pointer-void
-                "
+  (let ((var
+         (ffi:c-inline (space boolvars) (:pointer-void :object) :object
+                       "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 int len = (int)ecl_length(#1);
@@ -385,17 +416,20 @@ Gecode::BoolVar* u = new Gecode::BoolVar(*boolSpace, 0, 1);
 
 rel(*boolSpace, Gecode::BOT_AND, a, *u);
 
-@(return 0) = u;
+@(return 0) = ecl_make_foreign_data(ecl_make_keyword(\"BOOLVAR\"), 0, u);
 
-"))
+")))
+    #+fobj-leak-checks(push var *pool*)
+    var))
 
 (defun expr-not (space boolvar)
   "Return a new boolvar that is constrained to be the NOT of boolvar."
   ;; c-inline00005
   (check-type space SI:FOREIGN-DATA)
   (check-type boolvar SI:FOREIGN-DATA)
-  (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :pointer-void
-                "
+  (let ((var
+         (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :object
+                       "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVar* a = ((Gecode::BoolVar*)(#1));
@@ -404,9 +438,11 @@ Gecode::BoolVar* u = new Gecode::BoolVar(*boolSpace, 0, 1);
 
 rel(*boolSpace, *a, Gecode::IRT_NQ, *u);
 
-@(return 0) = u;
+@(return 0) = ecl_make_foreign_data(ecl_make_keyword(\"BOOLVAR\"), 0, u);
 
-"))
+")))
+    #+fobj-leak-checks(push var *pool*)
+    var))
 
 (defun post-nand (space i j)
   ;; c-inline00006
@@ -511,6 +547,10 @@ s->constrain_not_subset(*o);
 (defun delete-space (space)
   ;; c-inline00012
   (check-type space SI:FOREIGN-DATA)
+  #+fobj-leak-checks
+  (progn
+    (assert (member space *pool*))
+    (setq *pool* (delete space *pool*)))
   (ffi:c-inline (space) (:pointer-void) :void
                 "{ delete ((Gecode::Space*)#0); }")
   nil)
@@ -518,11 +558,14 @@ s->constrain_not_subset(*o);
 (defun clone-space (space)
   ;; space-status must have been called, before calling this. Also,
   ;; space must not be failed.
-  (ffi:c-inline ((si:foreign-data-tag space) space)
-      (:object :pointer-void)
-      :object
-    "ecl_make_foreign_data(#0,0,((Gecode::Space*)#1)->clone())"
-    :one-liner t))
+  (let ((obj
+         (ffi:c-inline ((si:foreign-data-tag space) space)
+                       (:object :pointer-void)
+                       :object
+                       "ecl_make_foreign_data(#0,0,((Gecode::Space*)#1)->clone())"
+                       :one-liner t)))
+    #+fobj-leak-checks(push obj *pool*)
+    obj))
 
 (defun space-status (space)
   (check-type space SI:FOREIGN-DATA)
@@ -628,6 +671,10 @@ default: @(return 0) = 100; break;
 (defun delete-dfs (dfs)
   ;; c-inline00025
   (check-type dfs SI:FOREIGN-DATA)
+  #+fobj-leak-checks
+  (progn
+    (assert (member dfs *pool*))
+    (setq *pool* (delete dfs *pool*)))
   (ffi:c-inline (dfs) (:pointer-void) :void
                 "{ delete ((Gecode::DFS<BoolSpace>*)#0); }")
   nil)
@@ -635,6 +682,10 @@ default: @(return 0) = 100; break;
 (defun delete-bab (bab)
   ;; c-inline00025
   (check-type bab SI:FOREIGN-DATA)
+  #+fobj-leak-checks
+  (progn
+    (assert (member bab *pool*))
+    (setq *pool* (delete bab *pool*)))
   (ffi:c-inline (bab) (:pointer-void) :void
                 "{ delete ((Gecode::BAB<BoolSpace>*)#0); }")
   nil)
@@ -643,9 +694,14 @@ default: @(return 0) = 100; break;
   (check-type bab SI:FOREIGN-DATA)
   (labels
       ((bab-next (bab)
-         (ffi:c-inline
-          (bab) (:pointer-void) :pointer-void
-          "{ @(return 0) = ((Gecode::BAB<BoolSpace>*)(#0))->next(); }")))
+         (let ((solution
+                (ffi:c-inline
+                 (bab) (:pointer-void) :pointer-void
+                 "{ @(return 0) = ((Gecode::BAB<BoolSpace>*)(#0))->next(); }")))
+           #+fobj-leak-checks
+           (unless (si:null-pointer-p solution)
+             (push solution *pool*))
+           solution)))
     (declare (inline bab-next))
     (loop
       for prev-solution = nil then
