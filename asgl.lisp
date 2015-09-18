@@ -247,6 +247,7 @@
   (check-type task task)
   (check-type semantic semantic)
   (check-type drive-fn function)
+  #+fobj-leak-checks(gecode::pool-start)
   (multiple-value-bind (space vector)
       (with-timing (prepare-space input task semantic))
     (let ((engine (with-timing (make-search-engine space task semantic vector)))
@@ -254,7 +255,11 @@
       (log* 1 "driver: ~A" driver)
       (log* 1 "engine: ~A" engine)
       (log* 1 "STARTING SEARCH")
-      (with-timing (funcall drive-fn driver engine)))))
+      (multiple-value-prog1
+          (with-timing (funcall drive-fn driver engine))
+        #+fobj-leak-checks
+        (gecode::pool-check (format nil "~S ~S ~S ~S"
+                                    input task semantic drive-fn))))))
 
 (defun print-answer (input task semantic)
   (solve input task semantic

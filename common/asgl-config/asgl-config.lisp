@@ -86,3 +86,19 @@ res = 1;
 
 (when (ENABLE-LOGGING)
   (push :logging *features*))
+
+(defun ENABLE-FOBJ-LEAK-CHECKS ()
+  (zerop
+   (ffi:c-inline () () :int
+                 "{
+int res;
+#ifdef ENABLE_FOBJ_LEAK_CHECKS
+res = 0;
+#else
+res = 1;
+#endif
+@(return 0) = res;
+}")))
+
+(when (ENABLE-FOBJ-LEAK-CHECKS)
+  (push :fobj-leak-checks *features*))
