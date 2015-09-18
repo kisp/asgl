@@ -22,6 +22,12 @@ AS_IF([test "x$enableval" = "xyes"], [AC_DEFINE([ENABLE_LOGGING])])
 AS_IF([test "x$ASGL_LOGGING" = "xyes"], [AC_DEFINE([ENABLE_LOGGING])])
 unset enableval
 
+AC_ARG_VAR(ASGL_FOBJ_LEAK_CHECKS, Setting this to yes has same effect as --enable-fobj-leak-checks)
+AC_ARG_ENABLE([fobj-leak-checks], AS_HELP_STRING([--enable-fobj-leak-checks], [Enable feature fobj_leak_checks]))
+AS_IF([test "x$enableval" = "xyes"], [AC_DEFINE([ENABLE_FOBJ_LEAK_CHECKS])])
+AS_IF([test "x$ASGL_FOBJ_LEAK_CHECKS" = "xyes"], [AC_DEFINE([ENABLE_FOBJ_LEAK_CHECKS])])
+unset enableval
+
 AC_ARG_WITH([gist],
     AS_HELP_STRING([--without-gist], [Ignore presence of gist and disable it]))
 
