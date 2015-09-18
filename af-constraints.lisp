@@ -87,10 +87,14 @@
                       (funcall expr-or grandparents)
                       (funcall var node))))
           (t
-           (funcall post-eql-vars
-                    (funcall expr-and-vars
-                             (mapcar expr-or (mapcar #'cdr pg)))
-                    (funcall var node)))))))
+           (let ((expr-and
+                   (funcall expr-and-vars
+                            (mapcar expr-or (mapcar #'cdr pg)))))
+             (prog1
+                 (funcall post-eql-vars
+                          expr-and
+                          (funcall var node))
+               (delete-boolvar expr-and))))))))
 
 ;;; API
 (defmacro with-post-env-setup ((space) &body body)
@@ -101,7 +105,12 @@
           (*nand-table* (make-hash-table :test #'equal))
           (*expr-or-table* (make-hash-table :test #'equal))
           (*imp-or-table* (make-hash-table :test #'equal)))
-      ,@body)))
+      (unwind-protect
+           ,@body
+        (maphash (lambda (key value)
+                   (declare (ignore key))
+                   (delete-boolvar value))
+                 *expr-or-table*)))))
 
 (defmacro with-local-post-env (() &body body)
   `(let ((space *space*)
@@ -172,9 +181,12 @@
     (with-timing
         (do-parents (node parents graph)
           (when parents
-            (assert-imp
-             space
-             (expr-not space (!!var!! node))
-             (!!expr-or!! parents)))))))
+            (let ((negated-var
+                    (expr-not space (!!var!! node))))
+              (assert-imp
+               space
+               negated-var
+               (!!expr-or!! parents))
+              (delete-boolvar negated-var)))))))
 
 (cover:annotate nil)
