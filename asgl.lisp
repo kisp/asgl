@@ -478,7 +478,15 @@
 (defgeneric search-statistics (engine))
 
 (defmethod search-statistics ((engine search-engine))
-  (dfs-statistics (gecode-engine engine)))
+  (when (gecode-engine engine)
+    (prog1
+        (dfs-statistics (gecode-engine engine))
+      (when (and (gecode-engine engine)
+                 (typep (gecode-engine engine) 'si:foreign-data))
+        (ecase (si:foreign-data-tag (gecode-engine engine))
+          (:dfs-engine (delete-dfs (gecode-engine engine)))
+          (:bab-engine (delete-bab (gecode-engine engine))))
+        (setf (slot-value engine 'gecode-engine) nil)))))
 
 (defmethod search-statistics ((engine preferred-all-engine))
   (search-statistics (sub-engine engine)))
