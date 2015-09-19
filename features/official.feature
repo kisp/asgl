@@ -174,6 +174,7 @@ Feature: official
     | rdm50_4                     |
     | rdm50_5                     |
 
+    @notleak
     Examples: big
     | name    |
     | real_0  |
