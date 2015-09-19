@@ -1,0 +1,7 @@
+arg(arg0).
+arg(arg1).
+arg(arg2).
+att(arg2,arg0).
+att(arg0,arg0).
+att(arg0,arg1).
+att(arg0,arg2).
