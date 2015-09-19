@@ -36,6 +36,16 @@
 
 (in-package :asgl)
 
+(defun parse-print-result (result)
+  (labels ((s (x)
+             (setq x (substitute #\space #\, x))
+             (setq x (substitute #\( #\[ x))
+             (setq x (substitute #\) #\] x))))
+    (cond
+      ((string= (format nil "YES~%") result) t)
+      ((string= (format nil "NO~%") result) nil)
+      (t (read-from-string (s result))))))
+
 (macrolet ((frob (name semantic task)
              `(defun ,name ,(if (eql 2 (length task))
                                 '(graph a)
@@ -44,9 +54,27 @@
                       (semantic (make-semantic ,semantic)))
                   (multiple-value-bind (task semantic)
                       (translate-problem task semantic)
-                    (collect-answer graph
-                                    task
-                                    semantic))))))
+                    (let* ((print-answer-string
+                             (with-output-to-string (*standard-output*)
+                               (print-answer graph
+                                             task
+                                             semantic)))
+                           (print-answer (parse-print-result
+                                          print-answer-string)))
+                      (multiple-value-bind (collect-answer
+                                            collect-answer-exists-p)
+                          (collect-answer graph
+                                          task
+                                          semantic)
+                        (myam:is (equal print-answer collect-answer)
+                                 "print-answer is ~S (parsed as ~S). collect-answer is ~S"
+                                 print-answer-string print-answer
+                                 collect-answer)
+                        (case ,(car task)
+                          (:se (myam:is (eql (null collect-answer-exists-p)
+                                             (equal (format nil "NO~%") print-answer-string)))))
+                        (values collect-answer
+                                collect-answer-exists-p))))))))
   ;; all
   (frob $$complete-all :co (:ee))
   (frob $$stable-all :st (:ee))
