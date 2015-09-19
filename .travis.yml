@@ -23,7 +23,7 @@ env:
     - VARIANT=ref
     - VARIANT=asgl
     - VARIANT=asgl ASGL_COVER=yes
-    - VARIANT=asgl ASGL_FOBJ_LEAK_CHECKS=yes
+    - VARIANT=asgl ASGL_FOBJ_LEAK_CHECKS=yes CUKE_ARGS="--tags ~@notleak"
     - VARIANT=dist CUKE_ARGS="--tags ~@slow"
 
 install:
