@@ -1,0 +1,17 @@
+arg(arg0).
+arg(arg1).
+arg(arg2).
+arg(arg3).
+arg(arg4).
+att(arg3,arg1).
+att(arg2,arg1).
+att(arg1,arg1).
+att(arg1,arg2).
+att(arg4,arg3).
+att(arg3,arg3).
+att(arg1,arg3).
+att(arg4,arg4).
+att(arg3,arg4).
+att(arg2,arg4).
+att(arg1,arg4).
+att(arg0,arg4).
