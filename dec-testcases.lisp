@@ -3,12 +3,21 @@
 (in-package #:asgl)
 
 (defstruct case
-  sem-a task-a
+  sem-a task-a len-a
   solution
   sem-b task-b)
 
-(defun make-case* (sem-a task-a solution sem-b task-b)
-  (make-case :sem-a sem-a :task-a task-a :solution solution :sem-b sem-b :task-b task-b))
+(defun make-case* (sem-a task-a len-a solution sem-b task-b)
+  (make-case :len-a len-a :sem-a sem-a :task-a task-a :solution solution :sem-b sem-b :task-b task-b))
+
+(defun good-length (len spec)
+  (cond
+    ((integerp spec)
+     (= len spec))
+    ((consp spec)
+     (funcall (first spec) len (second spec)))
+    (t
+     (error "what to do with ~S?" spec))))
 
 (defun case-satisfied (graph arg case)
   (let ((ee-a (collect-answer graph
@@ -17,7 +26,11 @@
         (ee-b (collect-answer graph
                               (make-task (case-task-b case) arg)
                               (make-semantic (case-sem-b case)))))
-    (and (eql (case-solution case) ee-a)
+    (and (good-length (length (collect-answer graph
+                                              (make-task :ee)
+                                              (make-semantic (case-sem-a case))))
+                      (case-len-a case))
+         (eql (case-solution case) ee-a)
          (not (eql ee-a ee-b)))))
 
 (defun satisfied-cases (graph cases)
@@ -29,6 +42,12 @@
 
 (defun impossible-case (case)
   (or
+   (and (not (eql :st (case-sem-a case)))
+        (eql 0 (case-len-a case)))
+   ;; gr ist immer 1
+   (and (eql :gr (case-sem-a case))
+        (not (eql 1 (case-len-a case))))
+   ;; __
    (equal (list (case-task-a case) (case-sem-a case))
           (list (case-task-b case) (case-sem-b case)))
    (and (eql :ds (case-task-a case))
@@ -58,12 +77,13 @@
              (map-product #'make-case*
                           '(:co :pr :st :gr)
                           '(:dc :ds)
+                          '(0 1 2 3 4 (> 4))
                           '(t nil)
                           '(:co :pr :st :gr)
                           '(:dc :ds))))
 
 (defun random-graph-01 ()
-  (let ((n (+ 2 (random 25))))
+  (let ((n (+ 2 (random 15))))
     (cons n (random (expt 2 (* n n))))))
 
 (defun run ()
@@ -71,7 +91,7 @@
         graphs)
     (restart-case
         (loop for i upfrom 0
-              for graph = (random-graph-01)        
+              for graph = (random-graph-01)
               for good = (satisfied-cases graph missing-cases)
               when good do (push graph graphs)
                 do (setf missing-cases
@@ -145,4 +165,5 @@
                        ',solution ',x)))
           (terpri))))))
 
-(run)
+;;;
+;; (run)
