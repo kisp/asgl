@@ -66,6 +66,12 @@ def parse_output(string)
   json.j2set
 end
 
+def assert_newline_terminated(string)
+  unless string[-1] == "\n"
+    raise "not newline terminated:\n'#{string}'"
+  end
+end
+
 def is_array_of_strings?(x)
   x.is_a?(Array) &&
     x.all? { |elem| elem.is_a?(String) }
