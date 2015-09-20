@@ -279,7 +279,9 @@
         (constrain-complete graph))
       (assert (eql :solved (space-status space)))
       (if print
-          (space-print-in space argument-names)
+          (progn
+            (space-print-in space argument-names)
+            (terpri))
           (values (space-collect-in space argument-names)
                   t)))))
 
