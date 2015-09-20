@@ -68,7 +68,7 @@ end
 
 def assert_newline_terminated(string)
   unless string[-1] == "\n"
-    raise "not newline terminated:\n'#{string}'"
+    raise "not newline terminated:\n'#{string[-20..-1] || string}'"
   end
 end
 
