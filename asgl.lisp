@@ -261,13 +261,47 @@
         (gecode::pool-check (format nil "~S ~S ~S ~S"
                                     input task semantic drive-fn))))))
 
+;;; ================================================================================
+;;; sketches
+;;; ================================================================================
+
+(defmacro with-space ((space-var form) &body body)
+  `(let ((,space-var ,form))
+     (unwind-protect
+          (progn ,@body)
+       (delete-space ,space-var))))
+
+(defun solve-se-gr (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (with-space (space (make-bool-space (order graph)))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (assert (eql :solved (space-status space)))
+      (if print
+          (space-print-in space argument-names)
+          (values (space-collect-in space argument-names)
+                  t)))))
+
+;;; ////////////////////////////////////////////////////////////////////////////////
+;;; END sketches
+;;; ////////////////////////////////////////////////////////////////////////////////
+
 (defun print-answer (input task semantic)
-  (solve input task semantic
-         #'drive-search-and-print))
+  (cond
+    ((and (typep task 'se-task)
+          (typep semantic 'grounded))
+     (solve-se-gr input :print t))
+    (t (solve input task semantic
+              #'drive-search-and-print))))
 
 (defun collect-answer (input task semantic)
-  (solve input task semantic
-         #'drive-search-and-collect))
+  (cond
+    ((and (typep task 'se-task)
+          (typep semantic 'grounded))
+     (solve-se-gr input :print nil))
+    (t (solve input task semantic
+              #'drive-search-and-collect))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun make-semantic (semantic)
