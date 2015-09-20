@@ -300,6 +300,20 @@
           (values (space-collect-in space argument-names)
                   t)))))
 
+(defun-leak-checks solve-ee-gr (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (with-space (space (make-bool-space (order graph)))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (assert (eql :solved (space-status space)))
+      (if print
+          (progn
+            (write-char #\[)
+            (space-print-in space argument-names)
+            (write-line "]"))
+          (list (space-collect-in space argument-names))))))
+
 ;;; ////////////////////////////////////////////////////////////////////////////////
 ;;; END sketches
 ;;; ////////////////////////////////////////////////////////////////////////////////
@@ -309,6 +323,9 @@
     ((and (typep task 'se-task)
           (typep semantic 'grounded))
      (solve-se-gr input :print t))
+    ((and (typep task 'ee-task)
+          (typep semantic 'grounded))
+     (solve-ee-gr input :print t))
     (t (solve input task semantic
               #'drive-search-and-print))))
 
@@ -317,6 +334,9 @@
     ((and (typep task 'se-task)
           (typep semantic 'grounded))
      (solve-se-gr input :print nil))
+    ((and (typep task 'ee-task)
+          (typep semantic 'grounded))
+     (solve-ee-gr input :print nil))
     (t (solve input task semantic
               #'drive-search-and-collect))))
 
