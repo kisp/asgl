@@ -53,7 +53,7 @@
                 (let ((task (make-task ,@task))
                       (semantic (make-semantic ,semantic)))
                   (multiple-value-bind (task semantic)
-                      (translate-problem task semantic)
+                      (no-translate-problem task semantic)
                     (let* ((print-answer-string
                              (with-output-to-string (*standard-output*)
                                (print-answer graph

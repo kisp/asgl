@@ -808,6 +808,9 @@
   (translate (:ee :st) -> (:ee :st))
   (translate (:se :st) -> (:se :st)))
 
+(defun no-translate-problem (a b)
+  (values a b))
+
 (defun parse-g-arg (string)
   (let ((form (read-from-string string)))
     (cond
@@ -843,7 +846,7 @@
       (let ((task (make-task task a))
             (semantic (make-semantic semantic)))
         (multiple-value-bind (task semantic)
-            (translate-problem task semantic)
+            (no-translate-problem task semantic)
           (with-timing (print-answer input task semantic)))))))
 
 #+cover
