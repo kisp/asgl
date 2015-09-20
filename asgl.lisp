@@ -832,7 +832,7 @@
   (format t "[DC-CO, DC-GR, DC-PR, DC-ST, ~
               DS-CO, DS-GR, DS-PR, DS-ST, ~
               EE-CO, EE-GR, EE-PR, EE-ST, ~
-              SE-CO, SE-GR, SE-PR, SE-ST]"))
+              SE-CO, SE-GR, SE-PR, SE-ST]~%"))
 
 (defun run-repl ()
   (let ((init-file (merge-pathnames ".asglrc" (user-homedir-pathname))))
