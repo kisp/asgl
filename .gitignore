@@ -10,6 +10,7 @@ gr1/gr1.c
 *.eclh
 *.data
 *.fas
+*.fasc
 make.mk
 *.a
 *.fasl
