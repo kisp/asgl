@@ -271,7 +271,21 @@
           (progn ,@body)
        (delete-space ,space-var))))
 
-(defun solve-se-gr (graph-input &key print)
+(defmacro with-leak-checks ((msg) &body body)
+  #-fobj-leak-checks(declare (ignore msg))
+  `(progn
+     #+fobj-leak-checks(gecode::pool-start)
+     (multiple-value-prog1
+         (progn ,@body)
+       #+fobj-leak-checks
+       (gecode::pool-check ,msg))))
+
+(defmacro defun-leak-checks (name args &body body)
+  `(defun ,name ,args
+     (with-leak-checks (,(princ-to-string name))
+       ,@body)))
+
+(defun-leak-checks solve-se-gr (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
     (with-space (space (make-bool-space (order graph)))
@@ -285,7 +299,7 @@
           (values (space-collect-in space argument-names)
                   t)))))
 
-(defun solve-ee-gr (graph-input &key print)
+(defun-leak-checks solve-ee-gr (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
     (with-space (space (make-bool-space (order graph)))
@@ -299,7 +313,7 @@
             (write-line "]"))
           (list (space-collect-in space argument-names))))))
 
-(defun solve-se-st (graph-input &key print)
+(defun-leak-checks solve-se-st (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
     (let ((space (make-bool-space (order graph))))
