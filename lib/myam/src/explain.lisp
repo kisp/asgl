@@ -36,8 +36,8 @@
       (terpri stream)
       (terpri stream)
       (when failed
-        (output "Failure Details (limited to max 10):~%")
-        (dolist (f (safe-subseq failed 0 10))
+        (output "Failure Details (limited to max 100):~%")
+        (dolist (f (safe-subseq failed 0 100))
           (output "--------------------------------~%")
           (output "~A ~@{[~A]~}: ~%"
                   (name (test-case f))
