@@ -148,8 +148,8 @@
 (defun dfs-next (dfs)
   (let ((solution
           (ffi:c-inline (dfs) (:pointer-void) :pointer-void
-                        "((Gecode::DFS<Gecode::Space>*)(#0))->next()"
-                                              :one-liner t)))
+            "((Gecode::DFS<Gecode::Space>*)(#0))->next()"
+            :one-liner t)))
     (if (si:null-pointer-p solution)
         nil
         (prog1
@@ -159,8 +159,8 @@
 (defun bab-next (bab)
   (let ((solution
           (ffi:c-inline (bab) (:pointer-void) :pointer-void
-                        "((Gecode::BAB<Gecode::Space>*)(#0))->next()"
-                                              :one-liner t)))
+            "((Gecode::BAB<Gecode::Space>*)(#0))->next()"
+            :one-liner t)))
     (if (si:null-pointer-p solution)
         nil
         (prog1
@@ -169,7 +169,7 @@
 
 (defun dfs-count (dfs)
   (ffi:c-inline (dfs) (:pointer-void) :int
-                "{
+    "{
 Gecode::DFS<Gecode::Space> *dfs = (Gecode::DFS<Gecode::Space>*)(#0);
 int n = 0;
 Gecode::Space *s;
@@ -184,7 +184,7 @@ while(s = dfs->next()) {
 
 (defun bool-space-ins (space)
   (ffi:c-inline (space) (:pointer-void) :object
-                "{
+    "{
 BoolSpace *space = ((BoolSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(space->getVars());
@@ -211,7 +211,7 @@ result = ecl_cons(list, result);
 
 (defun int-space-ins (space)
   (ffi:c-inline (space) (:pointer-void) :object
-                "{
+    "{
 IntSpace *space = ((IntSpace*)(#0));
 
 Gecode::IntVarArray vars = *(space->getVars());
@@ -238,7 +238,7 @@ result = ecl_cons(list, result);
 
 (defun pr-bab-space-ins (space)
   (ffi:c-inline (space) (:pointer-void) :object
-                "{
+    "{
 PrBABSpace *space = ((PrBABSpace*)(#0));
 
 Gecode::BoolVarArray vars = *(space->getVars());
@@ -320,13 +320,13 @@ ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
           `(,(%symbol fn) ,@args
             (lambda (,variable)
               (let*-heap ,rest
-                ,@body)))))))
+                         ,@body)))))))
 
 (defun branch (space a b)
   (ecase (si:foreign-data-tag space)
     ((:bool-space :pr-bab-space)
      (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-                   "{
+       "{
 Gecode::IntVarBranch* var = ((Gecode::IntVarBranch*)(#1));
 Gecode::IntValBranch* val = ((Gecode::IntValBranch*)(#2));
 
@@ -337,7 +337,7 @@ Gecode::BoolVarArray vars = *(boolSpace->getVars());
 Gecode::branch(*boolSpace, vars, *var, *val);}"))
     (:int-space
      (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-                   "{
+       "{
 Gecode::IntVarBranch* var = ((Gecode::IntVarBranch*)(#1));
 Gecode::IntValBranch* val = ((Gecode::IntValBranch*)(#2));
 
@@ -354,8 +354,8 @@ Gecode::branch(*intSpace, vars, *var, *val);}"))))
   (check-type boolvars list)
   (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
   (let ((var
-         (ffi:c-inline (space boolvars) (:pointer-void :object) :object
-                       "
+          (ffi:c-inline (space boolvars) (:pointer-void :object) :object
+            "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 int len = (int)ecl_length(#1);
@@ -386,8 +386,8 @@ rel(*boolSpace, Gecode::BOT_OR, a, *u);
     (assert (member boolvar *pool*))
     (setq *pool* (delete boolvar *pool*)))
   (ffi:c-inline (boolvar) (:pointer-void) :void
-                "delete ((Gecode::BoolVar*)(#0))"
-                :one-liner t))
+    "delete ((Gecode::BoolVar*)(#0))"
+    :one-liner t))
 
 (defun expr-and (space boolvars)
   "Return a new boolvar that is constrained to be the AND of boolvars."
@@ -396,8 +396,8 @@ rel(*boolSpace, Gecode::BOT_OR, a, *u);
   (check-type boolvars list)
   (dolist (b boolvars) (check-type b SI:FOREIGN-DATA))
   (let ((var
-         (ffi:c-inline (space boolvars) (:pointer-void :object) :object
-                       "
+          (ffi:c-inline (space boolvars) (:pointer-void :object) :object
+            "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 int len = (int)ecl_length(#1);
@@ -428,8 +428,8 @@ rel(*boolSpace, Gecode::BOT_AND, a, *u);
   (check-type space SI:FOREIGN-DATA)
   (check-type boolvar SI:FOREIGN-DATA)
   (let ((var
-         (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :object
-                       "
+          (ffi:c-inline (space boolvar) (:pointer-void :pointer-void) :object
+            "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 Gecode::BoolVar* a = ((Gecode::BoolVar*)(#1));
@@ -450,7 +450,7 @@ rel(*boolSpace, *a, Gecode::IRT_NQ, *u);
   (check-type i non-negative-fixnum)
   (check-type j non-negative-fixnum)
   (ffi:c-inline (space i j) (:pointer-void :int :int) :void
-                "{
+    "{
 
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
@@ -470,7 +470,7 @@ rel(*boolSpace, vars[i], Gecode::BOT_AND, vars[j], 0);
   (check-type a SI:FOREIGN-DATA)
   (check-type b SI:FOREIGN-DATA)
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-                "{
+    "{
 
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
@@ -487,7 +487,7 @@ rel(*boolSpace, *a, Gecode::BOT_IMP, *b, 1);
   (check-type space SI:FOREIGN-DATA)
   (check-type i non-negative-fixnum)
   (ffi:c-inline (space i) (:pointer-void :int) :void
-                "{
+    "{
 
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
@@ -505,7 +505,7 @@ rel(*boolSpace, vars[i], Gecode::IRT_EQ, 0);
   (check-type space SI:FOREIGN-DATA)
   (check-type i non-negative-fixnum)
   (ffi:c-inline (space i) (:pointer-void :int) :void
-                "{
+    "{
 
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
@@ -524,7 +524,7 @@ rel(*boolSpace, vars[i], Gecode::IRT_EQ, 1);
   (check-type a SI:FOREIGN-DATA)
   (check-type b SI:FOREIGN-DATA)
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-                "
+    "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 rel(*boolSpace, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ,
@@ -536,7 +536,7 @@ rel(*boolSpace, *((Gecode::BoolVar*)(#1)), Gecode::IRT_EQ,
   (check-type space SI:FOREIGN-DATA)
   (check-type other SI:FOREIGN-DATA)
   (ffi:c-inline (space other) (:pointer-void :pointer-void) :void
-                "
+    "
 PrBABSpace* s = ((PrBABSpace*)(#0));
 PrBABSpace* o = ((PrBABSpace*)(#1));
 
@@ -552,18 +552,18 @@ s->constrain_not_subset(*o);
     (assert (member space *pool*))
     (setq *pool* (delete space *pool*)))
   (ffi:c-inline (space) (:pointer-void) :void
-                "{ delete ((Gecode::Space*)#0); }")
+    "{ delete ((Gecode::Space*)#0); }")
   nil)
 
 (defun clone-space (space)
   ;; space-status must have been called, before calling this. Also,
   ;; space must not be failed.
   (let ((obj
-         (ffi:c-inline ((si:foreign-data-tag space) space)
-                       (:object :pointer-void)
-                       :object
-                       "ecl_make_foreign_data(#0,0,((Gecode::Space*)#1)->clone())"
-                       :one-liner t)))
+          (ffi:c-inline ((si:foreign-data-tag space) space)
+              (:object :pointer-void)
+              :object
+            "ecl_make_foreign_data(#0,0,((Gecode::Space*)#1)->clone())"
+            :one-liner t)))
     #+fobj-leak-checks(push obj *pool*)
     obj))
 
@@ -572,7 +572,7 @@ s->constrain_not_subset(*o);
   (let ((status
           ;; c-inline00016
           (ffi:c-inline (space) (:pointer-void) :int
-                        "{
+            "{
 Gecode::SpaceStatus status = (((Gecode::Space*)(#0))->status());
 
 switch (status) {
@@ -597,13 +597,13 @@ default: @(return 0) = 100; break;
   ;; c-inline00017
   (check-type boolvar SI:FOREIGN-DATA)
   (ffi:c-inline (boolvar) (:pointer-void) :int
-                "{ @(return 0) = ((Gecode::BoolVar*)(#0))->min(); }"))
+    "{ @(return 0) = ((Gecode::BoolVar*)(#0))->min(); }"))
 
 (defun boolvar-max (boolvar)
   ;; c-inline00018
   (check-type boolvar SI:FOREIGN-DATA)
   (ffi:c-inline (boolvar) (:pointer-void) :int
-                "{ @(return 0) = ((Gecode::BoolVar*)(#0))->max(); }"))
+    "{ @(return 0) = ((Gecode::BoolVar*)(#0))->max(); }"))
 
 (defun boolvar-domain (boolvar)
   (check-type boolvar SI:FOREIGN-DATA)
@@ -652,21 +652,21 @@ default: @(return 0) = 100; break;
   ;; c-inline00019
   (check-type space SI:FOREIGN-DATA)
   (ffi:c-inline (space) (:pointer-void) :pointer-void
-                "{ @(return 0) = (void*)(((BoolSpace*)(#0))->getVars());}"))
+    "{ @(return 0) = (void*)(((BoolSpace*)(#0))->getVars());}"))
 
 (defun vars-size (vars)
   ;; c-inline00020
   (check-type vars SI:FOREIGN-DATA)
   (ffi:c-inline (vars) (:pointer-void) :int
-                "{ @(return 0) = ((Gecode::BoolVarArray*)(#0))->size(); }"))
+    "{ @(return 0) = ((Gecode::BoolVarArray*)(#0))->size(); }"))
 
 (defun vars-nth (vars n)
   ;; c-inline00021
   (check-type vars SI:FOREIGN-DATA)
   (check-type n non-negative-fixnum)
   (ffi:c-inline
-   (vars n) (:pointer-void :int) :pointer-void
-   "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
+      (vars n) (:pointer-void :int) :pointer-void
+    "{ @(return 0) = (void*)(&((*((Gecode::BoolVarArray*)(#0)))[#1])); }"))
 
 (defun delete-dfs (dfs)
   ;; c-inline00025
@@ -676,7 +676,7 @@ default: @(return 0) = 100; break;
     (assert (member dfs *pool*))
     (setq *pool* (delete dfs *pool*)))
   (ffi:c-inline (dfs) (:pointer-void) :void
-                "{ delete ((Gecode::DFS<BoolSpace>*)#0); }")
+    "{ delete ((Gecode::DFS<BoolSpace>*)#0); }")
   nil)
 
 (defun delete-bab (bab)
@@ -687,7 +687,7 @@ default: @(return 0) = 100; break;
     (assert (member bab *pool*))
     (setq *pool* (delete bab *pool*)))
   (ffi:c-inline (bab) (:pointer-void) :void
-                "{ delete ((Gecode::BAB<BoolSpace>*)#0); }")
+    "{ delete ((Gecode::BAB<BoolSpace>*)#0); }")
   nil)
 
 (defun bab-best (bab)
@@ -695,9 +695,9 @@ default: @(return 0) = 100; break;
   (labels
       ((bab-next (bab)
          (let ((solution
-                (ffi:c-inline
-                 (bab) (:pointer-void) :pointer-void
-                 "{ @(return 0) = ((Gecode::BAB<BoolSpace>*)(#0))->next(); }")))
+                 (ffi:c-inline
+                     (bab) (:pointer-void) :pointer-void
+                   "{ @(return 0) = ((Gecode::BAB<BoolSpace>*)(#0))->next(); }")))
            #+fobj-leak-checks
            (unless (si:null-pointer-p solution)
              (push solution *pool*))
@@ -717,12 +717,12 @@ default: @(return 0) = 100; break;
   (multiple-value-bind (fail node depth restart nogood)
       ;; c-inline00027
       (ffi:c-inline (dfs) (:pointer-void)
-                    (values :unsigned-long-long
-                            :unsigned-long-long
-                            :unsigned-long-long
-                            :unsigned-long-long
-                            :unsigned-long-long)
-                    "
+          (values :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long)
+        "
 Gecode::DFS<BoolSpace>* dfs = (Gecode::DFS<BoolSpace>*)(#0);
 
 Gecode::Search::Statistics s = dfs->statistics();
@@ -743,7 +743,7 @@ Gecode::Search::Statistics s = dfs->statistics();
   (let ((status
           ;; c-inline000028
           (ffi:c-inline (space) (:pointer-void) :int
-                        "
+            "
 int res = 0;
 #ifdef HAVE_GECODE_GIST_HH
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
@@ -766,7 +766,7 @@ res = 7;
   (let ((status
           ;; c-inline000028
           (ffi:c-inline (space) (:pointer-void) :int
-                        "
+            "
 int res = 0;
 #ifdef HAVE_GECODE_GIST_HH
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
@@ -795,7 +795,7 @@ res = 7;
   (check-type neg-boolvars list)
   (dolist (b neg-boolvars) (check-type b SI:FOREIGN-DATA))
   (ffi:c-inline (space pos-boolvars neg-boolvars) (:pointer-void :object :object) :void
-                "
+    "
 BoolSpace* boolSpace = ((BoolSpace*)(#0));
 
 cl_object mylist = NULL;
