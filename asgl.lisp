@@ -314,6 +314,32 @@
             (write-line "]"))
           (list (space-collect-in space argument-names))))))
 
+(defun-leak-checks solve-se-st (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (let ((space (make-bool-space (order graph))))
+      (with-post-env-setup (space)
+        (constrain-complete graph)
+        (constrain-stable graph))
+      (let*-heap ((var (int-var-none))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (with-space (space (dfs-next engine))
+          (multiple-value-prog1
+              (if space
+                  (if print
+                      (progn
+                        (space-print-in space argument-names)
+                        (terpri))
+                      (values (space-collect-in space argument-names)
+                              t))
+                  (if print
+                      (write-line "NO")
+                      (values nil nil)))
+            (delete-dfs engine)))))))
+
 ;;; ////////////////////////////////////////////////////////////////////////////////
 ;;; END sketches
 ;;; ////////////////////////////////////////////////////////////////////////////////
@@ -326,6 +352,9 @@
     ((and (typep task 'ee-task)
           (typep semantic 'grounded))
      (solve-ee-gr input :print t))
+    ((and (typep task 'se-task)
+          (typep semantic 'stable))
+     (solve-se-st input :print t))
     (t (solve input task semantic
               #'drive-search-and-print))))
 
@@ -337,6 +366,9 @@
     ((and (typep task 'ee-task)
           (typep semantic 'grounded))
      (solve-ee-gr input :print nil))
+    ((and (typep task 'se-task)
+          (typep semantic 'stable))
+     (solve-se-st input :print nil))
     (t (solve input task semantic
               #'drive-search-and-collect))))
 
