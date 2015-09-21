@@ -353,8 +353,8 @@
 
 (defmacro branch-with-logging (space &body body)
   `(let*-heap (,@body)
-     (log* 1 "branch ~{~A~^ ~}" ',body)
-     (branch ,space var val)))
+              (log* 1 "branch ~{~A~^ ~}" ',body)
+              (branch ,space var val)))
 
 (defmethod branch-space (space task semantic)
   (branch-with-logging space
@@ -804,7 +804,7 @@
     (when eval (eval eval))
     (make-problem :graph-input input
                   :task-semantic p
-                  :query-argument-name a)    
+                  :query-argument-name a)
     (multiple-value-bind (task semantic) (parse-problem p)
       (let ((task (make-task task a))
             (semantic (make-semantic semantic)))
