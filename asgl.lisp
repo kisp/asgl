@@ -269,7 +269,8 @@
   `(let ((,space-var ,form))
      (unwind-protect
           (progn ,@body)
-       (delete-space ,space-var))))
+       (when ,space-var
+         (delete-space ,space-var)))))
 
 (defmacro with-leak-checks ((msg) &body body)
   #-fobj-leak-checks(declare (ignore msg))
@@ -325,7 +326,7 @@
                  (branch space var val))
       (let ((engine (gecode:make-dfs-engine space)))
         (delete-space space)
-        (let ((space (dfs-next engine)))
+        (with-space (space (dfs-next engine))
           (multiple-value-prog1
               (if space
                   (if print
