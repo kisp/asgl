@@ -947,6 +947,7 @@
     (si:top-level)))
 
 (defun run-self-check (test-files)
+  (load "asgl.lisp")
   (dolist (file (directory
                  (merge-pathnames "tests/support/*.lisp"
                                   (asgl-home))))
