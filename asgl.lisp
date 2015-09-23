@@ -265,6 +265,22 @@
 ;;; sketches
 ;;; ================================================================================
 
+(defmacro with-array-output-helper ((stream) &body body)
+  (once-only
+   (stream)
+   (with-gensyms (first-time)
+     `(macrolet ((maybe-print-comma ()
+                   ',`(progn
+                        (if ,first-time
+                            (write-string "  " ,stream)
+                            (write-string ", " ,stream))
+                        (when ,first-time
+                          (setq ,first-time nil)))))
+        (let ((,first-time t))
+          (write-line "[" ,stream)
+          ,@body
+          (write-line "]" ,stream))))))
+
 (defmacro with-space ((space-var form) &body body)
   `(let ((,space-var ,form))
      (unwind-protect
@@ -290,8 +306,10 @@
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
     (with-space (space (make-bool-space (order graph)))
-      (with-post-env-setup (space)
-        (constrain-complete graph))
+      (do-parents (x parents graph)
+        (if (member x parents)
+            (gecode:post-ored-vars-imp-neg-var space (remove x parents) x)
+            (gecode:post-ored-vars-eql-neg-var space parents x)))
       (assert (eql :solved (space-status space)))
       (if print
           (progn
@@ -299,6 +317,24 @@
             (terpri))
           (values (space-collect-in space argument-names)
                   t)))))
+
+(defun-leak-checks solve-dc-gr (graph-input argument-name &key print)
+  (multiple-value-bind (graph argument-names hash-table)
+      (read-graph-input graph-input)
+    (declare (ignore argument-names))
+    (with-space (space (make-bool-space (order graph)))
+      (post-must-be-false space (gethash argument-name hash-table))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (ecase (space-status space)
+        (:solved
+         (if print
+             (write-line "NO")
+             nil))
+        (:failed
+         (if print
+             (write-line "YES")
+             t))))))
 
 (defun-leak-checks solve-ee-gr (graph-input &key print)
   (multiple-value-bind (graph argument-names)
@@ -314,6 +350,130 @@
             (write-line "]"))
           (list (space-collect-in space argument-names))))))
 
+(defun-leak-checks solve-ee-co (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (let ((space (make-bool-space (order graph))))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (multiple-value-prog1
+            (if print
+                (with-array-output-helper (*standard-output*)
+                  (loop
+                    (with-space (space (dfs-next engine))
+                      (if space
+                          (progn
+                            (maybe-print-comma)
+                            (space-print-in space argument-names)
+                            (terpri))
+                          (return)))))
+                (let (result)
+                  (loop
+                    (with-space (space (dfs-next engine))
+                      (if space
+                          (push (space-collect-in space argument-names) result)
+                          (return))))
+                  (nreverse result)))
+          (delete-dfs engine))))))
+
+(defun-leak-checks solve-ee-co2 (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (let ((space (make-bool-space (order graph))))
+      (let* ((n (order graph))
+             (vars-in (gecode:space-vars-as-vector space))
+             (vars-out (gecode:make-boolvar-array space n)))
+        (dotimes (i n)
+          (gecode:assert-nand space (aref vars-in i) (aref vars-out i)))
+        (do-parents (i parents graph)
+          (gecode:vector-indices-bot-eql-var
+           space vars-in parents :bot-or (aref vars-out i)))
+        (do-parents (i parents graph)
+          (gecode:vector-indices-bot-eql-var
+           space vars-out parents :bot-and (aref vars-in i))))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (multiple-value-prog1
+            (if print
+                (with-array-output-helper (*standard-output*)
+                  (loop
+                    (with-space (space (dfs-next engine))
+                      (if space
+                          (progn
+                            (maybe-print-comma)
+                            (space-print-in space argument-names)
+                            (terpri))
+                          (return)))))
+                (let (result)
+                  (loop
+                    (with-space (space (dfs-next engine))
+                      (if space
+                          (push (space-collect-in space argument-names) result)
+                          (return))))
+                  (nreverse result)))
+          (delete-dfs engine))))))
+
+(defun-leak-checks solve-ee-st (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (let ((space (make-bool-space (order graph))))
+      (with-post-env-setup (space)
+        (constrain-complete graph)
+        (constrain-stable graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (multiple-value-prog1
+            (if print
+                (with-array-output-helper (*standard-output*)
+                  (loop
+                    (with-space (space (dfs-next engine))
+                      (if space
+                          (progn
+                            (maybe-print-comma)
+                            (space-print-in space argument-names)
+                            (terpri))
+                          (return)))))
+                (let (result)
+                  (loop
+                    (with-space (space (dfs-next engine))
+                      (if space
+                          (push (space-collect-in space argument-names) result)
+                          (return))))
+                  (nreverse result)))
+          (delete-dfs engine))))))
+
+(defun-leak-checks solve-se-co (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (let ((space (make-bool-space (order graph))))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (with-space (space (dfs-next engine))
+          (multiple-value-prog1
+              (if print
+                  (progn
+                    (space-print-in space argument-names)
+                    (terpri))
+                  (values (space-collect-in space argument-names)
+                          t))
+            (delete-dfs engine)))))))
+
 (defun-leak-checks solve-se-st (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
@@ -321,7 +481,7 @@
       (with-post-env-setup (space)
         (constrain-complete graph)
         (constrain-stable graph))
-      (let*-heap ((var (int-var-none))
+      (let*-heap ((var (int-var-degree-max))
                   (val (int-val-min)))
                  (branch space var val))
       (let ((engine (gecode:make-dfs-engine space)))
@@ -340,35 +500,265 @@
                       (values nil nil)))
             (delete-dfs engine)))))))
 
+(defun-leak-checks solve-se-pr (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (let ((space (make-pr-bab-space (order graph))))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-max)))
+                 (branch space var val))
+      (let ((engine (gecode:make-bab-engine space)))
+        (delete-space space)
+        (with-space (space (bab-best engine))
+          (multiple-value-prog1
+              (if print
+                  (progn
+                    (space-print-in space argument-names)
+                    (terpri))
+                  (values (space-collect-in space argument-names)
+                          t))
+            (delete-bab engine)))))))
+
+(defun-leak-checks solve-dc-st (graph-input argument-name &key print)
+  (multiple-value-bind (graph argument-names hash-table)
+      (read-graph-input graph-input)
+    (declare (ignore argument-names))
+    (let ((space (make-bool-space (order graph))))
+      (post-must-be-true space (gethash argument-name hash-table))
+      (with-post-env-setup (space)
+        (constrain-complete graph)
+        (constrain-stable graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (with-space (space (dfs-next engine))
+          (multiple-value-prog1
+              (if space
+                  (if print
+                      (write-line "YES")
+                      t)
+                  (if print
+                      (write-line "NO")
+                      nil))
+            (delete-dfs engine)))))))
+
+(defun-leak-checks solve-ds-st (graph-input argument-name &key print)
+  (multiple-value-bind (graph argument-names hash-table)
+      (read-graph-input graph-input)
+    (declare (ignore argument-names))
+    (let ((space (make-bool-space (order graph))))
+      (post-must-be-false space (gethash argument-name hash-table))
+      (with-post-env-setup (space)
+        (constrain-complete graph)
+        (constrain-stable graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (with-space (space (dfs-next engine))
+          (multiple-value-prog1
+              (if (not space)
+                  (if print
+                      (write-line "YES")
+                      t)
+                  (if print
+                      (write-line "NO")
+                      nil))
+            (delete-dfs engine)))))))
+
+(defun-leak-checks solve-dc-co (graph-input argument-name &key print)
+  (multiple-value-bind (graph argument-names hash-table)
+      (read-graph-input graph-input)
+    (declare (ignore argument-names))
+    (let ((space (make-bool-space (order graph))))
+      (post-must-be-true space (gethash argument-name hash-table))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (with-space (space (dfs-next engine))
+          (multiple-value-prog1
+              (if space
+                  (if print
+                      (write-line "YES")
+                      t)
+                  (if print
+                      (write-line "NO")
+                      nil))
+            (delete-dfs engine)))))))
+
+(defun-leak-checks solve-ds-co (graph-input argument-name &key print)
+  (multiple-value-bind (graph argument-names hash-table)
+      (read-graph-input graph-input)
+    (declare (ignore argument-names))
+    (let ((space (make-bool-space (order graph))))
+      (post-must-be-false space (gethash argument-name hash-table))
+      (with-post-env-setup (space)
+        (constrain-complete graph))
+      (let*-heap ((var (int-var-degree-max))
+                  (val (int-val-min)))
+                 (branch space var val))
+      (let ((engine (gecode:make-dfs-engine space)))
+        (delete-space space)
+        (with-space (space (dfs-next engine))
+          (multiple-value-prog1
+              (if (not space)
+                  (if print
+                      (write-line "YES")
+                      t)
+                  (if print
+                      (write-line "NO")
+                      nil))
+            (delete-dfs engine)))))))
+
+(defun solve-ee-pr (graph-input &key print)
+  (let* ((ee-co (solve-ee-co graph-input :print nil))
+         (ee-pr (remove-duplicates (sort ee-co #'< :key #'length)
+                                   :test #'subsetp)))
+    (if print
+        (with-array-output-helper (*standard-output*)
+          (dolist (ext ee-pr)
+            (maybe-print-comma)
+            (format t "[~{~A~^,~}]~%" ext)))
+        ee-pr)))
+
+(defun solve-ds-pr (graph-input argument-name &key print)
+  (let* ((ee-co (solve-ee-co graph-input :print nil))
+         (ee-pr (remove-duplicates (sort ee-co #'< :key #'length)
+                                   :test #'subsetp)))
+    (if (every (lambda (ext) (member argument-name ext :test #'equal))
+               ee-pr)
+        (if print
+            (write-line "YES")
+            t)
+        (if print
+            (write-line "NO")
+            nil))))
+
+(defun solve-ds-gr (graph-input argument-name &key print)
+  (solve-dc-gr graph-input argument-name :print print))
+
+(defun solve-dc-pr (graph-input argument-name &key print)
+  (solve-dc-co graph-input argument-name :print print))
+
 ;;; ////////////////////////////////////////////////////////////////////////////////
 ;;; END sketches
 ;;; ////////////////////////////////////////////////////////////////////////////////
 
-(defun print-answer (input task semantic)
+(defun typep* (obj type)
+  (eql type (type-of obj)))
+
+(defun print-answer (input arg-name task semantic)
   (cond
-    ((and (typep task 'se-task)
-          (typep semantic 'grounded))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'grounded))
      (solve-se-gr input :print t))
-    ((and (typep task 'ee-task)
-          (typep semantic 'grounded))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'grounded))
      (solve-ee-gr input :print t))
-    ((and (typep task 'se-task)
-          (typep semantic 'stable))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'stable))
      (solve-se-st input :print t))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'complete))
+     (solve-se-co input :print t))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'complete))
+     (solve-ee-co input :print t))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'stable))
+     (solve-ee-st input :print t))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'preferred))
+     (solve-se-pr input :print t))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'stable))
+     (solve-dc-st input arg-name :print t))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'stable))
+     (solve-ds-st input arg-name :print t))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'complete))
+     (solve-dc-co input arg-name :print t))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'complete))
+     (solve-ds-co input arg-name :print t))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'grounded))
+     (solve-dc-gr input arg-name :print t))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'grounded))
+     (solve-ds-gr input arg-name :print t))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'preferred))
+     (solve-dc-pr input arg-name :print t))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'preferred))
+     (solve-ee-pr input :print t))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'preferred))
+     (solve-ds-pr input arg-name :print t))
     (t (solve input task semantic
               #'drive-search-and-print))))
 
-(defun collect-answer (input task semantic)
+(defun collect-answer (input arg-name task semantic)
   (cond
-    ((and (typep task 'se-task)
-          (typep semantic 'grounded))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'grounded))
      (solve-se-gr input :print nil))
-    ((and (typep task 'ee-task)
-          (typep semantic 'grounded))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'grounded))
      (solve-ee-gr input :print nil))
-    ((and (typep task 'se-task)
-          (typep semantic 'stable))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'stable))
      (solve-se-st input :print nil))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'complete))
+     (solve-se-co input :print nil))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'complete))
+     (solve-ee-co input :print nil))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'stable))
+     (solve-ee-st input :print nil))
+    ((and (typep* task 'se-task)
+          (typep* semantic 'preferred))
+     (solve-se-pr input :print nil))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'stable))
+     (solve-dc-st input arg-name :print nil))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'stable))
+     (solve-ds-st input arg-name :print nil))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'complete))
+     (solve-dc-co input arg-name :print nil))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'complete))
+     (solve-ds-co input arg-name :print nil))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'grounded))
+     (solve-dc-gr input arg-name :print nil))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'grounded))
+     (solve-ds-gr input arg-name :print nil))
+    ((and (typep* task 'dc-task)
+          (typep* semantic 'preferred))
+     (solve-dc-pr input arg-name :print nil))
+    ((and (typep* task 'ee-task)
+          (typep* semantic 'preferred))
+     (solve-ee-pr input :print nil))
+    ((and (typep* task 'ds-task)
+          (typep* semantic 'preferred))
+     (solve-ds-pr input arg-name :print nil))
     (t (solve input task semantic
               #'drive-search-and-collect))))
 
@@ -916,7 +1306,7 @@
             (semantic (make-semantic semantic)))
         (multiple-value-bind (task semantic)
             (no-translate-problem task semantic)
-          (with-timing (print-answer input task semantic)))))))
+          (with-timing (print-answer input a task semantic)))))))
 
 #+cover
 (defvar *cover-file*
