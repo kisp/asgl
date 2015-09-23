@@ -635,7 +635,8 @@ default: @(return 0) = 100; break;
                  (setq first-time nil)
                  (write-string "," stream))
              (princ (aref vector i) stream)))
-  (write-string "]" stream))
+  (write-string "]" stream)
+  nil)
 
 (defun space-collect-in (space vector)
   (check-type space SI:FOREIGN-DATA)
