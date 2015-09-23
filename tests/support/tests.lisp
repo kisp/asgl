@@ -49,34 +49,40 @@
       (t (read-from-string (s result))))))
 
 (macrolet ((frob (name semantic task)
-             `(defun ,name ,(if (eql 2 (length task))
-                                '(graph a)
-                                '(graph))
-                (let ((task (make-task ,@task))
-                      (semantic (make-semantic ,semantic)))
-                  (multiple-value-bind (task semantic)
-                      (no-translate-problem task semantic)
-                    (let* ((print-answer-string
-                             (with-output-to-string (*standard-output*)
-                               (print-answer graph
-                                             task
-                                             semantic)))
-                           (print-answer (parse-print-result
-                                          print-answer-string)))
-                      (multiple-value-bind (collect-answer
-                                            collect-answer-exists-p)
-                          (collect-answer graph
-                                          task
-                                          semantic)
-                        (myam:is (equal print-answer collect-answer)
-                                 "print-answer is ~S (parsed as ~S). collect-answer is ~S"
-                                 print-answer-string print-answer
-                                 collect-answer)
-                        (case ,(car task)
-                          (:se (myam:is (eql (null collect-answer-exists-p)
-                                             (equal (format nil "NO~%") print-answer-string)))))
-                        (values collect-answer
-                                collect-answer-exists-p))))))))
+             (let ((graph-or-graph-a
+                     (if (eql 2 (length task))
+                         '(graph a)
+                         '(graph)))
+                   (graph-nil-or-graph-a
+                     (if (eql 2 (length task))
+                         '(graph a)
+                         '(graph nil))))
+               `(defun ,name ,graph-or-graph-a
+                  (let ((task (make-task ,@task))
+                        (semantic (make-semantic ,semantic)))
+                    (multiple-value-bind (task semantic)
+                        (no-translate-problem task semantic)
+                      (let* ((print-answer-string
+                               (with-output-to-string (*standard-output*)
+                                 (print-answer ,@graph-nil-or-graph-a
+                                               task
+                                               semantic)))
+                             (print-answer (parse-print-result
+                                            print-answer-string)))
+                        (multiple-value-bind (collect-answer
+                                              collect-answer-exists-p)
+                            (collect-answer ,@graph-nil-or-graph-a
+                                            task
+                                            semantic)
+                          (myam:is (equal print-answer collect-answer)
+                                   "print-answer is ~S (parsed as ~S). collect-answer is ~S"
+                                   print-answer-string print-answer
+                                   collect-answer)
+                          (case ,(car task)
+                            (:se (myam:is (eql (null collect-answer-exists-p)
+                                               (equal (format nil "NO~%") print-answer-string)))))
+                          (values collect-answer
+                                  collect-answer-exists-p)))))))))
   ;; all
   (frob $$complete-all :co (:ee))
   (frob $$stable-all :st (:ee))
