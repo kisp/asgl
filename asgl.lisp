@@ -105,7 +105,7 @@
 
 (defmethod (setf task-hash) (value (task task))
   (check-type value hash-table)
-  ;; noop
+  ;; nothing to do here
   )
 
 (defclass decision-task (task)
@@ -318,7 +318,7 @@
   (check-type space SI:FOREIGN-DATA)
   (check-type semantic semantic)
   (check-type task task)
-  ;; noop
+  ;; nothing to do here
   )
 
 (defmethod constrain-arg-if-needed (space semantic (task decision-task))
@@ -689,7 +689,7 @@
 
 (defmethod constrain-arg-if-needed
     (space (semantic preferred) (task ds-task))
-  ;; noop
+  ;; nothing to do here
   )
 
 (defclass ds-pr-engine (engine)
