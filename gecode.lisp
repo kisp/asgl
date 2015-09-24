@@ -64,6 +64,8 @@
    #:pr-bab-space-ins
    #:bool-space-ins)
   (:export #:constrain-not-subset)
+  (:export #:dfs-search-gist
+           #:bab-search-gist)
   ;; deprecated
   (:export
    #:space-vars-as-list
