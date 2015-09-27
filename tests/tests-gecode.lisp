@@ -275,3 +275,143 @@
       (is (equal '(1 1)
                  (gecode::space-to-list (gecode::bab-best dfs))))
       (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-eql-neg-var.1
+  (let ((space (gecode::make-bool-space 1)))
+    (gecode:post-ored-vars-eql-neg-var space nil 0)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((1)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-eql-neg-var.2
+  (let ((space (gecode::make-bool-space 2)))
+    (gecode:post-ored-vars-eql-neg-var space '(0) 1)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 1) (1 0)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-eql-neg-var.3
+  (let ((space (gecode::make-bool-space 3)))
+    (gecode:post-ored-vars-eql-neg-var space '(0 1) 2)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0 1) (0 1 0) (1 0 0) (1 1 0)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-eql-neg-var.4
+  (let ((space (gecode::make-bool-space 4)))
+    (gecode:post-ored-vars-eql-neg-var space '(0 1 2) 3)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0 0 1) (0 0 1 0) (0 1 0 0) (0 1 1 0)
+                     (1 0 0 0) (1 0 1 0) (1 1 0 0) (1 1 1 0))
+                   solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-eql-neg-var.5
+  (let ((space (gecode::make-bool-space 3)))
+    (gecode:post-ored-vars-eql-neg-var space '(0 1 2) 2)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 1 0) (1 0 0) (1 1 0))
+                   solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-imp-neg-var.1
+  (let ((space (gecode::make-bool-space 1)))
+    (gecode:post-ored-vars-imp-neg-var space nil 0)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0) (1)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-imp-neg-var.2
+  (let ((space (gecode::make-bool-space 2)))
+    (gecode:post-ored-vars-imp-neg-var space '(0) 1)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0) (0 1) (1 0)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-imp-neg-var.3
+  (let ((space (gecode::make-bool-space 3)))
+    (gecode:post-ored-vars-imp-neg-var space '(0 1) 2)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0 0) (0 0 1) (0 1 0) (1 0 0) (1 1 0)) solutions)))
+      (gecode::delete-dfs dfs))))
+
+(deftest post-ored-vars-imp-neg-var.4
+  (let ((space (gecode::make-bool-space 4)))
+    (gecode:post-ored-vars-imp-neg-var space '(0 1 2) 3)
+    (let*-heap ((var (int-var-none))
+                      (val (int-val-min)))
+                     (branch space var val))
+    (let ((dfs (gecode::make-dfs-engine space)))
+      (gecode::delete-space space)
+      (let ((solutions (loop for solution = (gecode::dfs-next dfs)
+                             while solution
+                             collect (gecode::space-to-list solution)
+                             do (gecode::delete-space solution))))
+        (is (equal '((0 0 0 0) (0 0 0 1) (0 0 1 0) (0 1 0 0) (0 1 1 0) (1 0 0 0) (1 0 1 0)
+                     (1 1 0 0) (1 1 1 0))
+                   solutions)))
+      (gecode::delete-dfs dfs))))
