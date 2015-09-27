@@ -40,7 +40,9 @@
   (:export
    #:post-must-be-true
    #:post-must-be-false
-   #:post-nand)
+   #:post-nand
+   #:post-ored-vars-eql-neg-var
+   #:post-ored-vars-imp-neg-var)
   (:export
    #:assert-imp)
   (:export
@@ -464,6 +466,68 @@ int j = #2;
 rel(*boolSpace, vars[i], Gecode::BOT_AND, vars[j], 0);
 
 }"))
+
+(defun post-ored-vars-eql-neg-var (space vars var)
+  (ffi:c-inline (space vars var) (:pointer-void :object :object) :void
+    "{
+
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+
+Gecode::BoolVarArray vars = *(boolSpace->getVars());
+
+int len = (int)ecl_length(#1);
+Gecode::BoolVarArgs a(len);
+
+cl_object mylist = #1;
+int __i = 0;
+while (!Null(mylist)) {
+  cl_object mycar = ecl_car(mylist);
+  a[__i] = vars[ecl_fixnum(mycar)];
+  mylist = ecl_cdr(mylist);
+  __i++;
+}
+
+Gecode::BoolVarArgs none;
+clause(*boolSpace, Gecode::BOT_AND, none, a, vars[ecl_fixnum(#2)]);
+
+}"))
+
+(defun post-ored-vars-imp-neg-var (space vars var)
+  (let ((length (length vars)))
+    (cond
+      ((zerop length)
+       ;; nothing to do
+       )
+      ((eql 1 length)
+       (post-nand space (first vars) var))
+      ((eql 2 length)
+       (post-nand space (first vars) var)
+       (post-nand space (second vars) var))
+      (t (ffi:c-inline (space vars var) (:pointer-void :object :object) :void
+           "{
+
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+
+Gecode::BoolVarArray vars = *(boolSpace->getVars());
+
+int len = (int)ecl_length(#1);
+Gecode::BoolVarArgs a(len);
+
+cl_object mylist = #1;
+int __i = 0;
+while (!Null(mylist)) {
+  cl_object mycar = ecl_car(mylist);
+  a[__i] = vars[ecl_fixnum(mycar)];
+  mylist = ecl_cdr(mylist);
+  __i++;
+}
+
+Gecode::BoolVar u(*boolSpace, 0, 1);
+rel(*boolSpace, u, Gecode::IRT_NQ, vars[ecl_fixnum(#2)]);
+
+rel(*boolSpace, a, Gecode::IRT_LQ, u);
+
+}")))))
 
 (defun assert-imp (space a b)
   "BoolVar a --> BoolVar b."
