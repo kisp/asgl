@@ -8,8 +8,6 @@ job1:
     - make data/iccma15_solutions data/iccma15_testcases
     - cucumber --tags ~@slow
     - cucumber --tags @slow
-    - export ASGL_HOME=`pwd`
-    - # ./bin/asgl --check
     - xz -k bin/asgl
     - du -h bin/*
     - s3put bin/asgl.xz bin/$(git describe)/without-gist/asgl.xz
