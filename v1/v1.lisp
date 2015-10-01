@@ -1228,8 +1228,22 @@ res = 7;
   (unwind-protect
        (cond
          ((null (cdr ext:*command-args*))
-          (write-line "ASGL version 0.1.3")
+          (format t "ASGL version ~A~%"
+                  #.(multiple-value-bind (stream exit-code)
+                        (ext:run-program "git" '("describe" "HEAD"))
+                      (assert (zerop exit-code))
+                      (prog1
+                          (read-line stream)
+                        (close stream))))
           (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
+          (terpri)
+          (write-line "configuration options: ")
+          (write-line #.(multiple-value-bind (stream exit-code)
+                            (ext:run-program "./config.status" '("--config"))
+                          (assert (zerop exit-code))
+                          (prog1
+                              (read-line stream)
+                            (close stream))))
           (terpri)
           (write-line "Copyright (C) 2015  Kilian Sprotte")
           (write-line "This program comes with ABSOLUTELY NO WARRANTY.")

@@ -2,11 +2,7 @@ require 'aruba/cucumber'
 require 'set'
 
 Before do
-  if ENV['TRAVIS']
     @aruba_timeout_seconds = 30
-  else
-    @aruba_timeout_seconds = 10
-  end
 end
 
 RSpec::Matchers.define :be_meql do |expected|
