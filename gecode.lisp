@@ -44,11 +44,17 @@
    #:post-ored-vars-eql-neg-var
    #:post-ored-vars-imp-neg-var)
   (:export
-   #:assert-imp)
+   #:assert-imp
+   #:assert-nand
+   #:assert-true
+   #:assert-false)
+  (:export
+   #:vector-indices-bot-eql-var)
   (:export
    #:expr-or
    #:expr-and
    #:expr-not)
+  (:export #:make-boolvar-array)
   (:export #:delete-boolvar)
   (:export
    #:boolvar-post-eql)
@@ -71,6 +77,7 @@
   ;; deprecated
   (:export
    #:space-vars-as-list
+   #:space-vars-as-vector
    #:space-print-in
    #:space-collect-in
    #:bab-best
@@ -384,6 +391,23 @@ rel(*boolSpace, Gecode::BOT_OR, a, *u);
     #+fobj-leak-checks(push var *pool*)
     var))
 
+(defun make-boolvar-array (space n)
+  (let ((vector (make-array n)))
+    (ffi:c-inline (space n vector) (:pointer-void :int :object) :void
+      "{
+
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+
+Gecode::BoolVarArray a(*boolSpace, #1, 0, 1);
+
+cl_object v = #2;
+
+for(int i = 0; i<#1; i++)
+  ecl_aset_unsafe(v,i,ecl_make_pointer((void*)(&a[i])));
+
+}")
+    vector))
+
 (defun delete-boolvar (boolvar)
   #+fobj-leak-checks
   (progn
@@ -531,21 +555,37 @@ rel(*boolSpace, a, Gecode::IRT_LQ, u);
 
 (defun assert-imp (space a b)
   "BoolVar a --> BoolVar b."
-  ;; c-inline00007
   (check-type space SI:FOREIGN-DATA)
   (check-type a SI:FOREIGN-DATA)
   (check-type b SI:FOREIGN-DATA)
   (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
-    "{
+    "rel(*((BoolSpace*)(#0)), *(Gecode::BoolVar*)#1, Gecode::BOT_IMP, *(Gecode::BoolVar*)#2, 1)"
+    :one-liner t))
 
-BoolSpace* boolSpace = ((BoolSpace*)(#0));
+(defun assert-nand (space a b)
+  "!(BoolVar a && BoolVar b)."
+  (check-type space SI:FOREIGN-DATA)
+  (check-type a SI:FOREIGN-DATA)
+  (check-type b SI:FOREIGN-DATA)
+  (ffi:c-inline (space a b) (:pointer-void :pointer-void :pointer-void) :void
+    "rel(*((BoolSpace*)(#0)), *(Gecode::BoolVar*)#1, Gecode::BOT_AND, *(Gecode::BoolVar*)#2, 0)"
+    :one-liner t))
 
-Gecode::BoolVar* a = (Gecode::BoolVar*)#1;
-Gecode::BoolVar* b = (Gecode::BoolVar*)#2;
+(defun assert-false (space a)
+  "Post that a can only be 0."
+  (check-type space SI:FOREIGN-DATA)
+  (check-type a SI:FOREIGN-DATA)
+  (ffi:c-inline (space a) (:pointer-void :pointer-void) :void
+    "rel(*((BoolSpace*)(#0)), *(Gecode::BoolVar*)#1, Gecode::IRT_EQ, 0)"
+    :one-liner t))
 
-rel(*boolSpace, *a, Gecode::BOT_IMP, *b, 1);
-
-}"))
+(defun assert-true (space a)
+  "Post that a can only be 1."
+  (check-type space SI:FOREIGN-DATA)
+  (check-type a SI:FOREIGN-DATA)
+  (ffi:c-inline (space a) (:pointer-void :pointer-void) :void
+    "rel(*((BoolSpace*)(#0)), *(Gecode::BoolVar*)#1, Gecode::IRT_EQ, 1)"
+    :one-liner t))
 
 (defun post-must-be-false (space i)
   "Post that i can only be 0."
@@ -684,6 +724,15 @@ default: @(return 0) = 100; break;
   (let ((vars (space-vars space)))
     (loop for i from 0 below (vars-size vars)
           collect (vars-nth vars i))))
+
+(defun space-vars-as-vector (space)
+  (check-type space SI:FOREIGN-DATA)
+  (let* ((vars (space-vars space))
+         (size (vars-size vars))
+         (vector (make-array size)))
+    (loop for i from 0 below size
+          do (setf (aref vector i) (vars-nth vars i)))
+    vector))
 
 (defun space-print-in (space vector
                        &optional (stream *standard-output*))
@@ -894,6 +943,36 @@ while (!Null(mylist)) {
 clause(*boolSpace, Gecode::BOT_OR, a, b, 1);
 "))
 
+;;; ============================================================
+;;; vector-indices-bot-eql-var
+;;; ============================================================
+
+(defun lookup-bot (bot)
+  (ecase bot
+    (:bot-or
+     (ffi:c-inline () () :int "Gecode::BOT_OR" :one-liner t))
+    (:bot-and
+     (ffi:c-inline () () :int "Gecode::BOT_AND" :one-liner t))))
+
+(defun vector-indices-bot-eql-var (space vector indices bot var)
+  (ffi:c-inline (space vector indices (lookup-bot bot) var)
+      (:pointer-void :object :object :int :pointer-void) :void
+    "
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+
+int len = (int)ecl_length(#2);
+Gecode::BoolVarArgs a(len);
+
+cl_object list = #2;
+
+for(int count = 0; count<len; count++) {
+  cl_fixnum i = ecl_fixnum(ECL_CONS_CAR(list));
+  a[count] = *(Gecode::BoolVar*)ecl_to_pointer(ecl_aref_unsafe(#1,i));
+  list = ECL_CONS_CDR(list);
+}
+
+rel(*boolSpace, (Gecode::BoolOpType)#3, a, *(Gecode::BoolVar*)(#4));
+"))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
