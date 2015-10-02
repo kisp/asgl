@@ -13,3 +13,4 @@ constraint-based systems and applications. The interface conforms to
     This program comes with ABSOLUTELY NO WARRANTY.
     This is free software, and you are welcome to redistribute it
     under certain conditions.
+trigger build
