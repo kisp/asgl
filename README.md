@@ -12,4 +12,4 @@ constraint-based systems and applications. The interface conforms to
     Copyright (C) 2015  Kilian Sprotte
     This program comes with ABSOLUTELY NO WARRANTY.
     This is free software, and you are welcome to redistribute it
-    under certain conditions. 
+    under certain conditions.
