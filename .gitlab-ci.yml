@@ -5,6 +5,7 @@ job1:
     - ./scripts/generate-make-mk.sh
     - make
     - ./bin/asgl
+    - ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp
     - make data/iccma15_solutions data/iccma15_testcases
     - cucumber --tags ~@slow
     - cucumber --tags @slow
@@ -22,3 +23,15 @@ job2:
     - xz -k bin/asgl
     - du -h bin/*
     - s3put bin/asgl.xz bin/$(git describe)/without-gist_enable-timing/asgl.xz
+
+job3:
+  script:
+    - autoconf
+    - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist --enable-fobj-leak-checks
+    - ./scripts/generate-make-mk.sh
+    - make
+    - ./bin/asgl
+    - ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp
+    - xz -k bin/asgl
+    - du -h bin/*
+    - s3put bin/asgl.xz bin/$(git describe)/without-gist_fobj-leak-checks/asgl.xz
