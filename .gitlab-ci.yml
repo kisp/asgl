@@ -1,7 +1,7 @@
 job1:
   script:
     - autoconf
-    - ./configure --without-gist
+    - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist
     - ./scripts/generate-make-mk.sh
     - make
     - ./bin/asgl
@@ -15,7 +15,7 @@ job1:
 job2:
   script:
     - autoconf
-    - ./configure --without-gist --enable-timing
+    - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist --enable-timing
     - ./scripts/generate-make-mk.sh
     - make
     - ./bin/asgl
