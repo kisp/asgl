@@ -1,4 +1,4 @@
-job1:
+standard:
   script:
     - autoconf
     - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist
@@ -13,7 +13,7 @@ job1:
     - du -h bin/*
     - s3put bin/asgl.xz bin/$(git describe)/without-gist/asgl.xz
 
-job2:
+enable-timing:
   script:
     - autoconf
     - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist --enable-timing
@@ -24,7 +24,7 @@ job2:
     - du -h bin/*
     - s3put bin/asgl.xz bin/$(git describe)/without-gist_enable-timing/asgl.xz
 
-job3:
+enable-fobj-leak-checks:
   script:
     - autoconf
     - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist --enable-fobj-leak-checks
