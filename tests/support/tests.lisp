@@ -36,6 +36,8 @@
 
 (in-package :asgl)
 
+(setq *log-level* 0)
+
 (defun parse-print-result (result)
   (labels ((s (x)
              (setq x (substitute #\space #\, x))
