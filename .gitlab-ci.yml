@@ -32,6 +32,7 @@ enable-fobj-leak-checks:
     - make
     - ./bin/asgl
     - ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp
+    - cucumber --tags ~@slow
     - xz -k bin/asgl
     - du -h bin/*
     - s3put bin/asgl.xz bin/$(git describe)/without-gist_fobj-leak-checks/asgl.xz
