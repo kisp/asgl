@@ -1,38 +1,23 @@
-standard:
+normal-full:
   script:
-    - autoconf
-    - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist
-    - ./scripts/generate-make-mk.sh
-    - make
-    - ./bin/asgl
-    - ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp
-    - make data/iccma15_solutions data/iccma15_testcases
-    - cucumber --tags ~@slow
-    - cucumber --tags @slow
-    - xz -k bin/asgl
-    - du -h bin/*
-    - s3put bin/asgl.xz bin/$(git describe)/without-gist/asgl.xz
+    - ./gitlab-ci/run.sh full
 
-enable-timing:
+normal-light:
   script:
-    - autoconf
-    - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist --enable-timing
-    - ./scripts/generate-make-mk.sh
-    - make
-    - ./bin/asgl
-    - xz -k bin/asgl
-    - du -h bin/*
-    - s3put bin/asgl.xz bin/$(git describe)/without-gist_enable-timing/asgl.xz
+    - ./gitlab-ci/run.sh light
 
-enable-fobj-leak-checks:
+cover:
   script:
-    - autoconf
-    - CXXFLAGS="-O3 -march=core2 -mtune=generic -pipe -fomit-frame-pointer" ./configure --without-gist --enable-fobj-leak-checks
-    - ./scripts/generate-make-mk.sh
-    - make
-    - ./bin/asgl
-    - ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp
-    - cucumber --tags ~@slow
-    - xz -k bin/asgl
-    - du -h bin/*
-    - s3put bin/asgl.xz bin/$(git describe)/without-gist_fobj-leak-checks/asgl.xz
+    - ./gitlab-ci/run.sh light --enable-cover
+
+timing:
+  script:
+    - ./gitlab-ci/run.sh none --enable-timing
+
+logging:
+  script:
+    - ./gitlab-ci/run.sh light --enable-logging
+
+fobj-leak-checks:
+  script:
+    - ./gitlab-ci/run.sh light --enable-fobj-leak-checks
