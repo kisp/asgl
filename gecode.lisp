@@ -18,6 +18,8 @@
 
 (defpackage :gecode
   (:use :cl :early :alexandria)
+  ;; conditions
+  (:export #:engine-stopped)
   (:export
    #:make-bool-space
    #:make-pr-bab-space
@@ -25,16 +27,33 @@
    #:branch
    #:space-status
    #:clone-space
-   #:delete-space)
+   #:delete-space
+   #:with-space)
   (:export
    #:make-dfs-engine
+   #:make-dfs-engine-with-options
    #:make-bab-engine
+   #:make-bab-engine-with-options
    #:dfs-next
    #:bab-next
    #:dfs-count
    #:dfs-statistics
+   #:bab-statistics
    #:delete-dfs
    #:delete-bab)
+  (:export #:make-default-search-options
+           #:with-default-search-options
+           #:search-options-clone
+           #:search-options-threads
+           #:search-options-commit-distance
+           #:search-options-adaptive-distance
+           #:search-options-nogoods-limit
+           #:search-options-stop
+           ;; #:search-options-cutoff
+           )
+  (:export #:make-node-stop
+           #:make-fail-stop
+           #:make-time-stop)
   (:export
    #:let*-heap)
   (:export
@@ -74,6 +93,9 @@
   (:export #:constrain-not-subset)
   (:export #:dfs-search-gist
            #:bab-search-gist)
+  (:export #:delete-generic
+           #:let-delete
+           #:let*-delete)
   ;; deprecated
   (:export
    #:space-vars-as-list
@@ -116,7 +138,9 @@
            (arg-type (arg) (let ((type (second arg)))
                              (if (stringp (arg-ctype arg))
                                  :pointer-void
-                                 (arg-ctype arg)))))
+                                 (arg-ctype arg))))
+           (arg-options (arg) (cddr arg))
+           (arg-deref (arg) (getf (arg-options arg) :deref nil)))
     `(defun ,name ,(mapcar #'arg-var args)
        (let ((obj
                (ffi:c-inline
@@ -128,9 +152,10 @@
                           (loop for i upfrom 1
                                 for arg in args
                                 collect (format
-                                         nil "~@[(~A)~](#~D)"
+                                         nil "~@[~A~](#~D)"
                                          (when (eql :pointer-void (arg-type arg))
-                                           (arg-ctype arg))
+                                           (format nil "~:[~;*~](~A)"
+                                                   (arg-deref arg) (arg-ctype arg)))
                                          i)))
                  :one-liner t)))
          #+fobj-leak-checks(push obj *pool*)
@@ -152,35 +177,143 @@
                              "Gecode::DFS<Gecode::Space>" :tag :dfs-engine)
     (space "Gecode::Space*"))
 
+(define-foreign-constructor (make-dfs-engine-with-options
+                             "Gecode::DFS<Gecode::Space>" :tag :dfs-engine)
+    (space "Gecode::Space*")
+  (options "Gecode::Search::Options*" :deref t))
+
 (define-foreign-constructor (make-bab-engine
                              "Gecode::BAB<Gecode::Space>" :tag :bab-engine)
     (space "Gecode::Space*"))
 
+(define-foreign-constructor (make-bab-engine-with-options
+                             "Gecode::BAB<Gecode::Space>" :tag :bab-engine)
+    (space "Gecode::Space*")
+  (options "Gecode::Search::Options*" :deref t))
+
+(define-foreign-constructor (make-default-search-options
+                             "Gecode::Search::Options" :tag :search-options))
+
+(define-foreign-constructor (make-node-stop
+                             "Gecode::Search::NodeStop" :tag :node-stop)
+    (l :unsigned-long-long))
+
+(define-foreign-constructor (make-fail-stop
+                             "Gecode::Search::FailStop" :tag :fail-stop)
+    (l :unsigned-long-long))
+
+(define-foreign-constructor (make-time-stop
+                             "Gecode::Search::TimeStop" :tag :time-stop)
+    (l :unsigned-long-long))
+
+(defmacro with-default-search-options ((options) &body body)
+  `(let ((,options (make-default-search-options)))
+     (unwind-protect
+          (progn ,@body)
+       (delete-generic ,options))))
+
+(defun search-options-clone (search-options)
+  (ffi:c-inline (search-options) (:pointer-void) :bool
+    "(*(Gecode::Search::Options*)(#0)).clone"
+    :one-liner t))
+
+(defun (setf search-options-clone) (value search-options)
+  (ffi:c-inline (search-options value) (:pointer-void :bool) :void
+    "(*(Gecode::Search::Options*)(#0)).clone = #1"
+    :one-liner t)
+  value)
+
+(defun search-options-threads (search-options)
+  (ffi:c-inline (search-options) (:pointer-void) :double
+    "(*(Gecode::Search::Options*)(#0)).threads"
+    :one-liner t))
+
+(defun (setf search-options-threads) (value search-options)
+  (ffi:c-inline (search-options value) (:pointer-void :double) :void
+    "(*(Gecode::Search::Options*)(#0)).threads = #1"
+    :one-liner t))
+
+(defun search-options-commit-distance (search-options)
+  (ffi:c-inline (search-options) (:pointer-void) :unsigned-int
+    "(*(Gecode::Search::Options*)(#0)).c_d"
+    :one-liner t))
+
+(defun (setf search-options-commit-distance) (value search-options)
+  (ffi:c-inline (search-options value) (:pointer-void :unsigned-int) :void
+    "(*(Gecode::Search::Options*)(#0)).c_d = #1"
+    :one-liner t))
+
+(defun search-options-adaptive-distance (search-options)
+  (ffi:c-inline (search-options) (:pointer-void) :unsigned-int
+    "(*(Gecode::Search::Options*)(#0)).a_d"
+    :one-liner t))
+
+(defun (setf search-options-adaptive-distance) (value search-options)
+  (ffi:c-inline (search-options value) (:pointer-void :unsigned-int) :void
+    "(*(Gecode::Search::Options*)(#0)).a_d = #1"
+    :one-liner t))
+
+(defun search-options-nogoods-limit (search-options)
+  (ffi:c-inline (search-options) (:pointer-void) :unsigned-int
+    "(*(Gecode::Search::Options*)(#0)).nogoods_limit"
+    :one-liner t))
+
+(defun (setf search-options-nogoods-limit) (value search-options)
+  (ffi:c-inline (search-options value) (:pointer-void :unsigned-int) :void
+    "(*(Gecode::Search::Options*)(#0)).nogoods_limit = #1"
+    :one-liner t))
+
+(defun search-options-stop (search-options)
+  (let ((pointer
+          (ffi:c-inline (search-options) (:pointer-void) :pointer-void
+            "(*(Gecode::Search::Options*)(#0)).stop"
+            :one-liner t)))
+    (unless (si:null-pointer-p pointer)
+      pointer)))
+
+(defun (setf search-options-stop) (value search-options)
+  (ffi:c-inline (search-options value) (:pointer-void :pointer-void) :void
+    "(*(Gecode::Search::Options*)(#0)).stop = (Gecode::Search::Stop*)(#1)"
+    :one-liner t))
+
+(define-condition engine-stopped ()
+  ())
+
 (defun dfs-next (dfs)
-  (let ((solution
-          (ffi:c-inline (dfs) (:pointer-void) :pointer-void
-            "((Gecode::DFS<Gecode::Space>*)(#0))->next()"
-            :one-liner t)))
+  (multiple-value-bind (solution stopped)
+      (ffi:c-inline (dfs) (:pointer-void) (values :pointer-void :bool)
+        "
+Gecode::DFS<Gecode::Space> *dfs = ((Gecode::DFS<Gecode::Space>*)(#0));
+@(return 0) = dfs->next();
+@(return 1) = dfs->stopped();")
+    (when stopped
+      (error 'engine-stopped))
     (if (si:null-pointer-p solution)
         nil
         (prog1
             solution
           #+fobj-leak-checks(push solution *pool*)))))
 
+(declaim (inline bab-next))
 (defun bab-next (bab)
-  (let ((solution
-          (ffi:c-inline (bab) (:pointer-void) :pointer-void
-            "((Gecode::BAB<Gecode::Space>*)(#0))->next()"
-            :one-liner t)))
+  (multiple-value-bind (solution stopped)
+      (ffi:c-inline (bab) (:pointer-void) (values :pointer-void :bool)
+        "
+Gecode::BAB<Gecode::Space> *bab = ((Gecode::BAB<Gecode::Space>*)(#0));
+@(return 0) = bab->next();
+@(return 1) = bab->stopped();")
+    (when stopped
+      (error 'engine-stopped))
     (if (si:null-pointer-p solution)
         nil
         (prog1
             solution
           #+fobj-leak-checks(push solution *pool*)))))
 
-(defun dfs-count (dfs)
-  (ffi:c-inline (dfs) (:pointer-void) :int
-    "{
+(defun dfs-count (dfs &key (error-on-stopped t) delete-engine)
+  (multiple-value-bind (n stopped)
+      (ffi:c-inline (dfs) (:pointer-void) (values :int :bool)
+        "{
 Gecode::DFS<Gecode::Space> *dfs = (Gecode::DFS<Gecode::Space>*)(#0);
 int n = 0;
 Gecode::Space *s;
@@ -189,9 +322,14 @@ while(s = dfs->next()) {
   delete s;
 }
 @(return 0) = n;
-}"))
-
-
+@(return 1) = dfs->stopped();
+}")
+    (when (and error-on-stopped stopped)
+      (error "engine was stopped"))
+    (multiple-value-prog1
+        (values n stopped)
+      (when delete-engine
+        (delete-dfs dfs)))))
 
 (defun bool-space-ins (space)
   (ffi:c-inline (space) (:pointer-void) :object
@@ -331,7 +469,7 @@ ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
           `(,(%symbol fn) ,@args
             (lambda (,variable)
               (let*-heap ,rest
-                         ,@body)))))))
+                ,@body)))))))
 
 (defun branch (space a b)
   (ecase (si:foreign-data-tag space)
@@ -650,6 +788,12 @@ s->constrain_not_subset(*o);
 
 "))
 
+(defmacro with-space ((space form) &body body)
+  `(let ((,space ,form))
+     (unwind-protect
+          (progn ,@body)
+       (delete-space ,space))))
+
 (defun delete-space (space)
   ;; c-inline00012
   (check-type space SI:FOREIGN-DATA)
@@ -807,26 +951,14 @@ default: @(return 0) = 100; break;
   nil)
 
 (defun bab-best (bab)
-  (check-type bab SI:FOREIGN-DATA)
-  (labels
-      ((bab-next (bab)
-         (let ((solution
-                 (ffi:c-inline
-                     (bab) (:pointer-void) :pointer-void
-                   "{ @(return 0) = ((Gecode::BAB<BoolSpace>*)(#0))->next(); }")))
-           #+fobj-leak-checks
-           (unless (si:null-pointer-p solution)
-             (push solution *pool*))
-           solution)))
-    (declare (inline bab-next))
-    (loop
-      for prev-solution = nil then
-                              (progn (when prev-solution
-                                       (delete-space prev-solution))
-                                     solution)
-      for solution = (bab-next bab)
-      until (si:null-pointer-p solution)
-      finally (return prev-solution))))
+  (loop
+    for prev-solution = nil then
+                            (progn (when prev-solution
+                                     (delete-space prev-solution))
+                                   solution)
+    for solution = (bab-next bab)
+    until (null solution)
+    finally (return prev-solution)))
 
 (defun dfs-statistics (dfs)
   (check-type dfs SI:FOREIGN-DATA)
@@ -842,6 +974,30 @@ default: @(return 0) = 100; break;
 Gecode::DFS<BoolSpace>* dfs = (Gecode::DFS<BoolSpace>*)(#0);
 
 Gecode::Search::Statistics s = dfs->statistics();
+
+@(return 0) = s.fail;
+@(return 1) = s.node;
+@(return 2) = s.depth;
+@(return 3) = s.restart;
+@(return 4) = s.nogood;
+
+")
+    (list :fail fail :node node
+          :depth depth :restart restart
+          :nogood nogood)))
+
+(defun bab-statistics (bab)
+  (multiple-value-bind (fail node depth restart nogood)
+      (ffi:c-inline (bab) (:pointer-void)
+          (values :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long
+                  :unsigned-long-long)
+        "
+Gecode::BAB<Gecode::Space>* bab = (Gecode::BAB<Gecode::Space>*)(#0);
+
+Gecode::Search::Statistics s = bab->statistics();
 
 @(return 0) = s.fail;
 @(return 1) = s.node;
@@ -973,6 +1129,27 @@ for(int count = 0; count<len; count++) {
 
 rel(*boolSpace, (Gecode::BoolOpType)#3, a, *(Gecode::BoolVar*)(#4));
 "))
+
+;;; delete-generic
+(defun delete-generic (object)
+  (ecase (si:foreign-data-tag object)
+    (:search-options (ffi:c-inline (object) (:pointer-void) :void
+                       "delete (Gecode::Search::Options*)#0" :one-liner t))
+    (:node-stop (ffi:c-inline (object) (:pointer-void) :void
+                  "delete (Gecode::Search::NodeStop*)#0" :one-liner t))
+    (:fail-stop (ffi:c-inline (object) (:pointer-void) :void
+                  "delete (Gecode::Search::FailStop*)#0" :one-liner t))
+    (:time-stop (ffi:c-inline (object) (:pointer-void) :void
+                  "delete (Gecode::Search::TimeStop*)#0" :one-liner t))
+    (:dfs-engine (delete-dfs object))))
+
+(defmacro let-delete ((&rest bindings) &body body)
+  `(let ,bindings
+     (unwind-protect
+          (progn ,@body)
+       ,@(mapcar (lambda (x)
+                   `(delete-generic ,(first x)))
+                 bindings))))
 
 (eval-when (:compile-toplevel :execute)
   (cover:annotate nil))
