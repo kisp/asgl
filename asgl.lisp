@@ -819,7 +819,7 @@
 (defun print-informational-message ()
   (format t "ASGL version ~A~%"
           #.(multiple-value-bind (stream exit-code)
-                (ext:run-program "git" '("describe" "HEAD"))
+                (ext:run-program "git" '("describe" "HEAD") :error nil)
               (assert (zerop exit-code))
               (prog1
                   (read-line stream)
@@ -828,7 +828,7 @@
   (terpri)
   (write-line "configuration options: ")
   (write-line #.(multiple-value-bind (stream exit-code)
-                    (ext:run-program "./config.status" '("--config"))
+                    (ext:run-program "./config.status" '("--config") :error nil)
                   (assert (zerop exit-code))
                   (prog1
                       (read-line stream)
