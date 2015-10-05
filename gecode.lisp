@@ -1148,7 +1148,7 @@ rel(*boolSpace, (Gecode::BoolOpType)#3, a, *(Gecode::BoolVar*)(#4));
      (unwind-protect
           (progn ,@body)
        ,@(mapcar (lambda (x)
-                   `(delete-generic ,(first x)))
+                   `(when ,(first x) (delete-generic ,(first x))))
                  bindings))))
 
 (eval-when (:compile-toplevel :execute)
