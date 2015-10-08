@@ -903,6 +903,8 @@
           (terpri *standard-output*))
          ((equal "--repl" (second ext:*command-args*))
           (run-repl))
+         ((equal "--load" (second ext:*command-args*))
+          (load (third ext:*command-args*)))
          ((equal "--check" (second ext:*command-args*))
           (run-self-check (cddr ext:*command-args*)))
          (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
