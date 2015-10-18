@@ -68,7 +68,8 @@
    #:assert-true
    #:assert-false)
   (:export
-   #:vector-indices-bot-eql-var)
+   #:vector-indices-bot-eql-var
+   #:vector-indices-bot-eql-const)
   (:export
    #:expr-or
    #:expr-and
@@ -1134,6 +1135,26 @@ for(int count = 0; count<len; count++) {
 }
 
 rel(*boolSpace, (Gecode::BoolOpType)#3, a, *(Gecode::BoolVar*)(#4));
+"))
+
+(defun vector-indices-bot-eql-const (space vector indices bot const)
+  (ffi:c-inline (space vector indices (lookup-bot bot) const)
+      (:pointer-void :object :object :int :bool) :void
+    "
+BoolSpace* boolSpace = ((BoolSpace*)(#0));
+
+int len = (int)ecl_length(#2);
+Gecode::BoolVarArgs a(len);
+
+cl_object list = #2;
+
+for(int count = 0; count<len; count++) {
+  cl_fixnum i = ecl_fixnum(ECL_CONS_CAR(list));
+  a[count] = *(Gecode::BoolVar*)ecl_to_pointer(ecl_aref_unsafe(#1,i));
+  list = ECL_CONS_CDR(list);
+}
+
+rel(*boolSpace, (Gecode::BoolOpType)#3, a, #4);
 "))
 
 ;;; delete-generic
