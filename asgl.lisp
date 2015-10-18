@@ -424,10 +424,17 @@
 (defun-leak-checks solve-ee-st (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
-    (let ((space (make-bool-space (order graph))))
-      (with-post-env-setup (space)
-        (constrain-complete graph)
-        (constrain-stable graph))
+    (let* ((space (make-bool-space (order graph)))
+           (vars-in (gecode:space-vars-as-vector space)))
+      (do-parents (x parents graph)
+        ;; es ginge auch nur
+        ;; (gecode:post-ored-vars-eql-neg-var space parents x)
+        (if (member x parents)
+            (progn
+              (gecode:assert-false space (aref vars-in x))
+              (gecode:vector-indices-bot-eql-const
+               space vars-in (remove x parents) :bot-or t))
+            (gecode:post-ored-vars-eql-neg-var space parents x)))
       (let*-heap ((var (int-var-degree-max))
                   (val (int-val-min)))
                  (branch space var val))
