@@ -82,6 +82,8 @@
   (:export
    #:int-var-none
    #:int-var-degree-max
+   #:int-var-activity-max
+   #:int-var-afc-max
    #:int-var-rnd)
   (:export
    #:int-val-rnd
@@ -431,6 +433,18 @@ ecl_function_dispatch(cl_env_copy,#0)(1, toll);"))
 (defun %int-var-degree-max (k)
   (ffi:c-inline (k) (:object) :void "
 Gecode::IntVarBranch obj = Gecode::INT_VAR_DEGREE_MAX();
+ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun int-var-activity-max (decay) (declare (ignore decay)) (error "only within let*-heap"))
+(defun %int-var-activity-max (decay k)
+  (ffi:c-inline (k decay) (:object :double) :void "
+Gecode::IntVarBranch obj = Gecode::INT_VAR_ACTIVITY_MAX(#1);
+ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun int-var-afc-max (decay) (declare (ignore decay)) (error "only within let*-heap"))
+(defun %int-var-afc-max (decay k)
+  (ffi:c-inline (k decay) (:object :double) :void "
+Gecode::IntVarBranch obj = Gecode::INT_VAR_AFC_MAX(#1);
 ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
 
 (defun int-var-none () (error "only within let*-heap"))
