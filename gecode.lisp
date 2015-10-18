@@ -84,7 +84,8 @@
    #:int-var-degree-max
    #:int-var-activity-max
    #:int-var-afc-max
-   #:int-var-rnd)
+   #:int-var-rnd
+   #:tiebreak)
   (:export
    #:int-val-rnd
    #:int-val-min
@@ -459,6 +460,13 @@ ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
 Gecode::Rnd* rnd = ((Gecode::Rnd*)(#0));
 Gecode::IntVarBranch obj = Gecode::INT_VAR_RND(*rnd);
 ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun tiebreak (a b) (declare (ignore a b)) (error "only within let*-heap"))
+(defun %tiebreak (a b k)
+  (ffi:c-inline (a b k) (:pointer-void :pointer-void :object) :void "
+Gecode::TieBreak<Gecode::IntVarBranch> obj =
+  Gecode::tiebreak(*(Gecode::IntVarBranch*)#0, *(Gecode::IntVarBranch*)#1);
+ecl_function_dispatch(cl_env_copy,#2)(1, ecl_make_pointer((void*)&obj));"))
 
 (defun int-val-rnd (rnd) (declare (ignore rnd)) (error "only within let*-heap"))
 (defun %int-val-rnd (rnd k)
