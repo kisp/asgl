@@ -1105,10 +1105,16 @@ clause(*boolSpace, Gecode::BOT_OR, a, b, 1);
 
 (defun lookup-bot (bot)
   (ecase bot
+    (:bot-and
+     (ffi:c-inline () () :int "Gecode::BOT_AND" :one-liner t))
     (:bot-or
      (ffi:c-inline () () :int "Gecode::BOT_OR" :one-liner t))
-    (:bot-and
-     (ffi:c-inline () () :int "Gecode::BOT_AND" :one-liner t))))
+    (:bot-imp
+     (ffi:c-inline () () :int "Gecode::BOT_IMP" :one-liner t))
+    (:bot-eqv
+     (ffi:c-inline () () :int "Gecode::BOT_EQV" :one-liner t))
+    (:bot-xor
+     (ffi:c-inline () () :int "Gecode::BOT_XOR" :one-liner t))))
 
 (defun vector-indices-bot-eql-var (space vector indices bot var)
   (ffi:c-inline (space vector indices (lookup-bot bot) var)
