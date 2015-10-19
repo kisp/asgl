@@ -86,6 +86,8 @@
    #:int-var-activity-max
    #:int-var-afc-max
    #:int-var-rnd
+   #:int-var-merit-min
+   #:int-var-merit-max
    #:tiebreak)
   (:export
    #:int-val-rnd
@@ -460,6 +462,18 @@ ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
   (ffi:c-inline (rnd k) (:pointer-void :object) :void "
 Gecode::Rnd* rnd = ((Gecode::Rnd*)(#0));
 Gecode::IntVarBranch obj = Gecode::INT_VAR_RND(*rnd);
+ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun int-var-merit-min (fn) (declare (ignore fn)) (error "only within let*-heap"))
+(defun %int-var-merit-min (fn k)
+  (ffi:c-inline (fn k) (:pointer-void :object) :void "
+Gecode::IntVarBranch obj = Gecode::INT_VAR_MERIT_MIN((Gecode::BoolBranchMerit)#0);
+ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
+
+(defun int-var-merit-max (fn) (declare (ignore fn)) (error "only within let*-heap"))
+(defun %int-var-merit-max (fn k)
+  (ffi:c-inline (fn k) (:pointer-void :object) :void "
+Gecode::IntVarBranch obj = Gecode::INT_VAR_MERIT_MAX((Gecode::BoolBranchMerit)#0);
 ecl_function_dispatch(cl_env_copy,#1)(1, ecl_make_pointer((void*)&obj));"))
 
 (defun tiebreak (a b) (declare (ignore a b)) (error "only within let*-heap"))
