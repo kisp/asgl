@@ -644,7 +644,7 @@
             (delete-dfs engine)))))))
 
 (defun solve-ee-pr (graph-input &key print)
-  (let* ((ee-co (solve-ee-co graph-input :print nil))
+  (let* ((ee-co (solve-ee-co2 graph-input :print nil))
          (ee-pr (remove-duplicates (sort ee-co #'< :key #'length)
                                    :test #'subsetp)))
     (if print
@@ -655,7 +655,7 @@
         ee-pr)))
 
 (defun solve-ds-pr (graph-input argument-name &key print)
-  (let* ((ee-co (solve-ee-co graph-input :print nil))
+  (let* ((ee-co (solve-ee-co2 graph-input :print nil))
          (ee-pr (remove-duplicates (sort ee-co #'< :key #'length)
                                    :test #'subsetp)))
     (if (every (lambda (ext) (member argument-name ext :test #'equal))
@@ -696,7 +696,7 @@
      (solve-se-co input :print t))
     ((and (typep* task 'ee-task)
           (typep* semantic 'complete))
-     (solve-ee-co input :print t))
+     (solve-ee-co2 input :print t))
     ((and (typep* task 'ee-task)
           (typep* semantic 'stable))
      (solve-ee-st input :print t))
@@ -749,7 +749,7 @@
      (solve-se-co input :print nil))
     ((and (typep* task 'ee-task)
           (typep* semantic 'complete))
-     (solve-ee-co input :print nil))
+     (solve-ee-co2 input :print nil))
     ((and (typep* task 'ee-task)
           (typep* semantic 'stable))
      (solve-ee-st input :print nil))
