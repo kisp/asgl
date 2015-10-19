@@ -31,6 +31,7 @@
 
 (defvar *intval* nil)
 (defvar *intvar* nil)
+(defvar *seed* 2015)
 
 (defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
@@ -306,12 +307,19 @@
        ,@body)))
 
 (defun branch* (space intvar intval)
-  (let*-heap ((var (ecase intvar
-                     (:degree-max (int-var-degree-max))))
-              (val (ecase intval
-                     (:min (int-val-min))
-                     (:max (int-val-max)))))
-             (branch space var val)))
+  (let ((random-needed-p (or (eql intvar :rnd)
+                             (eql intval :rnd))))
+    (let*-heap ((rnd (case random-needed-p
+                       ((t) (rnd *seed*))))
+                (var (ecase intvar
+                       (:degree-max (int-var-degree-max))
+                       (:rnd (int-var-rnd rnd))
+                       (:none (int-var-none))))
+                (val (ecase intval
+                       (:min (int-val-min))
+                       (:max (int-val-max))
+                       (:rnd (int-val-rnd rnd)))))
+      (branch space var val))))
 
 (defun-leak-checks solve-se-gr (graph-input &key print)
   (multiple-value-bind (graph argument-names)
@@ -1281,7 +1289,8 @@
 (defun main% (&key (fo "apx") f p a g (gist "nil")
                 (log-level "1") (timing "t")
                 (eval "nil") (load nil)
-                (intval nil) (intvar nil))
+                (intval nil) (intvar nil)
+                (seed "2015"))
   (unless (equal fo "apx")
     (error "unsupported format ~S" fo))
   (unless (xor f g)
@@ -1295,7 +1304,8 @@
               (if g (parse-integer a) a)))
          (eval (read-from-string eval))
          (*intval* (when intval (make-keyword (string-upcase intval))))
-         (*intvar* (when intvar (make-keyword (string-upcase intvar)))))
+         (*intvar* (when intvar (make-keyword (string-upcase intvar))))
+         (*seed* (parse-integer seed)))
     (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))

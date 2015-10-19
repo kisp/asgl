@@ -492,17 +492,28 @@ ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
               bindings
             `(let ((,k (lambda (,variable)
                          (let*-heap ,rest
-                                    ,@body))))
-               ,(if (or (eql 'case fn) (eql 'ecase fn))
-                    (destructuring-bind (keyform . alternatives)
-                        args
-                      `(,fn ,keyform
-                         ,@(mapcar (lambda (alternative)
-                                     (destructuring-bind (values form) alternative
-                                       `(,values ,(destructuring-bind (fn . args) form
-                                                    `(,(%symbol fn) ,@args ,k)))))
-                            alternatives)))
-                    `(,(%symbol fn) ,@args ,k))))))))
+                           ,@body))))
+               ,(case fn
+                  (ecase
+                      (destructuring-bind (keyform . alternatives)
+                          args
+                        `(ecase ,keyform
+                           ,@(mapcar (lambda (alternative)
+                                       (destructuring-bind (values form) alternative
+                                         `(,values ,(destructuring-bind (fn . args) form
+                                                      `(,(%symbol fn) ,@args ,k)))))
+                              alternatives))))
+                  (case
+                      (destructuring-bind (keyform . alternatives)
+                          args
+                        `(case ,keyform
+                           ,@(mapcar (lambda (alternative)
+                                       (destructuring-bind (values form) alternative
+                                         `(,values ,(destructuring-bind (fn . args) form
+                                                      `(,(%symbol fn) ,@args ,k)))))
+                              alternatives)
+                           (t (funcall ,k nil)))))
+                  (t `(,(%symbol fn) ,@args ,k)))))))))
 
 (defun branch (space a b)
   (ecase (si:foreign-data-tag space)
