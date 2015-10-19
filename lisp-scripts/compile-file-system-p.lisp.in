@@ -12,10 +12,11 @@
                                 "gecodeminimodel" "gecodekernel" "gecodesupport"
                                 "gecodegist" )))
          (c::*ld-bundle-flags*
-           (format nil "~A -L~A ~{-l~A ~} -O3 @CXXFLAGS@"
+           (format nil "~A -L~A ~{-l~A ~}"
                    c::*ld-bundle-flags*
                    *default-pathname-defaults*
                    dynamic-libraries))
+         (c:*user-cc-flags* "-O3 @CXXFLAGS@")
          (c::*delete-files* nil)
          (source pathname)
          (o-pathname (make-pathname :type "o" :defaults pathname)))
