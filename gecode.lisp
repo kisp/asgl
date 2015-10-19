@@ -487,12 +487,22 @@ ecl_function_dispatch(cl_env_copy,#0)(1, ecl_make_pointer((void*)&obj));"))
                (symbolicate "%" symbol))))
     (if (null bindings)
         `(progn ,@body)
-        (destructuring-bind ((variable (fn . args)) . rest)
-            bindings
-          `(,(%symbol fn) ,@args
-            (lambda (,variable)
-              (let*-heap ,rest
-                ,@body)))))))
+        (with-gensyms (k)
+          (destructuring-bind ((variable (fn . args)) . rest)
+              bindings
+            `(let ((,k (lambda (,variable)
+                         (let*-heap ,rest
+                                    ,@body))))
+               ,(if (or (eql 'case fn) (eql 'ecase fn))
+                    (destructuring-bind (keyform . alternatives)
+                        args
+                      `(,fn ,keyform
+                         ,@(mapcar (lambda (alternative)
+                                     (destructuring-bind (values form) alternative
+                                       `(,values ,(destructuring-bind (fn . args) form
+                                                    `(,(%symbol fn) ,@args ,k)))))
+                            alternatives)))
+                    `(,(%symbol fn) ,@args ,k))))))))
 
 (defun branch (space a b)
   (ecase (si:foreign-data-tag space)
