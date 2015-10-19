@@ -423,6 +423,8 @@
       (let* ((n (order graph))
              (vars-in (gecode:space-vars-as-vector space))
              (vars-out (gecode:make-boolvar-array space n)))
+        (do-edges (from to graph)
+          (gecode:assert-nand space (aref vars-in from) (aref vars-in to)))
         (dotimes (i n)
           (gecode:assert-nand space (aref vars-in i) (aref vars-out i)))
         (do-parents (i parents graph)
