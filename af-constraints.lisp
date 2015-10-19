@@ -42,12 +42,12 @@
      (rotatef ,a ,b)))
 
 (defun safe-sort (list)
-  (check-type list list)
+  ;; (check-type list list)
   (sort (copy-list list) #'<))
 
 (defun constrain-conflict-free (graph constrain-nand)
-  (check-type graph graph)
-  (check-type constrain-nand function)
+  ;; (check-type graph graph)
+  ;; (check-type constrain-nand function)
   (with-timing
       (do-edges (from to graph)
         (funcall constrain-nand from to))))
@@ -60,14 +60,14 @@
                                     expr-and-vars
                                     expr-or
                                     var)
-  (check-type graph graph)
-  (check-type post-must-be-false function)
-  (check-type post-must-be-true function)
-  (check-type post-eql-indices function)
-  (check-type post-eql-vars function)
-  (check-type expr-and-vars function)
-  (check-type expr-or function)
-  (check-type var function)
+  ;; (check-type graph graph)
+  ;; (check-type post-must-be-false function)
+  ;; (check-type post-must-be-true function)
+  ;; (check-type post-eql-indices function)
+  ;; (check-type post-eql-vars function)
+  ;; (check-type expr-and-vars function)
+  ;; (check-type expr-or function)
+  ;; (check-type var function)
   (with-timing
       (do-parents-grandparents (node pg graph)
         (cond
@@ -148,7 +148,7 @@
          ,@body))))
 
 (defun constrain-complete (graph)
-  (check-type graph graph)
+  ;; (check-type graph graph)
   (with-local-post-env ()
     (constrain-conflict-free graph #'!!post-nand!!)
     #+nil
@@ -176,7 +176,7 @@
        #'!!var!!))))
 
 (defun constrain-stable (graph)
-  (check-type graph graph)
+  ;; (check-type graph graph)
   (with-local-post-env ()
     (with-timing
         (do-parents (node parents graph)

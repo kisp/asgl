@@ -50,7 +50,7 @@
        (bab-search-gist space))))
 
 (defun adopt-keywords (list)
-  (check-type list list)
+  ;; (check-type list list)
   (mapcar (lambda (x)
             (if (char= #\- (char x 0))
                 (intern (string-upcase (subseq x 1)) "KEYWORD")
@@ -58,7 +58,7 @@
           list))
 
 (defun parse-problem (string)
-  (check-type string string)
+  ;; (check-type string string)
   (let ((pos (position #\- string)))
     (values
      (intern (string-upcase (subseq string 0 pos)) "KEYWORD")
@@ -108,7 +108,7 @@
 (defclass se-task (extension-task) ())
 
 (defmethod (setf task-hash) (value (task task))
-  (check-type value hash-table)
+  ;; (check-type value hash-table)
   ;; nothing to do here
   )
 
@@ -130,9 +130,9 @@
              (hash-table-alist (task-hash task)))))
 
 (defun prepare-space (input task semantic)
-  (check-type input input)
-  (check-type task task)
-  (check-type semantic semantic)
+  ;; (check-type input input)
+  ;; (check-type task task)
+  ;; (check-type semantic semantic)
   (multiple-value-bind (graph vector hash)
       (with-timing (read-graph-input input))
     (setf (task-hash task) hash)
@@ -225,20 +225,20 @@
             (inferred-on-no-solution driver))))
 
 (defmethod make-driver (semantic (task ee-task))
-  (check-type semantic semantic)
+  ;; (check-type semantic semantic)
   (make-instance 'search-all-driver))
 
 (defmethod make-driver (semantic (task se-task))
-  (check-type semantic semantic)
+  ;; (check-type semantic semantic)
   (make-instance 'search-one-driver))
 
 (defmethod make-driver (semantic (task dc-task))
-  (check-type semantic semantic)
+  ;; (check-type semantic semantic)
   (make-instance 'search-one-decision-driver
                  :inferred-on-no-solution nil))
 
 (defmethod make-driver (semantic (task ds-task))
-  (check-type semantic semantic)
+  ;; (check-type semantic semantic)
   (make-instance 'search-one-decision-driver
                  :inferred-on-no-solution t))
 
@@ -247,10 +247,10 @@
                  :inferred-on-no-solution t))
 
 (defun solve (input task semantic drive-fn)
-  (check-type input input)
-  (check-type task task)
-  (check-type semantic semantic)
-  (check-type drive-fn function)
+  ;; (check-type input input)
+  ;; (check-type task task)
+  ;; (check-type semantic semantic)
+  ;; (check-type drive-fn function)
   #+fobj-leak-checks(gecode::pool-start)
   (multiple-value-bind (space vector)
       (with-timing (prepare-space input task semantic))
@@ -777,7 +777,7 @@
       (:pr (make-instance 'preferred))))
 
   (defun make-task (task &optional arg)
-    (check-type arg (or null string non-negative-fixnum))
+    ;; (check-type arg (or null string non-negative-fixnum))
     (ecase task
       (:ee (make-instance 'ee-task))
       (:se (make-instance 'se-task))
@@ -785,67 +785,67 @@
       (:ds (make-instance 'ds-task :arg-name arg)))))
 
 (defmethod make-initial-space (graph (task task) (semantic semantic))
-  (check-type graph graph)
+  ;; (check-type graph graph)
   (log* 1 "creating initial bool-space")
   (make-bool-space (order graph)))
 
 (defmethod make-initial-space (graph (task se-task) (semantic preferred))
-  (check-type graph graph)
+  ;; (check-type graph graph)
   (log* 1 "creating initial pr-bab-space")
   (make-pr-bab-space (order graph)))
 
 (defmethod make-initial-space (graph (task ee-task) (semantic preferred))
-  (check-type graph graph)
+  ;; (check-type graph graph)
   (log* 1 "creating initial pr-bab-space")
   (make-pr-bab-space (order graph)))
 
 (defmethod constrain-space (space (semantic complete) task graph)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type task task)
-  (check-type graph graph)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type task task)
+  ;; (check-type graph graph)
   (log* 1 "constrain-complete")
   (constrain-complete graph))
 
 (defmethod constrain-space :after (space (semantic stable) task graph)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type task task)
-  (check-type graph graph)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type task task)
+  ;; (check-type graph graph)
   (log* 1 "constrain-stable")
   (constrain-stable graph))
 
 (defmethod constrain-arg-if-needed (space semantic task)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
   ;; nothing to do here
   )
 
 (defmethod constrain-arg-if-needed (space semantic (task decision-task))
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
   (constrain-arg space semantic task))
 
 (defmethod constrain-arg (space (semantic grounded) (task decision-task))
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
   (log* 1 "constrain arg not to be in")
   (log* 3 "task arg is ~S" (task-arg task))
   (post-must-be-false space (task-arg task)))
 
 (defmethod constrain-arg (space semantic (task ds-task))
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
   (log* 1 "constrain arg not to be in")
   (log* 3 "task arg is ~S" (task-arg task))
   (post-must-be-false space (task-arg task)))
 
 (defmethod constrain-arg (space semantic (task dc-task))
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
   (log* 1 "constrain arg to be in")
   (log* 3 "task arg is ~S" (task-arg task))
   (post-must-be-true space (task-arg task)))
@@ -871,19 +871,19 @@
                        (val (int-val-max))))
 
 (defmethod make-search-engine (space (task ee-task) (semantic preferred) vector)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
-  (check-type vector vector)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
+  ;; (check-type vector vector)
   (make-instance 'preferred-all-engine
                  :sub-engine (make-search-engine space task
                                                  (make-semantic :co) vector)))
 
 (defmethod make-search-engine (space task semantic vector)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
-  (check-type vector vector)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
+  ;; (check-type vector vector)
   (typecase semantic
     (grounded
      (make-instance 'propagate-only-engine
@@ -952,7 +952,7 @@
   space)
 
 (defun gecode-engine-space-wrapper-next (wrapper)
-  (check-type wrapper gecode-engine-space-wrapper)
+  ;; (check-type wrapper gecode-engine-space-wrapper)
   (let ((space (gecode-engine-space-wrapper-space wrapper)))
     (when space
       (prog1
@@ -999,16 +999,16 @@
   nil)
 
 (defmethod drive-search-and-print :around (driver engine)
-  (check-type driver driver)
-  (check-type engine engine)
+  ;; (check-type driver driver)
+  ;; (check-type engine engine)
   (call-next-method)
   (let ((statistics (search-statistics engine)))
     (log* 1 "search statistics: ~A" statistics)
     (values statistics driver engine)))
 
 (defmethod drive-search-and-collect :around (driver engine)
-  (check-type driver driver)
-  (check-type engine engine)
+  ;; (check-type driver driver)
+  ;; (check-type engine engine)
   (multiple-value-bind (extension exists-p)
       (call-next-method)
     (values
@@ -1180,10 +1180,10 @@
 
 ;;; DS-PR
 (defmethod make-search-engine (space (task ds-task) (semantic preferred) vector)
-  (check-type space SI:FOREIGN-DATA)
-  (check-type semantic semantic)
-  (check-type task task)
-  (check-type vector vector)
+  ;; (check-type space SI:FOREIGN-DATA)
+  ;; (check-type semantic semantic)
+  ;; (check-type task task)
+  ;; (check-type vector vector)
   (make-instance 'ds-pr-engine :task task :space space :vector vector))
 
 (defmethod constrain-arg-if-needed
@@ -1306,7 +1306,7 @@
          (*intval* (when intval (make-keyword (string-upcase intval))))
          (*intvar* (when intvar (make-keyword (string-upcase intvar))))
          (*seed* (parse-integer seed)))
-    (check-type *log-level* log-level)
+    ;; (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))
     #+nil
