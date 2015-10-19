@@ -423,14 +423,12 @@
       (let* ((n (order graph))
              (vars-in (gecode:space-vars-as-vector space))
              (vars-out (gecode:make-boolvar-array space n)))
-        (do-edges (from to graph)
-          (gecode:assert-nand space (aref vars-in from) (aref vars-in to)))
-        (dotimes (i n)
-          (gecode:assert-nand space (aref vars-in i) (aref vars-out i)))
         (do-parents (i parents graph)
+          (dolist (j parents)
+            (gecode:assert-nand space (aref vars-in i) (aref vars-in j)))
+          (gecode:assert-nand space (aref vars-in i) (aref vars-out i))
           (gecode:vector-indices-bot-eql-var
-           space vars-in parents :bot-or (aref vars-out i)))
-        (do-parents (i parents graph)
+           space vars-in parents :bot-or (aref vars-out i))
           (gecode:vector-indices-bot-eql-var
            space vars-out parents :bot-and (aref vars-in i))))
       (branch* space (or *intvar* :degree-max) (or *intval* :min))
