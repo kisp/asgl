@@ -32,6 +32,7 @@
 (defvar *intval* nil)
 (defvar *intvar* nil)
 (defvar *seed* 2015)
+(defvar *decay* 1.0)
 
 (defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
@@ -313,6 +314,8 @@
                        ((t) (rnd *seed*))))
                 (var (ecase intvar
                        (:degree-max (int-var-degree-max))
+                       (:activity-max (int-var-activity-max *decay*))
+                       (:afc-max (int-var-afc-max *decay*))
                        (:rnd (int-var-rnd rnd))
                        (:none (int-var-none))))
                 (val (ecase intval
@@ -1290,7 +1293,8 @@
                 (log-level "1") (timing "t")
                 (eval "nil") (load nil)
                 (intval nil) (intvar nil)
-                (seed "2015"))
+                (seed "2015")
+                (decay "1.0"))
   (unless (equal fo "apx")
     (error "unsupported format ~S" fo))
   (unless (xor f g)
@@ -1305,7 +1309,8 @@
          (eval (read-from-string eval))
          (*intval* (when intval (make-keyword (string-upcase intval))))
          (*intvar* (when intvar (make-keyword (string-upcase intvar))))
-         (*seed* (parse-integer seed)))
+         (*seed* (parse-integer seed))
+         (*decay* (read-from-string decay)))
     ;; (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))
