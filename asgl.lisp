@@ -308,21 +308,36 @@
        ,@body)))
 
 (defun branch* (space intvar intval)
-  (let ((random-needed-p (or (eql intvar :rnd)
-                             (eql intval :rnd))))
-    (let*-heap ((rnd (case random-needed-p
-                       ((t) (rnd *seed*))))
-                (var (ecase intvar
-                       (:degree-max (int-var-degree-max))
-                       (:activity-max (int-var-activity-max *decay*))
-                       (:afc-max (int-var-afc-max *decay*))
-                       (:rnd (int-var-rnd rnd))
-                       (:none (int-var-none))))
-                (val (ecase intval
-                       (:min (int-val-min))
-                       (:max (int-val-max))
-                       (:rnd (int-val-rnd rnd)))))
-      (branch space var val))))
+  (labels ((random-needed-p ()
+             (or (eql intvar :rnd)
+                 (eql intval :rnd)
+                 (eql intvar :degree-max-rnd)))
+           (b (var random-gen)
+             (let*-heap ((val (ecase intval
+                                (:min (int-val-min))
+                                (:max (int-val-max))
+                                (:rnd (int-val-rnd random-gen)))))
+               (branch space var val))))
+    (let*-heap ((random-gen (case (random-needed-p)
+                       ((t) (rnd *seed*)))))
+      (case intvar
+        (:degree-max-activity-max
+         (let*-heap ((degree-max (int-var-degree-max))
+                     (activity-max (int-var-activity-max *decay*))
+                     (var (tiebreak degree-max activity-max)))
+           (b var random-gen)))
+        (:degree-max-rnd
+         (let*-heap ((degree-max (int-var-degree-max))
+                     (rrr (int-var-rnd random-gen))
+                     (var (tiebreak degree-max rrr)))
+           (b var random-gen)))
+        (t (let*-heap ((var (ecase intvar
+                              (:degree-max (int-var-degree-max))
+                              (:activity-max (int-var-activity-max *decay*))
+                              (:afc-max (int-var-afc-max *decay*))
+                              (:rnd (int-var-rnd random-gen))
+                              (:none (int-var-none)))))
+             (b var random-gen)))))))
 
 (defun-leak-checks solve-se-gr (graph-input &key print)
   (multiple-value-bind (graph argument-names)
