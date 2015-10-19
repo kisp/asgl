@@ -26,6 +26,7 @@
    #:make-int-space
    #:branch
    #:space-status
+   #:space-propagators
    #:clone-space
    #:delete-space
    #:with-space)
@@ -872,6 +873,10 @@ default: @(return 0) = 100; break;
       (1 :failed)
       (2 :solved)
       (3 :branch))))
+
+(defun space-propagators (space)
+  (ffi:c-inline (space) (:pointer-void) :unsigned-int "
+((Gecode::Space*)#0)->propagators()" :one-liner t))
 
 (defun space-to-list (space)
   ;; (check-type space SI:FOREIGN-DATA)
