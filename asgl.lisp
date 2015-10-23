@@ -34,6 +34,8 @@
 (defvar *seed* 2015)
 (defvar *decay* 1.0)
 
+(defvar *constr* 0)
+
 (defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
       (make-dfs-engine space)
@@ -420,17 +422,34 @@
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
     (let ((space (make-bool-space (order graph))))
-      (let* ((n (order graph))
-             (vars-in (gecode:space-vars-as-vector space))
-             (vars-out (gecode:make-boolvar-array space n)))
-        (do-parents (i parents graph)
-          (dolist (j parents)
-            (gecode:assert-nand space (aref vars-in i) (aref vars-in j)))
-          (gecode:assert-nand space (aref vars-in i) (aref vars-out i))
-          (gecode:vector-indices-bot-eql-var
-           space vars-in parents :bot-or (aref vars-out i))
-          (gecode:vector-indices-bot-eql-var
-           space vars-out parents :bot-and (aref vars-in i))))
+      (case *constr*
+        (3 (with-post-env-setup (space)
+             (constrain-complete graph)))
+        (t (let* ((n (order graph))
+                  (vars-in (gecode:space-vars-as-vector space))
+                  (vars-out (gecode:make-boolvar-array space n)))
+             (case *constr*
+               (0 (do-parents (i parents graph)
+                    (dolist (j parents)
+                      (gecode:assert-nand space (aref vars-in i) (aref vars-in j)))
+                    (gecode:assert-nand space (aref vars-in i) (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-in parents :bot-or (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-out parents :bot-and (aref vars-in i))))
+               (1 (do-parents (i parents graph)
+                    (dolist (j parents)
+                      (gecode:assert-nand space (aref vars-in i) (aref vars-in j)))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-in parents :bot-or (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-out parents :bot-and (aref vars-in i))))
+               (2 (do-parents (i parents graph)
+                    (gecode:assert-nand space (aref vars-in i) (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-in parents :bot-or (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-out parents :bot-and (aref vars-in i))))))))
       (branch* space (or *intvar* :degree-max) (or *intval* :min))
       (let ((engine (gecode:make-dfs-engine space)))
         (delete-space space)
@@ -1309,7 +1328,8 @@
                 (eval "nil") (load nil)
                 (intval nil) (intvar nil)
                 (seed "2015")
-                (decay "1.0"))
+                (decay "1.0")
+                (constr "0"))
   (unless (equal fo "apx")
     (error "unsupported format ~S" fo))
   (unless (xor f g)
@@ -1325,7 +1345,8 @@
          (*intval* (when intval (make-keyword (string-upcase intval))))
          (*intvar* (when intvar (make-keyword (string-upcase intvar))))
          (*seed* (parse-integer seed))
-         (*decay* (read-from-string decay)))
+         (*decay* (read-from-string decay))
+         (*constr* (parse-integer constr)))
     ;; (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))
