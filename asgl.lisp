@@ -393,35 +393,6 @@
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
     (let ((space (make-bool-space (order graph))))
-      (with-post-env-setup (space)
-        (constrain-complete graph))
-      (branch* space (or *intvar* :degree-max) (or *intval* :min))
-      (let ((engine (gecode:make-dfs-engine space)))
-        (delete-space space)
-        (multiple-value-prog1
-            (if print
-                (with-array-output-helper (*standard-output*)
-                  (loop
-                    (with-space (space (dfs-next engine))
-                      (if space
-                          (progn
-                            (maybe-print-comma)
-                            (space-print-in space argument-names)
-                            (terpri))
-                          (return)))))
-                (let (result)
-                  (loop
-                    (with-space (space (dfs-next engine))
-                      (if space
-                          (push (space-collect-in space argument-names) result)
-                          (return))))
-                  (nreverse result)))
-          (delete-dfs engine))))))
-
-(defun-leak-checks solve-ee-co2 (graph-input &key print)
-  (multiple-value-bind (graph argument-names)
-      (read-graph-input graph-input)
-    (let ((space (make-bool-space (order graph))))
       (case *constr*
         (3 (with-post-env-setup (space)
              (constrain-complete graph)))
@@ -663,7 +634,7 @@
             (delete-dfs engine)))))))
 
 (defun solve-ee-pr (graph-input &key print)
-  (let* ((ee-co (solve-ee-co2 graph-input :print nil))
+  (let* ((ee-co (solve-ee-co graph-input :print nil))
          (ee-pr (remove-duplicates (sort ee-co #'< :key #'length)
                                    :test #'subsetp)))
     (if print
@@ -674,7 +645,7 @@
         ee-pr)))
 
 (defun solve-ds-pr (graph-input argument-name &key print)
-  (let* ((ee-co (solve-ee-co2 graph-input :print nil))
+  (let* ((ee-co (solve-ee-co graph-input :print nil))
          (ee-pr (remove-duplicates (sort ee-co #'< :key #'length)
                                    :test #'subsetp)))
     (if (every (lambda (ext) (member argument-name ext :test #'equal))
@@ -715,7 +686,7 @@
      (solve-se-co input :print t))
     ((and (typep* task 'ee-task)
           (typep* semantic 'complete))
-     (solve-ee-co2 input :print t))
+     (solve-ee-co input :print t))
     ((and (typep* task 'ee-task)
           (typep* semantic 'stable))
      (solve-ee-st input :print t))
@@ -768,7 +739,7 @@
      (solve-se-co input :print nil))
     ((and (typep* task 'ee-task)
           (typep* semantic 'complete))
-     (solve-ee-co2 input :print nil))
+     (solve-ee-co input :print nil))
     ((and (typep* task 'ee-task)
           (typep* semantic 'stable))
      (solve-ee-st input :print nil))
