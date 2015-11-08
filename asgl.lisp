@@ -503,11 +503,18 @@
 (defun-leak-checks solve-se-st (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
-    (let ((space (make-bool-space (order graph))))
-      (with-post-env-setup (space)
-        (constrain-complete graph)
-        (constrain-stable graph))
-      (branch* space (or *intvar* :degree-max) (or *intval* :min))
+    (let* ((space (make-bool-space (order graph)))
+           (vars-in (gecode:space-vars-as-vector space)))
+      (do-parents (x parents graph)
+        ;; es ginge auch nur
+        ;; (gecode:post-ored-vars-eql-neg-var space parents x)
+        (if (member x parents)
+            (progn
+              (gecode:assert-false space (aref vars-in x))
+              (gecode:vector-indices-bot-eql-const
+               space vars-in (remove x parents) :bot-or t))
+            (gecode:post-ored-vars-eql-neg-var space parents x)))
+      (branch* space (or *intvar* :degree-max) (or *intval* :max))
       (let ((engine (gecode:make-dfs-engine space)))
         (delete-space space)
         (with-space (space (dfs-next engine))
