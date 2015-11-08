@@ -458,7 +458,7 @@
               (gecode:vector-indices-bot-eql-const
                space vars-in (remove x parents) :bot-or t))
             (gecode:post-ored-vars-eql-neg-var space parents x)))
-      (branch* space (or *intvar* :degree-max) (or *intval* :min))
+      (branch* space (or *intvar* :degree-max) (or *intval* :max))
       (let ((engine (gecode:make-dfs-engine space)))
         (delete-space space)
         (multiple-value-prog1
