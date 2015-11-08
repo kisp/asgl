@@ -21,6 +21,9 @@ test: test-asgl check
 space_objects = BoolSpace.o PrBABSpace.o IntSpace.o
 space_object_strings = "BoolSpace.o" "PrBABSpace.o" "IntSpace.o"
 
+lingeling_object = lingeling/code/liblgl.a
+lingeling_object_string = "lingeling/code/liblgl.a"
+
 gecode_lib_link_strings = "-lgecodesearch" "-lgecodeminimodel" "-lgecodeint" \
 	"-lgecodeset" "-lgecodekernel" "-lgecodesupport" \#+gist"-lgecodegist"
 
@@ -86,7 +89,29 @@ af-constraints.o: af-constraints.lisp gecode.fas $(asgl_config_fas) $(early_fas)
 	  -eval '(compile-file-system-p "$<" :dynamic-libraries t)'
 	test -f $@
 
-asgl.o: asgl.lisp gecode.fas af-constraints.fas $(asgl_config_fas) $(early_fas) \
+# sat
+sat.fas: sat.o $(lingeling_object) $(asgl_config_fas)
+	rm -f $@
+	ecl -norc \
+	  -load $(asgl_config_fas) \
+	  -eval "(require 'cmp)" \
+	  -eval '(defvar *lisp-files* (list "$<"))' \
+	  -eval '(defvar *ld-flags* (list $(lingeling_object_string)))' \
+	  -eval '(c:build-fasl "$@" :lisp-files *lisp-files* :ld-flags *ld-flags*)' \
+	  -eval '(quit)'
+	test -f $@
+
+sat.o: sat.lisp $(asgl_config_fas) $(early_fas) $(alexandria_fas)
+	rm -f $@
+	ecl -norc \
+	  -load $(asgl_config_fas) \
+	  -load $(early_fas) \
+	  -load $(alexandria_fas) \
+	  -load lisp-scripts/compile-file-system-p.lisp \
+	  -eval '(compile-file-system-p "$<" :dynamic-libraries t)'
+	test -f $@
+
+asgl.o: asgl.lisp gecode.fas sat.fas af-constraints.fas $(asgl_config_fas) $(early_fas) \
 	  $(myam_fas) $(alexandria_fas) $(arnesi_list_match_fas)
 	rm -f $@
 	ecl -norc \
@@ -96,19 +121,20 @@ asgl.o: asgl.lisp gecode.fas af-constraints.fas $(asgl_config_fas) $(early_fas) 
 	  -load $(arnesi_list_match_fas) \
 	  -load $(myam_fas) \
 	  -load gecode.fas \
+	  -load sat.fas \
 	  -load af-constraints.fas \
 	  -load lisp-scripts/compile-file-system-p.lisp \
 	  -eval '(compile-file-system-p "$<" :dynamic-libraries t)'
 	test -f $@
 
 # asgl
-asgl: asgl.o gecode.o af-constraints.o BoolSpace.o PrBABSpace.o IntSpace.o common/early/libearly.a \
-	common/asgl-config/libasgl-config.a \
+asgl: asgl.o gecode.o sat.o af-constraints.o BoolSpace.o PrBABSpace.o IntSpace.o common/early/libearly.a \
+	common/asgl-config/libasgl-config.a $(lingeling_object) \
 	  $(asgl_config_fas) lib/myam/libmyam.a lib/alexandria/libalexandria.a \
 	  lib/arnesi-list-match/libarnesi-list-match.a
 	ecl -norc -eval '(require "cmp")' \
 	  -load $(asgl_config_fas) \
-	  -eval '(c:build-program "asgl" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "gecode.o" "af-constraints.o" "asgl.o") :ld-flags (list "common/early/libapxparse.a" $(space_object_strings) $(gecode_lib_link_strings)) :epilogue-code '\''(cl-user::main))' \
+	  -eval '(c:build-program "asgl" :lisp-files (list "common/asgl-config/libasgl-config.a" "common/early/libearly.a" "lib/alexandria/libalexandria.a" "lib/arnesi-list-match/libarnesi-list-match.a" "lib/myam/libmyam.a" "gecode.o" "sat.o" "af-constraints.o" "asgl.o") :ld-flags (list "common/early/libapxparse.a" $(space_object_strings) $(gecode_lib_link_strings) $(lingeling_object_string)) :epilogue-code '\''(cl-user::main))' \
 	  -eval '(quit)'
 
 BoolSpace.o: BoolSpace.cpp BoolSpace.h asgl_config.h
@@ -245,6 +271,9 @@ check:
 	timeout 1h ./bin/asgl --check
 
 common/asgl-config/asgl-config.o: asgl_config.h
+
+$(lingeling_object):
+	cd lingeling && ./build.sh
 
 include common/asgl-config/make.mk
 include common/early/make.mk
