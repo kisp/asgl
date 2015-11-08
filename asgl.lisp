@@ -531,6 +531,56 @@
                       (values nil nil)))
             (delete-dfs engine)))))))
 
+(defun sat-print-in (solver argument-names &optional vector)
+  (let ((vector (or vector (make-array (length argument-names))))
+        (stream *standard-output*))
+    (sat:save-solution solver vector)
+    (write-string "[" stream)
+    (loop with first-time = t
+          for i below (length argument-names)
+          for in = (aref vector i)
+          do (when in
+               (if first-time
+                   (setq first-time nil)
+                   (write-string "," stream))
+               (princ (aref argument-names i) stream)))
+    (write-string "]" stream)
+    vector))
+
+(defun sat-collect-in (solver argument-names &optional vector)
+  (let ((vector (or vector (make-array (length argument-names))))
+        (stream *standard-output*))
+    (sat:save-solution solver vector)
+    (values
+     (loop for i below (length argument-names)
+           for in = (aref vector i)
+           when in
+             collect (aref argument-names i))
+     vector)))
+
+(defun solve-se-st-sat (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (sat:with-solver (solver)
+      (do-parents (x parents graph)
+        (sat:with-added-clause (solver)
+          (sat:add-literals solver :positive x)
+          (dolist (parent parents)
+            (sat:add-literals solver :positive parent)))
+        (dolist (parent parents)
+          (sat:with-added-clause (solver)
+            (sat:add-literals solver :negative x parent))))
+      (if (sat:satisfiablep solver)
+          (if print
+              (progn
+                (sat-print-in solver argument-names)
+                (terpri))
+              (values (sat-collect-in solver argument-names)
+                      t))
+          (if print
+              (write-line "NO")
+              (values nil nil))))))
+
 (defun-leak-checks solve-se-pr (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
