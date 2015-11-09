@@ -36,6 +36,8 @@
 
 (defvar *constr* 0)
 
+(defvar *use-sat* nil)
+
 (defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
       (make-dfs-engine space)
@@ -777,7 +779,9 @@
      (solve-ee-gr input :print t))
     ((and (typep* task 'se-task)
           (typep* semantic 'stable))
-     (solve-se-st input :print t))
+     (if *use-sat*
+         (solve-se-st-sat input :print t)
+         (solve-se-st input :print t)))
     ((and (typep* task 'se-task)
           (typep* semantic 'complete))
      (solve-se-co input :print t))
@@ -786,7 +790,9 @@
      (solve-ee-co input :print t))
     ((and (typep* task 'ee-task)
           (typep* semantic 'stable))
-     (solve-ee-st input :print t))
+     (if *use-sat*
+         (solve-ee-st-sat input :print t)
+         (solve-ee-st input :print t)))
     ((and (typep* task 'se-task)
           (typep* semantic 'preferred))
      (solve-se-pr input :print t))
@@ -830,7 +836,9 @@
      (solve-ee-gr input :print nil))
     ((and (typep* task 'se-task)
           (typep* semantic 'stable))
-     (solve-se-st input :print nil))
+     (if *use-sat*
+         (solve-se-st-sat input :print nil)
+         (solve-se-st input :print nil)))
     ((and (typep* task 'se-task)
           (typep* semantic 'complete))
      (solve-se-co input :print nil))
@@ -839,7 +847,9 @@
      (solve-ee-co input :print nil))
     ((and (typep* task 'ee-task)
           (typep* semantic 'stable))
-     (solve-ee-st input :print nil))
+     (if *use-sat*
+         (solve-ee-st-sat input :print nil)
+         (solve-ee-st input :print nil)))
     ((and (typep* task 'se-task)
           (typep* semantic 'preferred))
      (solve-se-pr input :print nil))
@@ -1397,7 +1407,8 @@
                 (intval nil) (intvar nil)
                 (seed "2015")
                 (decay "1.0")
-                (constr "0"))
+                (constr "0")
+                (sat "nil"))
   (unless (equal fo "apx")
     (error "unsupported format ~S" fo))
   (unless (xor f g)
@@ -1414,7 +1425,8 @@
          (*intvar* (when intvar (make-keyword (string-upcase intvar))))
          (*seed* (parse-integer seed))
          (*decay* (read-from-string decay))
-         (*constr* (parse-integer constr)))
+         (*constr* (parse-integer constr))
+         (*use-sat* (read-from-string sat)))
     ;; (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))
