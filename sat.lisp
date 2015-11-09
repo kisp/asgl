@@ -22,6 +22,7 @@
    #:with-solver
    #:with-added-clause
    #:add-literals
+   #:freeze-literal
    #:satisfiablep
    #:unsatisfiablep
    #:save-solution))
@@ -77,6 +78,7 @@
 (defun lglrelease (lgl)
   (ffi:c-inline (lgl) (:pointer-void) :void "lglrelease((LGL*)#0)" :one-liner t))
 
+;;; API
 (defmacro with-solver ((solver) &body body)
   `(let ((,solver (lglinit)))
      (unwind-protect
@@ -104,6 +106,10 @@
          ,@(mapcar (lambda (x) `(lgladd-positive ,solver ,x)) positive)
          ,@(mapcar (lambda (x) `(lgladd-negative ,solver ,x)) negative)
          nil))))
+
+(declaim (inline freeze-literal))
+(defun freeze-literal (solver literal)
+  (lglfreeze solver literal))
 
 (defun satisfiablep (solver)
   (lglsat solver))
