@@ -38,6 +38,8 @@
 
 (defvar *use-sat* nil)
 
+(defvar *sat-force-freeze* t)
+
 (defun make-dfs-engine-or-gist (space)
   (if (not *use-gist*)
       (make-dfs-engine space)
@@ -612,6 +614,9 @@
         (dolist (parent parents)
           (sat:with-added-clause (solver)
             (sat:add-literals solver :negative x parent))))
+      (when *sat-force-freeze*
+        (dotimes (i (length argument-names))
+         (sat:freeze-literal solver i)))
       (if (sat:satisfiablep solver)
           (if print
               (progn
@@ -1408,7 +1413,8 @@
                 (seed "2015")
                 (decay "1.0")
                 (constr "0")
-                (sat "nil"))
+                (sat "nil")
+                (sat-force-freeze "t"))
   (unless (equal fo "apx")
     (error "unsupported format ~S" fo))
   (unless (xor f g)
@@ -1426,7 +1432,8 @@
          (*seed* (parse-integer seed))
          (*decay* (read-from-string decay))
          (*constr* (parse-integer constr))
-         (*use-sat* (read-from-string sat)))
+         (*use-sat* (read-from-string sat))
+         (*sat-force-freeze* (read-from-string sat-force-freeze)))
     ;; (check-type *log-level* log-level)
     (when load (load load))
     (when eval (eval eval))
