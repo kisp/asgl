@@ -272,6 +272,38 @@
 ;;; sketches
 ;;; ================================================================================
 
+(defun sat-print-in (solver argument-names &optional vector)
+  (let ((vector (or vector (make-array (length argument-names))))
+        (stream *standard-output*))
+    (sat:save-solution solver vector)
+    (write-string "[" stream)
+    (loop with first-time = t
+          for i below (length argument-names)
+          for in = (aref vector i)
+          do (when in
+               (if first-time
+                   (setq first-time nil)
+                   (write-string "," stream))
+               (princ (aref argument-names i) stream)))
+    (write-string "]" stream)
+    nil))
+
+(defun sat-collect-in (solver argument-names &optional vector)
+  (let ((vector (or vector (make-array (length argument-names))))
+        (stream *standard-output*))
+    (sat:save-solution solver vector)
+    (loop for i below (length argument-names)
+          for in = (aref vector i)
+          when in
+            collect (aref argument-names i))))
+
+(defun sat-block-solution (solver vector)
+  (sat:with-added-clause (solver)
+    (dotimes (i (length vector))
+      (if (aref vector i)
+          (sat:add-literals solver :negative i)
+          (sat:add-literals solver :positive i)))))
+
 (defmacro with-array-output-helper ((stream) &body body)
   (once-only
    (stream)
@@ -481,6 +513,41 @@
                   (nreverse result)))
           (delete-dfs engine))))))
 
+(defun solve-ee-st-sat (graph-input &key print)
+  (multiple-value-bind (graph argument-names)
+      (read-graph-input graph-input)
+    (sat:with-solver (solver)
+      (do-parents (x parents graph)
+        (sat:with-added-clause (solver)
+          (sat:add-literals solver :positive x)
+          (dolist (parent parents)
+            (sat:add-literals solver :positive parent)))
+        (dolist (parent parents)
+          (sat:with-added-clause (solver)
+            (sat:add-literals solver :negative x parent))))
+      (let ((solution-vector (make-array (length argument-names))))
+        (dotimes (i (length argument-names))
+          (sat:freeze-literal solver i))
+        (if print
+            (with-array-output-helper (*standard-output*)
+              (loop
+                (if (sat:satisfiablep solver)
+                    (progn
+                      (maybe-print-comma)
+                      (sat-print-in solver argument-names solution-vector)
+                      (sat-block-solution solver solution-vector)
+                      (terpri))
+                    (return))))
+            (let (result)
+              (loop
+                (if (sat:satisfiablep solver)
+                    (push (prog1
+                              (sat-collect-in solver argument-names solution-vector)
+                            (sat-block-solution solver solution-vector))
+                          result)
+                    (return)))
+              (nreverse result)))))))
+
 (defun-leak-checks solve-se-co (graph-input &key print)
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
@@ -530,33 +597,6 @@
                       (write-line "NO")
                       (values nil nil)))
             (delete-dfs engine)))))))
-
-(defun sat-print-in (solver argument-names &optional vector)
-  (let ((vector (or vector (make-array (length argument-names))))
-        (stream *standard-output*))
-    (sat:save-solution solver vector)
-    (write-string "[" stream)
-    (loop with first-time = t
-          for i below (length argument-names)
-          for in = (aref vector i)
-          do (when in
-               (if first-time
-                   (setq first-time nil)
-                   (write-string "," stream))
-               (princ (aref argument-names i) stream)))
-    (write-string "]" stream)
-    vector))
-
-(defun sat-collect-in (solver argument-names &optional vector)
-  (let ((vector (or vector (make-array (length argument-names))))
-        (stream *standard-output*))
-    (sat:save-solution solver vector)
-    (values
-     (loop for i below (length argument-names)
-           for in = (aref vector i)
-           when in
-             collect (aref argument-names i))
-     vector)))
 
 (defun solve-se-st-sat (graph-input &key print)
   (multiple-value-bind (graph argument-names)
