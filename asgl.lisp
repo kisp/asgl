@@ -632,8 +632,34 @@
   (multiple-value-bind (graph argument-names)
       (read-graph-input graph-input)
     (let ((space (make-pr-bab-space (order graph))))
-      (with-post-env-setup (space)
-        (constrain-complete graph))
+      (case *constr*
+        (3 (with-post-env-setup (space)
+             (constrain-complete graph)))
+        (t (let* ((n (order graph))
+                  (vars-in (gecode:space-vars-as-vector space))
+                  (vars-out (gecode:make-boolvar-array space n)))
+             (case *constr*
+               (0 (do-parents (i parents graph)
+                    (dolist (j parents)
+                      (gecode:assert-nand space (aref vars-in i) (aref vars-in j)))
+                    (gecode:assert-nand space (aref vars-in i) (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-in parents :bot-or (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-out parents :bot-and (aref vars-in i))))
+               (1 (do-parents (i parents graph)
+                    (dolist (j parents)
+                      (gecode:assert-nand space (aref vars-in i) (aref vars-in j)))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-in parents :bot-or (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-out parents :bot-and (aref vars-in i))))
+               (2 (do-parents (i parents graph)
+                    (gecode:assert-nand space (aref vars-in i) (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-in parents :bot-or (aref vars-out i))
+                    (gecode:vector-indices-bot-eql-var
+                     space vars-out parents :bot-and (aref vars-in i))))))))
       (branch* space (or *intvar* :degree-max) (or *intval* :max))
       (let ((engine (gecode:make-bab-engine space)))
         (delete-space space)
