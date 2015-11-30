@@ -70,3 +70,4 @@ lib/myam/src/utils.c
 gecode.c
 af-constraints.c
 sat.c
+README.pdf

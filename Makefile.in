@@ -275,6 +275,11 @@ common/asgl-config/asgl-config.o: asgl_config.h
 $(lingeling_object):
 	cd lingeling && ./build.sh
 
+README.pdf: README.md
+	pandoc README.md -V links-as-notes=true -o README.pdf
+
+doc: README.pdf
+
 include common/asgl-config/make.mk
 include common/early/make.mk
 include lib/myam/make.mk
