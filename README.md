@@ -23,11 +23,8 @@ Dockerfile
 : executable instructions to build a [docker](https://www.docker.com/)
 container for compiling and running ASGL based on a clean ubuntu image
 
-af-constraints.lisp
-: kann weg
-
 asgl.lisp
-: the main part of ASGL
+: the main implementation of ASGL
 
 gecode.lisp
 : the gecode interface
@@ -39,7 +36,7 @@ BoolSpace.cpp, PrBABSpace.cpp
 : GECODE space subclasses needed by ASGL
 
 data/
-: test AFs for acceptance tests
+: AF instances for acceptance tests
 
 features/
 : cucumber acceptance tests
