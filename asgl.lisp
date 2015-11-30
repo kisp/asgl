@@ -1479,13 +1479,7 @@
   (merge-pathnames "cover.data" (asgl-home)))
 
 (defun print-informational-message ()
-  (format t "ASGL version ~A~%"
-          #.(multiple-value-bind (stream exit-code)
-                (ext:run-program "git" '("describe" "HEAD") :error nil)
-              (assert (zerop exit-code))
-              (prog1
-                  (read-line stream)
-                (close stream))))
+  (format t "ASGL version ~A~%" "v0.1.4-40-g0e7355d")
   (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
   (terpri)
   (write-line "configuration options: ")
