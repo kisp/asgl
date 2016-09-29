@@ -1,8 +1,9 @@
 #!/bin/bash
 
 set -e
+set -x
 
-PACKAGE_HOST=http://pub47300999.s3-website.eu-central-1.amazonaws.com
+PACKAGE_HOST=https://dl.dropboxusercontent.com/u/23376070/96E978DB-9D70-4068-AF09-F7AD0CA5CC98
 
 function standard {
     sudo apt-get update
