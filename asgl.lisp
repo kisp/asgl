@@ -1531,7 +1531,6 @@
         (ext:quit 1))))
 
 (defun cl-user::main ()
-  (/ 1 0)
   (setq *debugger-hook* (lambda (c old)
                           (declare (ignore old))
                           (let ((*print-length* 3)
