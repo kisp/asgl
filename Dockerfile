@@ -46,3 +46,5 @@ RUN cd asgl && autoconf && ./configure --without-gist
 ENV ASGL_HOME "/asgl"
 
 RUN cd asgl && bash scripts/generate-make-mk.sh && make
+
+env PATH $ASGL_HOME/bin:$PATH
