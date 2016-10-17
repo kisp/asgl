@@ -87,6 +87,9 @@ $ asgl -p EE-ST -fo apx -f "af.apx"
 ]
 ```
 
+For further examples and documentation of the interface, please
+refer to [ICCMA15](http://argumentationcompetition.org/2015/rules.html).
+
 # Important files
 
 Dockerfile
