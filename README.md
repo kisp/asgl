@@ -69,7 +69,7 @@ For the computational tasks, we have:
 3. ```DC``` Given an abstract argumentation framework and some argument, decide whether the given argument is credulously inferred
 4. ```DS``` Given an abstract argumentation framework and some argument, decide whether the given argument is skeptically inferred
 
-And for the semantics:
+For the semantics, we have:
 
 1.    ```CO``` Complete Semantics
 2.    ```PR``` Preferred Semantics
