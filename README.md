@@ -15,6 +15,10 @@ as an alternative solver backend.  The interface of ASGL conforms to
     This program comes with ABSOLUTELY NO WARRANTY.
     This is free software, and you are welcome to redistribute it
     under certain conditions.
+    
+# Example
+
+![Graph of example AF](af.png)
 
 # Important files
 
