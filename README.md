@@ -78,7 +78,7 @@ And for the semantics:
 
 
 Thus, to compute the set of stable extensions, which in this
-example is ```{{a,d}}```, we solve the problem ```EE-ST``` running the command:
+example is the singleton set ```{{a,d}}```, we solve the problem ```EE-ST``` running the command:
 
 ```
 $ asgl -p EE-ST -fo apx -f "af.apx"
