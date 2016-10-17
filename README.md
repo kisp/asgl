@@ -18,7 +18,39 @@ as an alternative solver backend.  The interface of ASGL conforms to
     
 # Example
 
+Given the abstract argumentation framework
+
 ![Graph of example AF](af.png)
+
+and its encoding in Aspartix format
+
+```
+arg(a).
+arg(b).
+arg(c).
+arg(d).
+arg(e).
+att(a,b).
+att(b,a).
+att(a,c).
+att(c,d).
+att(d,e).
+att(e,c).
+```
+
+saved as a file ```af.apx```, we can enumerate all extensions
+under the complete semantics with ASGL, using the following command:
+
+```
+$ asgl -p EE-CO -fo apx -f "af.apx"
+[
+  []
+, [b]
+, [a,d]
+]
+```
+
+
 
 # Important files
 
