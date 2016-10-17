@@ -18,9 +18,6 @@ as an alternative solver backend.  The interface of ASGL conforms to
 
 # Important files
 
-README.md, README.pdf
-: the README text as markdown and as pdf
-
 Dockerfile
 : executable instructions to build a [docker](https://www.docker.com/)
 container for compiling and running ASGL based on a clean ubuntu image
