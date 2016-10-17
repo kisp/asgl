@@ -50,9 +50,42 @@ $ asgl -p EE-CO -fo apx -f "af.apx"
 ]
 ```
 
-This shows us that the set of complete extensions is ```{∅,{b},{a,d}}```.
+This shows us that the set of complete extensions here is ```{∅,{b},{a,d}}```, solving
+the problem ```EE-CO``` for the example argumentation framework.
+
+ASGL reports the problems it can solve via the command:
+
+```
+$ asgl --problems
+[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]
+```
+
+A problem here is defined as consisting of a computational task and a semantics.
+
+For the computational tasks, we have:
+
+1. ```SE``` Given an abstract argumentation framework, determine some extension
+2. ```EE``` Given an abstract argumentation framework, determine all extensions
+3. ```DC``` Given an abstract argumentation framework and some argument, decide whether the given argument is credulously inferred
+4. ```DS``` Given an abstract argumentation framework and some argument, decide whether the given argument is skeptically inferred
+
+And for the semantics:
+
+1.    ```CO``` Complete Semantics
+2.    ```PR``` Preferred Semantics
+3.    ```GR``` Grounded Semantics
+4.    ```ST``` Stable Semantics
 
 
+Thus, to compute the set of stable extensions, which in this
+example is ```{{a,d}}```, we solve the problem ```EE-ST``` running the command:
+
+```
+$ asgl -p EE-ST -fo apx -f "af.apx"
+[
+  [a,d]
+]
+```
 
 # Important files
 
