@@ -50,6 +50,8 @@ $ asgl -p EE-CO -fo apx -f "af.apx"
 ]
 ```
 
+This shows us that the set of complete extensions is ```{∅,{b},{a,d}}```.
+
 
 
 # Important files
