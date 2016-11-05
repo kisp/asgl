@@ -198,3 +198,7 @@ some long running tests).
 
 The unit tests can also be run individually, e.g. by
 ```ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp ```.
+
+# Docker
+
+There is a docker image automatically built at [Docker Hub](https://hub.docker.com/r/kisp/asgl/builds/).
