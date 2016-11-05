@@ -49,6 +49,6 @@ ENV ASGL_HOME "/asgl"
 
 RUN bash scripts/generate-make-mk.sh && make
 
-#RUN make test
+RUN make test
 
 ENV PATH $ASGL_HOME/bin:$PATH
