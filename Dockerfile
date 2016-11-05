@@ -38,13 +38,17 @@ RUN rm -rf ecl-13.5.1*
 ### asgl
 RUN git clone https://github.com/kisp/asgl.git
 
-# install cucumber
-RUN cd asgl && bundle
+WORKDIR /asgl
 
-RUN cd asgl && autoconf && ./configure --without-gist
+# install cucumber
+RUN bundle
+
+RUN autoconf && ./configure --without-gist
 
 ENV ASGL_HOME "/asgl"
 
-RUN cd asgl && bash scripts/generate-make-mk.sh && make
+RUN bash scripts/generate-make-mk.sh && make
 
-env PATH $ASGL_HOME/bin:$PATH
+#RUN make test
+
+ENV PATH $ASGL_HOME/bin:$PATH
