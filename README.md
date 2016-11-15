@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/kisp/asgl.svg?branch=master)](https://travis-ci.org/kisp/asgl)
-[![image badge](https://images.microbadger.com/badges/image/kisp/asgl.svg)](http://microbadger.com/images/kisp/asgl)
 
 # ASGL
 
