@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/kisp/asgl.svg?branch=master)](https://travis-ci.org/kisp/asgl)
+[![](https://images.microbadger.com/badges/image/kisp/asgl.svg)](http://microbadger.com/images/kisp/asgl "Get your own image badge on microbadger.com")
 
 # ASGL
 
