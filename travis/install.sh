@@ -50,7 +50,7 @@ function dist {
 
     bundle install
 
-    curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "$PACKAGE_HOST/ecl-16.1.2-amd64.tar.bz2"
+    curl --no-progress-bar --retry 10 -o "ecl.tar.bz2" -L "$PACKAGE_HOST/ecl-16.1.2-amd64.tar.bz2"
     md5sum ecl.tar.bz2
     mkdir tmpecl
     tar --strip-components=2 -C tmpecl -xf ecl.tar.bz2
