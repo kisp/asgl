@@ -29,7 +29,7 @@ asgl_config.h
 bin/ragel
 build
 dist
-ecl-13.5.1.tgz
+ecl-*.tgz
 gecode-4.3.3.tar.gz
 common/asgl-config/asgl-config.c
 common/early/apx.c

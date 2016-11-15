@@ -10,10 +10,10 @@ mkdir local
 LPREFIX=`pwd`/local
 mkdir depbuild
 
-tar -C depbuild -xf third-party/ecl-13.5.1.tgz
+tar -C depbuild -xf third-party/ecl-16.1.2.tgz
 tar -C depbuild -xf third-party/gecode-4.3.3.tar.gz
 
-cd depbuild/ecl-13.5.1
+cd depbuild/ecl-16.1.2
 ECLFLAGS="-O2 -march=native -pipe -fomit-frame-pointer"
 env CFLAGS="$ECLFLAGS" CXXFLAGS="$ECLFLAGS" ./configure --enable-threads \
     --with-cxx --with-dffi=included --enable-boehm=included --enable-libatomic=included \

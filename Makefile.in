@@ -216,7 +216,7 @@ clean: lib/arnesi-list-match/clean lib/alexandria/clean lib/myam/clean \
 	  common/asgl-config/asgl-config.eclh
 	rm -f asgl_config.h config.log config.status configure
 	rm -rf autom4te.cache
-	rm -f ecl-13.5.1.tgz gecode-4.3.3.tar.gz
+	rm -f ecl-16.1.2.tgz gecode-4.3.3.tar.gz
 	rm -f Makefile lisp-scripts/compile-file-system-p.lisp
 	if [ -n "`git clean -nxd`" ]; then git clean -nxd; exit 1; fi
 
@@ -240,9 +240,9 @@ dist:
 	autoconf
 	install configure dist/asgl/configure
 	mkdir dist/asgl/third-party
-	curl --no-progress-bar --retry 10 -o "ecl-13.5.1.tgz" -L \
-	  "http://heanet.dl.sourceforge.net/project/ecls/ecls/13.5/ecl-13.5.1.tgz"
-	install ecl-13.5.1.tgz dist/asgl/third-party
+	curl --no-progress-bar --retry 10 -o "ecl-16.1.2.tgz" -L \
+	  "https://common-lisp.net/project/ecl/static/files/release/ecl-16.1.2.tgz"
+	install ecl-16.1.2.tgz dist/asgl/third-party
 	curl --no-progress-bar --retry 10 -o "gecode-4.3.3.tar.gz" -L \
 	  "http://www.gecode.org/download/gecode-4.3.3.tar.gz"
 	install gecode-4.3.3.tar.gz dist/asgl/third-party

@@ -24,10 +24,10 @@ function standard {
     sudo tar -C / -xjf "gecode.tar.bz2"
     rm gecode.tar.bz2
 
-    curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "$PACKAGE_HOST/ecl-13.5.1-amd64.tgz"
-    md5sum ecl.tar.gz
-    sudo tar -C / -xzf "ecl.tar.gz"
-    rm ecl.tar.gz
+    curl --no-progress-bar --retry 10 -o "ecl.tar.bz2" -L "$PACKAGE_HOST/ecl-16.1.2-amd64.tar.bz2"
+    md5sum ecl.tar.bz2
+    sudo tar -C / -xf "ecl.tar.bz2"
+    rm ecl.tar.bz2
 
     sudo ldconfig
 
@@ -50,10 +50,10 @@ function dist {
 
     bundle install
 
-    curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "$PACKAGE_HOST/ecl-13.5.1-amd64.tgz"
-    md5sum ecl.tar.gz
+    curl --no-progress-bar --retry 10 -o "ecl.tar.gz" -L "$PACKAGE_HOST/ecl-16.1.2-amd64.tar.bz2"
+    md5sum ecl.tar.bz2
     mkdir tmpecl
-    tar --strip-components=2 -C tmpecl -xf ecl.tar.gz
+    tar --strip-components=2 -C tmpecl -xf ecl.tar.bz2
     mv tmpecl/bin/ecl tmpecl/bin/ecl_r
     cat >tmpecl/bin/ecl<<'EOF'
 #!/bin/bash
@@ -64,18 +64,18 @@ fi
 exec ecl_r -dir "$ECL_R_SYS_DIR" "$@"
 EOF
     chmod +x tmpecl/bin/ecl
-    rm ecl.tar.gz
+    rm ecl.tar.bz2
 
     env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
-        ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13.5.1 \
+        ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-16.1.2 \
         bash scripts/generate-make-mk.sh
 
     cp Makefile.in Makefile
 
     env PATH=`pwd`/tmpecl/bin:$PATH \
         LD_LIBRARY_PATH=`pwd`/tmpecl/lib \
-        ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-13.5.1 \
+        ECL_R_SYS_DIR=`pwd`/tmpecl/lib/ecl-16.1.2 \
         make dist
 
     rm -r tmpecl
