@@ -4,6 +4,7 @@ set -e
 
 function install_step {
     apt-get update
+    apt-get install -y libgmp-dev
 }
 
 function autoconf_step {
