@@ -3,7 +3,7 @@
 set -e
 
 function install_step {
-    sudo apt-get update
+    apt-get update
 }
 
 function autoconf_step {
