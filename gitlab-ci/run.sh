@@ -2,6 +2,10 @@
 
 set -e
 
+function install_step {
+    sudo apt-get update
+}
+
 function autoconf_step {
     autoconf
 }
@@ -101,6 +105,7 @@ shift
 CONFIG_ARGS="--without-gist $@"
 
 set -x
+install_step
 autoconf_step
 configure_step $CONFIG_ARGS
 make_mk_step
@@ -109,4 +114,4 @@ greeting_step
 check_step $TEST_MODE
 cucumber_step $TEST_MODE
 cover_report_step $CONFIG_ARGS
-s3put_step $CONFIG_ARGS
+#s3put_step $CONFIG_ARGS
