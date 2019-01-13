@@ -1,3 +1,17 @@
+before_script:
+  - export PACKAGE_HOST=http://kisp.github.io/asgl/files
+  - curl --no-progress-bar --retry 10 -o "ecl.tar.bz2" -L "$PACKAGE_HOST/ecl-16.1.2-amd64.tar.bz2"
+  - md5sum ecl.tar.bz2
+  - tar -C / -xf "ecl.tar.bz2"
+  - rm ecl.tar.bz2
+  - curl --no-progress-bar --retry 10 -o "gecode.tar.bz2" -L "$PACKAGE_HOST/gecode-4.3.3-complete-amd64.tar.bz2"
+  - md5sum gecode.tar.bz2
+  - tar -C / -xjf "gecode.tar.bz2"
+  - rm gecode.tar.bz2
+  - apt-get update
+  - apt-get install -y libgmp-dev ragel
+  - bundle
+
 normal-full:
   script:
     - ./gitlab-ci/run.sh full

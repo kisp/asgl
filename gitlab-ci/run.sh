@@ -2,11 +2,6 @@
 
 set -e
 
-function install_step {
-    apt-get update
-    apt-get install -y libgmp-dev
-}
-
 function autoconf_step {
     autoconf
 }
@@ -106,7 +101,6 @@ shift
 CONFIG_ARGS="--without-gist $@"
 
 set -x
-install_step
 autoconf_step
 configure_step $CONFIG_ARGS
 make_mk_step
