@@ -244,7 +244,7 @@ dist:
 	  "https://common-lisp.net/project/ecl/static/files/release/ecl-16.1.2.tgz"
 	install ecl-16.1.2.tgz dist/asgl/third-party
 	curl --no-progress-bar --retry 10 -o "gecode-4.3.3.tar.gz" -L \
-	  "http://www.gecode.org/download/gecode-4.3.3.tar.gz"
+	  "https://github.com/Gecode/gecode/archive/release-4.3.3.tar.gz"
 	install gecode-4.3.3.tar.gz dist/asgl/third-party
 	rm -rf dist/asgl/data
 	rm -rf dist/asgl/timings dist/asgl/features dist/asgl/tools dist/asgl/travis

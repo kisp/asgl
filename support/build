@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 START_TIME=`date`
 
@@ -10,8 +11,10 @@ mkdir local
 LPREFIX=`pwd`/local
 mkdir depbuild
 
+file third-party/*
 tar -C depbuild -xf third-party/ecl-16.1.2.tgz
 tar -C depbuild -xf third-party/gecode-4.3.3.tar.gz
+mv depbuild/gecode-release-4.3.3 depbuild/gecode-4.3.3
 
 cd depbuild/ecl-16.1.2
 ECLFLAGS="-O2 -march=native -pipe -fomit-frame-pointer"
