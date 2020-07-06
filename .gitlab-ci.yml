@@ -1,6 +1,7 @@
 image: ubuntu:trusty
 
 before_script:
+  - apt-get update
   - apt-get install -y curl
   - export PACKAGE_HOST=http://kisp.github.io/asgl/files
   - curl --no-progress-bar --retry 10 -o "ecl.tar.bz2" -L "$PACKAGE_HOST/ecl-16.1.2-amd64.tar.bz2"
@@ -11,7 +12,6 @@ before_script:
   - md5sum gecode.tar.bz2
   - tar -C / -xjf "gecode.tar.bz2"
   - rm gecode.tar.bz2
-  - apt-get update
   - apt-get install -y libgmp-dev ragel
   - bundle
 
