@@ -17,6 +17,8 @@
 language: lisp
 sudo: required
 
+dist: trusty
+
 env:
   matrix:
     - VARIANT=asgl CUKE_ARGS="--tags ~@slow"
