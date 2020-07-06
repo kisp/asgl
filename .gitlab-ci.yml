@@ -2,7 +2,7 @@ image: ubuntu:trusty
 
 before_script:
   - apt-get update
-  - apt-get install -y curl
+  - apt-get install -y curl bundler
   - export PACKAGE_HOST=http://kisp.github.io/asgl/files
   - curl --no-progress-bar --retry 10 -o "ecl.tar.bz2" -L "$PACKAGE_HOST/ecl-16.1.2-amd64.tar.bz2"
   - md5sum ecl.tar.bz2
