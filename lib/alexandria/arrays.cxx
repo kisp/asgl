@@ -1,7 +1,7 @@
-/*      Compiler: ECL 24.5.10                                         */
-/*      Date: 2024/7/24 06:55 (yyyy/mm/dd)                            */
+/*      Compiler: ECL 16.1.2                                          */
+/*      Date: 2024/7/24 08:12 (yyyy/mm/dd)                            */
 /*      Machine: Linux 6.9.7-arch1-1 x86_64                           */
-/*      Source: /home/packer/ws/github/kisp/asgl/lib/alexandria/arrays.lisp */
+/*      Source: lib/alexandria/arrays.lisp                            */
 #include <ecl/ecl-cmp.h>
 #include "lib/alexandria/arrays.eclh"
 /*      function definition for COPY-ARRAY                            */
@@ -9,7 +9,6 @@
 static cl_object L1copy_array(cl_narg narg, cl_object v1array, ...)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -78,7 +77,7 @@ L18:;
 #ifdef __cplusplus
 extern "C"
 #endif
-ECL_DLLEXPORT void _ecl6zVmPLti1MIGM_KoHycC71(cl_object flag)
+ECL_DLLEXPORT void _ecl6zVmPLti1MIGM_syh2dC71(cl_object flag)
 {
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -93,17 +92,17 @@ ECL_DLLEXPORT void _ecl6zVmPLti1MIGM_KoHycC71(cl_object flag)
  flag->cblock.data_text = compiler_data_text;
  flag->cblock.cfuns_size = compiler_cfuns_size;
  flag->cblock.cfuns = compiler_cfuns;
- flag->cblock.source = ecl_make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/arrays.lisp",-1);
+ flag->cblock.source = make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/arrays.lisp");
  return;}
  #ifdef ECL_DYNAMIC_VV
  VV = Cblock->cblock.data;
  #endif
- Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_ecl6zVmPLti1MIGM_KoHycC71@";
+ Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_ecl6zVmPLti1MIGM_syh2dC71@";
  VVtemp = Cblock->cblock.temp_data;
  ECL_DEFINE_SETF_FUNCTIONS
   si_select_package(VVtemp[0]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LOCATION",1862), VVtemp[1], VVtemp[2]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[3]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LOCATION",1777), VVtemp[1], VVtemp[2]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[3]) /*  ANNOTATE */;
   ecl_cmp_defun(VV[1]);                           /*  COPY-ARRAY      */
-  ecl_function_dispatch(cl_env_copy,VV[2])(3, VV[0], ECL_SYM("FUNCTION",398), VVtemp[4]) /*  SET-DOCUMENTATION */;
+  si_set_documentation(3, VV[0], ECL_SYM("FUNCTION",396), VVtemp[4]);
 }

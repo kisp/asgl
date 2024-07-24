@@ -1,7 +1,7 @@
-/*      Compiler: ECL 24.5.10                                         */
-/*      Date: 2024/7/24 06:55 (yyyy/mm/dd)                            */
+/*      Compiler: ECL 16.1.2                                          */
+/*      Date: 2024/7/24 08:12 (yyyy/mm/dd)                            */
 /*      Machine: Linux 6.9.7-arch1-1 x86_64                           */
-/*      Source: /home/packer/ws/github/kisp/asgl/lib/alexandria/hash-tables.lisp */
+/*      Source: lib/alexandria/hash-tables.lisp                       */
 #include <ecl/ecl-cmp.h>
 #include "lib/alexandria/hash-tables.eclh"
 /*      function definition for COPY-HASH-TABLE                       */
@@ -9,7 +9,7 @@
 static cl_object L2copy_hash_table(cl_narg narg, cl_object v1table, ...)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0, CLV1;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -34,7 +34,7 @@ static cl_object L2copy_hash_table(cl_narg narg, cl_object v1table, ...)
   }
   value0 = ECL_CONS_CAR(CLV0);
   if ((value0)!=ECL_NIL) { goto L4; }
-  ECL_CONS_CAR(CLV0) = ECL_SYM("IDENTITY",428);
+  ECL_CONS_CAR(CLV0) = ECL_SYM("IDENTITY",426);
   goto L2;
 L4:;
   ECL_CONS_CAR(CLV0) = value0;
@@ -74,11 +74,11 @@ L24:;
 L22:;
   {
    cl_object env1 = env0;
-   T0 = cl_make_hash_table(8, ECL_SYM("TEST",1350), v2test, ECL_SYM("SIZE",1342), v3size, ECL_SYM("REHASH-SIZE",1331), v4rehash_size, ECL_SYM("REHASH-THRESHOLD",1332), v5rehash_threshold);
+   T0 = cl_make_hash_table(8, ECL_SYM("TEST",1321), v2test, ECL_SYM("SIZE",1313), v3size, ECL_SYM("REHASH-SIZE",1302), v4rehash_size, ECL_SYM("REHASH-THRESHOLD",1303), v5rehash_threshold);
    CLV1 = env1 = CONS(T0,env1);                   /*  COPY            */
    {
     cl_object v6;
-    v6 = ecl_make_cclosure_va((cl_objectfn)LC1__lambda5,env1,Cblock,2);
+    v6 = ecl_make_cclosure_va((cl_objectfn)LC1__g5,env1,Cblock);
     T0 = v6;
    }
    cl_maphash(T0, v1table);
@@ -88,9 +88,9 @@ L22:;
   }
  }
 }
-/*      closure LAMBDA5                                               */
+/*      closure G5                                                    */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC1__lambda5(cl_narg narg, cl_object v1k, cl_object v2v, ...)
+static cl_object LC1__g5(cl_narg narg, cl_object v1k, cl_object v2v, ...)
 {
  cl_object T0;
  cl_object CLV0, CLV1;
@@ -116,7 +116,7 @@ TTL:
 static cl_object L4maphash_keys(cl_object v1function, cl_object v2table)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -126,16 +126,16 @@ static cl_object L4maphash_keys(cl_object v1function, cl_object v2table)
   CLV0 = env0 = CONS(v1function,env0);            /*  FUNCTION        */
   {
    cl_object v3;
-   v3 = ecl_make_cclosure_va((cl_objectfn)LC3__lambda9,env0,Cblock,2);
+   v3 = ecl_make_cclosure_va((cl_objectfn)LC3__g9,env0,Cblock);
    T0 = v3;
   }
   value0 = cl_maphash(T0, v2table);
   return value0;
  }
 }
-/*      closure LAMBDA9                                               */
+/*      closure G9                                                    */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC3__lambda9(cl_narg narg, cl_object v1k, cl_object v2v, ...)
+static cl_object LC3__g9(cl_narg narg, cl_object v1k, cl_object v2v, ...)
 {
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
@@ -158,7 +158,7 @@ TTL:
 static cl_object L6maphash_values(cl_object v1function, cl_object v2table)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -168,16 +168,16 @@ static cl_object L6maphash_values(cl_object v1function, cl_object v2table)
   CLV0 = env0 = CONS(v1function,env0);            /*  FUNCTION        */
   {
    cl_object v3;
-   v3 = ecl_make_cclosure_va((cl_objectfn)LC5__lambda10,env0,Cblock,2);
+   v3 = ecl_make_cclosure_va((cl_objectfn)LC5__g10,env0,Cblock);
    T0 = v3;
   }
   value0 = cl_maphash(T0, v2table);
   return value0;
  }
 }
-/*      closure LAMBDA10                                              */
+/*      closure G10                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC5__lambda10(cl_narg narg, cl_object v1k, cl_object v2v, ...)
+static cl_object LC5__g10(cl_narg narg, cl_object v1k, cl_object v2v, ...)
 {
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
@@ -200,7 +200,7 @@ TTL:
 static cl_object L9hash_table_keys(cl_object v1table)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0, CLV1;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -216,13 +216,13 @@ TTL:
     cl_object env2 = env1;
     {
      cl_object v3;
-     v3 = ecl_make_cclosure_va((cl_objectfn)LC7__lambda13,env2,Cblock,1);
+     v3 = ecl_make_cclosure_va((cl_objectfn)LC7__g13,env2,Cblock);
      v2 = v3;
     }
     CLV1 = env2 = CONS(v2,env2);                  /*  FUNCTION        */
     {
      cl_object v3;
-     v3 = ecl_make_cclosure_va((cl_objectfn)LC8__lambda15,env2,Cblock,2);
+     v3 = ecl_make_cclosure_va((cl_objectfn)LC8__g15,env2,Cblock);
      T0 = v3;
     }
     cl_maphash(T0, v1table);
@@ -233,9 +233,9 @@ TTL:
   }
  }
 }
-/*      closure LAMBDA13                                              */
+/*      closure G13                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC7__lambda13(cl_narg narg, cl_object v1k, ...)
+static cl_object LC7__g13(cl_narg narg, cl_object v1k, ...)
 {
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
@@ -255,9 +255,9 @@ TTL:
  }
  }
 }
-/*      closure LAMBDA15                                              */
+/*      closure G15                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC8__lambda15(cl_narg narg, cl_object v1k, cl_object v2v, ...)
+static cl_object LC8__g15(cl_narg narg, cl_object v1k, cl_object v2v, ...)
 {
  cl_object CLV0, CLV1;
  const cl_env_ptr cl_env_copy = ecl_process_env();
@@ -281,7 +281,7 @@ TTL:
 static cl_object L12hash_table_values(cl_object v1table)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0, CLV1;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -297,13 +297,13 @@ TTL:
     cl_object env2 = env1;
     {
      cl_object v3;
-     v3 = ecl_make_cclosure_va((cl_objectfn)LC10__lambda18,env2,Cblock,1);
+     v3 = ecl_make_cclosure_va((cl_objectfn)LC10__g18,env2,Cblock);
      v2 = v3;
     }
     CLV1 = env2 = CONS(v2,env2);                  /*  FUNCTION        */
     {
      cl_object v3;
-     v3 = ecl_make_cclosure_va((cl_objectfn)LC11__lambda20,env2,Cblock,2);
+     v3 = ecl_make_cclosure_va((cl_objectfn)LC11__g20,env2,Cblock);
      T0 = v3;
     }
     cl_maphash(T0, v1table);
@@ -314,9 +314,9 @@ TTL:
   }
  }
 }
-/*      closure LAMBDA18                                              */
+/*      closure G18                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC10__lambda18(cl_narg narg, cl_object v1v, ...)
+static cl_object LC10__g18(cl_narg narg, cl_object v1v, ...)
 {
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
@@ -336,9 +336,9 @@ TTL:
  }
  }
 }
-/*      closure LAMBDA20                                              */
+/*      closure G20                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC11__lambda20(cl_narg narg, cl_object v1k, cl_object v2v, ...)
+static cl_object LC11__g20(cl_narg narg, cl_object v1k, cl_object v2v, ...)
 {
  cl_object CLV0, CLV1;
  const cl_env_ptr cl_env_copy = ecl_process_env();
@@ -362,7 +362,7 @@ TTL:
 static cl_object L14hash_table_alist(cl_object v1table)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -375,7 +375,7 @@ TTL:
    CLV0 = env1 = CONS(ECL_NIL,env1);              /*  ALIST           */
    {
     cl_object v2;
-    v2 = ecl_make_cclosure_va((cl_objectfn)LC13__lambda21,env1,Cblock,2);
+    v2 = ecl_make_cclosure_va((cl_objectfn)LC13__g21,env1,Cblock);
     T0 = v2;
    }
    cl_maphash(T0, v1table);
@@ -385,9 +385,9 @@ TTL:
   }
  }
 }
-/*      closure LAMBDA21                                              */
+/*      closure G21                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC13__lambda21(cl_narg narg, cl_object v1k, cl_object v2v, ...)
+static cl_object LC13__g21(cl_narg narg, cl_object v1k, cl_object v2v, ...)
 {
  cl_object T0;
  cl_object CLV0;
@@ -414,7 +414,7 @@ TTL:
 static cl_object L16hash_table_plist(cl_object v1table)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -427,7 +427,7 @@ TTL:
    CLV0 = env1 = CONS(ECL_NIL,env1);              /*  PLIST           */
    {
     cl_object v2;
-    v2 = ecl_make_cclosure_va((cl_objectfn)LC15__lambda23,env1,Cblock,2);
+    v2 = ecl_make_cclosure_va((cl_objectfn)LC15__g23,env1,Cblock);
     T0 = v2;
    }
    cl_maphash(T0, v1table);
@@ -437,9 +437,9 @@ TTL:
   }
  }
 }
-/*      closure LAMBDA23                                              */
+/*      closure G23                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC15__lambda23(cl_narg narg, cl_object v1k, cl_object v2v, ...)
+static cl_object LC15__g23(cl_narg narg, cl_object v1k, cl_object v2v, ...)
 {
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
@@ -464,7 +464,6 @@ TTL:
 static cl_object L17alist_hash_table(cl_narg narg, cl_object v1alist, ...)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -476,7 +475,7 @@ static cl_object L17alist_hash_table(cl_narg narg, cl_object v1alist, ...)
   ecl_va_end(args);
   {
    cl_object v3table;
-   T0 = (ECL_SYM("MAKE-HASH-TABLE",530)->symbol.gfdef);
+   T0 = (ECL_SYM("MAKE-HASH-TABLE",528)->symbol.gfdef);
    v3table = cl_apply(2, T0, v2hash_table_initargs);
    {
     cl_object v4;
@@ -507,7 +506,6 @@ L14:;
 static cl_object L18plist_hash_table(cl_narg narg, cl_object v1plist, ...)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -519,7 +517,7 @@ static cl_object L18plist_hash_table(cl_narg narg, cl_object v1plist, ...)
   ecl_va_end(args);
   {
    cl_object v3table;
-   T0 = (ECL_SYM("MAKE-HASH-TABLE",530)->symbol.gfdef);
+   T0 = (ECL_SYM("MAKE-HASH-TABLE",528)->symbol.gfdef);
    v3table = cl_apply(2, T0, v2hash_table_initargs);
    {
     cl_object v4tail;
@@ -546,7 +544,6 @@ L12:;
 static cl_object LC19ensure_gethash(cl_object v1, cl_object v2)
 {
  cl_object T0, T1, T2, T3, T4;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -559,7 +556,7 @@ TTL:
    cl_object v6default;
    v3 = ecl_cdr(v1);
    if (!(v3==ECL_NIL)) { goto L3; }
-   ecl_function_dispatch(cl_env_copy,VV[29])(1, v1) /*  DM-TOO-FEW-ARGUMENTS */;
+   si_dm_too_few_arguments(v1);
 L3:;
    {
     cl_object v7;
@@ -568,7 +565,7 @@ L3:;
     v4key = v7;
    }
    if (!(v3==ECL_NIL)) { goto L9; }
-   ecl_function_dispatch(cl_env_copy,VV[29])(1, v1) /*  DM-TOO-FEW-ARGUMENTS */;
+   si_dm_too_few_arguments(v1);
 L9:;
    {
     cl_object v7;
@@ -588,14 +585,14 @@ L15:;
    v6default = ECL_NIL;
 L14:;
    if (Null(v3)) { goto L20; }
-   ecl_function_dispatch(cl_env_copy,VV[30])(1, v1) /*  DM-TOO-MANY-ARGUMENTS */;
+   si_dm_too_many_arguments(v1);
 L20:;
-   T0 = cl_list(3, ECL_SYM("GETHASH",415), v4key, v5hash_table);
-   T1 = cl_list(3, ECL_SYM("GETHASH",415), v4key, v5hash_table);
-   T2 = cl_list(3, ECL_SYM("SETF",752), T1, v6default);
-   T3 = cl_list(3, ECL_SYM("VALUES",897), T2, ECL_NIL);
-   T4 = cl_list(4, ECL_SYM("IF",948), VV[11], VV[12], T3);
-   value0 = cl_list(4, ECL_SYM("MULTIPLE-VALUE-BIND",574), VV[10], T0, T4);
+   T0 = cl_list(3, ECL_SYM("GETHASH",413), v4key, v5hash_table);
+   T1 = cl_list(3, ECL_SYM("GETHASH",413), v4key, v5hash_table);
+   T2 = cl_list(3, ECL_SYM("SETF",750), T1, v6default);
+   T3 = cl_list(3, ECL_SYM("VALUES",895), T2, ECL_NIL);
+   T4 = cl_list(4, ECL_SYM("IF",946), VV[11], VV[12], T3);
+   value0 = cl_list(4, ECL_SYM("MULTIPLE-VALUE-BIND",572), VV[10], T0, T4);
    return value0;
   }
  }
@@ -605,7 +602,7 @@ L20:;
 #ifdef __cplusplus
 extern "C"
 #endif
-ECL_DLLEXPORT void _ecl7ZmCSEYoe0NCM_eTFycC71(cl_object flag)
+ECL_DLLEXPORT void _ecl7ZmCSEYoe0NCM_yPg2dC71(cl_object flag)
 {
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -620,57 +617,55 @@ ECL_DLLEXPORT void _ecl7ZmCSEYoe0NCM_eTFycC71(cl_object flag)
  flag->cblock.data_text = compiler_data_text;
  flag->cblock.cfuns_size = compiler_cfuns_size;
  flag->cblock.cfuns = compiler_cfuns;
- flag->cblock.source = ecl_make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/hash-tables.lisp",-1);
+ flag->cblock.source = make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/hash-tables.lisp");
  return;}
  #ifdef ECL_DYNAMIC_VV
  VV = Cblock->cblock.data;
  #endif
- Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_ecl7ZmCSEYoe0NCM_eTFycC71@";
+ Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_ecl7ZmCSEYoe0NCM_yPg2dC71@";
  VVtemp = Cblock->cblock.temp_data;
  ECL_DEFINE_SETF_FUNCTIONS
   si_select_package(VVtemp[0]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LOCATION",1862), VVtemp[1], VVtemp[2]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[3]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LOCATION",1777), VVtemp[1], VVtemp[2]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[3]) /*  ANNOTATE */;
   ecl_cmp_defun(VV[13]);                          /*  COPY-HASH-TABLE */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[0], ECL_SYM("FUNCTION",398), VVtemp[4]) /*  SET-DOCUMENTATION */;
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[5]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[1], ECL_SYM("LOCATION",1862), VVtemp[6], VVtemp[7]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[1], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[8]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[20]);                          /*  MAPHASH-KEYS    */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[1], ECL_SYM("FUNCTION",398), VVtemp[9]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[1], ECL_SYM("INLINE",436), VVtemp[10]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[11]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[2], ECL_SYM("LOCATION",1862), VVtemp[12], VVtemp[13]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[2], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[8]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[21]);                          /*  MAPHASH-VALUES  */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[2], ECL_SYM("FUNCTION",398), VVtemp[14]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[2], ECL_SYM("INLINE",436), VVtemp[15]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[3], ECL_SYM("LOCATION",1862), VVtemp[16], VVtemp[17]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[3], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[18]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[22]);                          /*  HASH-TABLE-KEYS */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[3], ECL_SYM("FUNCTION",398), VVtemp[19]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[4], ECL_SYM("LOCATION",1862), VVtemp[20], VVtemp[21]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[4], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[18]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[23]);                          /*  HASH-TABLE-VALUES */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[4], ECL_SYM("FUNCTION",398), VVtemp[22]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[5], ECL_SYM("LOCATION",1862), VVtemp[23], VVtemp[24]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[5], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[18]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[24]);                          /*  HASH-TABLE-ALIST */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[5], ECL_SYM("FUNCTION",398), VVtemp[25]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[6], ECL_SYM("LOCATION",1862), VVtemp[26], VVtemp[27]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[6], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[18]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[25]);                          /*  HASH-TABLE-PLIST */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[6], ECL_SYM("FUNCTION",398), VVtemp[28]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[7], ECL_SYM("LOCATION",1862), VVtemp[29], VVtemp[30]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[7], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[31]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[26]);                          /*  ALIST-HASH-TABLE */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[7], ECL_SYM("FUNCTION",398), VVtemp[32]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[8], ECL_SYM("LOCATION",1862), VVtemp[33], VVtemp[34]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[8], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[35]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[27]);                          /*  PLIST-HASH-TABLE */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[8], ECL_SYM("FUNCTION",398), VVtemp[36]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[9], ECL_SYM("LOCATION",1862), VVtemp[37], VVtemp[38]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[9], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[39]) /*  ANNOTATE */;
-  ecl_cmp_defmacro(VV[28]);                       /*  ENSURE-GETHASH  */
-  ecl_function_dispatch(cl_env_copy,VV[14])(3, VV[9], ECL_SYM("FUNCTION",398), VVtemp[40]) /*  SET-DOCUMENTATION */;
+  si_set_documentation(3, VV[0], ECL_SYM("FUNCTION",396), VVtemp[4]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[5]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[1], ECL_SYM("LOCATION",1777), VVtemp[6], VVtemp[7]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[1], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[8]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[19]);                          /*  MAPHASH-KEYS    */
+  si_set_documentation(3, VV[1], ECL_SYM("FUNCTION",396), VVtemp[9]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[10]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[2], ECL_SYM("LOCATION",1777), VVtemp[11], VVtemp[12]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[2], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[8]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[20]);                          /*  MAPHASH-VALUES  */
+  si_set_documentation(3, VV[2], ECL_SYM("FUNCTION",396), VVtemp[13]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[3], ECL_SYM("LOCATION",1777), VVtemp[14], VVtemp[15]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[3], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[16]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[21]);                          /*  HASH-TABLE-KEYS */
+  si_set_documentation(3, VV[3], ECL_SYM("FUNCTION",396), VVtemp[17]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[4], ECL_SYM("LOCATION",1777), VVtemp[18], VVtemp[19]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[4], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[16]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[22]);                          /*  HASH-TABLE-VALUES */
+  si_set_documentation(3, VV[4], ECL_SYM("FUNCTION",396), VVtemp[20]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[5], ECL_SYM("LOCATION",1777), VVtemp[21], VVtemp[22]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[5], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[16]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[23]);                          /*  HASH-TABLE-ALIST */
+  si_set_documentation(3, VV[5], ECL_SYM("FUNCTION",396), VVtemp[23]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[6], ECL_SYM("LOCATION",1777), VVtemp[24], VVtemp[25]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[6], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[16]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[24]);                          /*  HASH-TABLE-PLIST */
+  si_set_documentation(3, VV[6], ECL_SYM("FUNCTION",396), VVtemp[26]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[7], ECL_SYM("LOCATION",1777), VVtemp[27], VVtemp[28]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[7], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[29]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[25]);                          /*  ALIST-HASH-TABLE */
+  si_set_documentation(3, VV[7], ECL_SYM("FUNCTION",396), VVtemp[30]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[8], ECL_SYM("LOCATION",1777), VVtemp[31], VVtemp[32]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[8], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[33]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[26]);                          /*  PLIST-HASH-TABLE */
+  si_set_documentation(3, VV[8], ECL_SYM("FUNCTION",396), VVtemp[34]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[9], ECL_SYM("LOCATION",1777), VVtemp[35], VVtemp[36]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[9], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[37]) /*  ANNOTATE */;
+  ecl_cmp_defmacro(VV[27]);                       /*  ENSURE-GETHASH  */
+  si_set_documentation(3, VV[9], ECL_SYM("FUNCTION",396), VVtemp[38]);
 }

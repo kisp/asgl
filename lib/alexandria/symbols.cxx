@@ -1,7 +1,7 @@
-/*      Compiler: ECL 24.5.10                                         */
-/*      Date: 2024/7/24 06:55 (yyyy/mm/dd)                            */
+/*      Compiler: ECL 16.1.2                                          */
+/*      Date: 2024/7/24 08:12 (yyyy/mm/dd)                            */
 /*      Machine: Linux 6.9.7-arch1-1 x86_64                           */
-/*      Source: /home/packer/ws/github/kisp/asgl/lib/alexandria/symbols.lisp */
+/*      Source: lib/alexandria/symbols.lisp                           */
 #include <ecl/ecl-cmp.h>
 #include "lib/alexandria/symbols.eclh"
 /*      function definition for ENSURE-SYMBOL                         */
@@ -9,7 +9,6 @@
 static cl_object L1ensure_symbol(cl_narg narg, cl_object v1name, ...)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -21,7 +20,7 @@ static cl_object L1ensure_symbol(cl_narg narg, cl_object v1name, ...)
   {
    int i = 1;
    if (i >= narg) {
-    v2package = ecl_symbol_value(ECL_SYM("*PACKAGE*",45));
+    v2package = ecl_symbol_value(ECL_SYM("*PACKAGE*",43));
    } else {
     i++;
     v2package = va_arg(args,cl_object);
@@ -38,7 +37,6 @@ static cl_object L1ensure_symbol(cl_narg narg, cl_object v1name, ...)
 static cl_object L2maybe_intern(cl_object v1name, cl_object v2package)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -46,7 +44,7 @@ static cl_object L2maybe_intern(cl_object v1name, cl_object v2package)
 TTL:
   if (Null(v2package)) { goto L2; }
   if (!((ECL_T)==(v2package))) { goto L5; }
-  T0 = ecl_symbol_value(ECL_SYM("*PACKAGE*",45));
+  T0 = ecl_symbol_value(ECL_SYM("*PACKAGE*",43));
   goto L4;
 L5:;
   T0 = v2package;
@@ -65,7 +63,6 @@ L1:;
 static cl_object L3format_symbol(cl_narg narg, cl_object v1package, cl_object v2control, ...)
 {
  cl_object T0, T1, T2;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -77,13 +74,13 @@ static cl_object L3format_symbol(cl_narg narg, cl_object v1package, cl_object v2
   ecl_va_end(args);
   {
    cl_object v4;
-   v4 = ecl_symbol_value(ECL_SYM("+IO-SYNTAX-PROGV-LIST+",1798));
+   v4 = ecl_symbol_value(ECL_SYM("+IO-SYNTAX-PROGV-LIST+",1732));
    {
     cl_object v6, v7; cl_index v5;
-    v6 = ECL_CONS_CAR(v4);
-    v7 = ECL_CONS_CDR(v4);
+    v6 = _ecl_car(v4);
+    v7 = _ecl_cdr(v4);
     v5 = ecl_progv(cl_env_copy, v6, v7);
-    T1 = (ECL_SYM("FORMAT",389)->symbol.gfdef);
+    T1 = (ECL_SYM("FORMAT",387)->symbol.gfdef);
     T2 = cl_string(v2control);
     T0 = cl_apply(4, T1, ECL_NIL, T2, v3arguments);
     ecl_bds_unwind(cl_env_copy,v5);
@@ -98,7 +95,6 @@ static cl_object L3format_symbol(cl_narg narg, cl_object v1package, cl_object v2
 static cl_object L4make_keyword(cl_object v1name)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -114,7 +110,6 @@ TTL:
 static cl_object L5make_gensym(cl_object v1name)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -125,7 +120,7 @@ TTL:
    v2 = ecl_make_fixnum(0);
    if (!(ECL_FIXNUMP(v1name)||ECL_BIGNUMP(v1name))) { goto L2; }
    v2 = v1name;
-   if (!(ecl_greatereq(v2,ecl_make_fixnum(0)))) { goto L2; }
+   if (!(ecl_number_compare(v2,ecl_make_fixnum(0))>=0)) { goto L2; }
   }
   T0 = v1name;
   goto L1;
@@ -141,7 +136,6 @@ L1:;
 static cl_object L6make_gensym_list(cl_narg narg, cl_object v1length, ...)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -167,7 +161,7 @@ static cl_object L6make_gensym_list(cl_narg narg, cl_object v1length, ...)
     v4 = ecl_make_fixnum(0);
     if (!(ECL_FIXNUMP(v2x)||ECL_BIGNUMP(v2x))) { goto L3; }
     v4 = v2x;
-    if (!(ecl_greatereq(v4,ecl_make_fixnum(0)))) { goto L3; }
+    if (!(ecl_number_compare(v4,ecl_make_fixnum(0))>=0)) { goto L3; }
    }
    v3g = v2x;
    goto L2;
@@ -181,9 +175,7 @@ L2:;
      v5 = v1length;
      T0 = cl_realp(v5);
      if (ecl_unlikely(!((T0)!=ECL_NIL)))
-         FEwrong_type_argument(ECL_SYM("REAL",705),v5);
-     value0 = ECL_NIL;
-     cl_env_copy->nvalues = 0;
+         FEwrong_type_argument(ECL_SYM("REAL",703),v5);
      v4 = v5;
     }
     {
@@ -201,8 +193,6 @@ L16:;
       cl_object v7;
       v7 = v6;
       if (ecl_unlikely(ECL_ATOM(v7))) FEtype_error_cons(v7);
-      value0 = ECL_NIL;
-      cl_env_copy->nvalues = 0;
       T0 = v7;
      }
      T1 = cl_gensym(1, v3g);
@@ -223,7 +213,6 @@ L15:;
 static cl_object L8symbolicate(cl_narg narg, ...)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -235,14 +224,14 @@ static cl_object L8symbolicate(cl_narg narg, ...)
   {
    cl_object v2length;
    cl_object v3name;
-   T0 = (ECL_SYM("+",16)->symbol.gfdef);
+   T0 = (ECL_SYM("+",14)->symbol.gfdef);
    {
     cl_object v4;
-    v4 = ecl_make_cfun((cl_objectfn_fixed)LC7__lambda15,ECL_NIL,Cblock,1);
+    v4 = ecl_make_cfun((cl_objectfn_fixed)LC7__g15,ECL_NIL,Cblock,1);
     T1 = v4;
    }
-   v2length = cl_reduce(4, T0, v1things, ECL_SYM("KEY",1294), T1);
-   v3name = si_make_pure_array(ECL_SYM("CHARACTER",224), v2length, ECL_NIL, ECL_NIL, ECL_NIL, ecl_make_fixnum(0));
+   v2length = cl_reduce(4, T0, v1things, ECL_SYM("KEY",1267), T1);
+   v3name = si_make_pure_array(ECL_SYM("CHARACTER",222), v2length, ECL_NIL, ECL_NIL, ECL_NIL, ecl_make_fixnum(0));
    {
     cl_object v4index;
     v4index = ecl_make_fixnum(0);
@@ -259,7 +248,7 @@ L8:;
        cl_fixnum v8len;
        v7x = cl_string(v6thing);
        v8len = ecl_length(v7x);
-       cl_replace(4, v3name, v7x, ECL_SYM("START1",1345), v4index);
+       cl_replace(4, v3name, v7x, ECL_SYM("START1",1316), v4index);
        v4index = ecl_plus(v4index,ecl_make_fixnum(v8len));
       }
      }
@@ -276,12 +265,11 @@ L20:;
   }
  }
 }
-/*      local function LAMBDA15                                       */
+/*      local function G15                                            */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC7__lambda15(cl_object v1x)
+static cl_object LC7__g15(cl_object v1x)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -298,7 +286,7 @@ TTL:
 #ifdef __cplusplus
 extern "C"
 #endif
-ECL_DLLEXPORT void _ecljVTgFlYFBNMEM_qiFycC71(cl_object flag)
+ECL_DLLEXPORT void _ecljVTgFlYFBNMEM_6gg2dC71(cl_object flag)
 {
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -313,44 +301,42 @@ ECL_DLLEXPORT void _ecljVTgFlYFBNMEM_qiFycC71(cl_object flag)
  flag->cblock.data_text = compiler_data_text;
  flag->cblock.cfuns_size = compiler_cfuns_size;
  flag->cblock.cfuns = compiler_cfuns;
- flag->cblock.source = ecl_make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/symbols.lisp",-1);
+ flag->cblock.source = make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/symbols.lisp");
  return;}
  #ifdef ECL_DYNAMIC_VV
  VV = Cblock->cblock.data;
  #endif
- Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_ecljVTgFlYFBNMEM_qiFycC71@";
+ Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_ecljVTgFlYFBNMEM_6gg2dC71@";
  VVtemp = Cblock->cblock.temp_data;
  ECL_DEFINE_SETF_FUNCTIONS
   si_select_package(VVtemp[0]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[1]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LOCATION",1862), VVtemp[2], VVtemp[3]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[4]) /*  ANNOTATE */;
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[1]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LOCATION",1777), VVtemp[2], VVtemp[3]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[4]) /*  ANNOTATE */;
   ecl_cmp_defun(VV[9]);                           /*  ENSURE-SYMBOL   */
-  ecl_function_dispatch(cl_env_copy,VV[10])(3, VV[0], ECL_SYM("FUNCTION",398), VVtemp[5]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[0], ECL_SYM("INLINE",436), VVtemp[6]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[1], ECL_SYM("LOCATION",1862), VVtemp[7], VVtemp[8]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[1], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[9]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[11]);                          /*  MAYBE-INTERN    */
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[10]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[2], ECL_SYM("LOCATION",1862), VVtemp[11], VVtemp[12]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[2], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[13]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[12]);                          /*  FORMAT-SYMBOL   */
-  ecl_function_dispatch(cl_env_copy,VV[10])(3, VV[2], ECL_SYM("FUNCTION",398), VVtemp[14]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[2], ECL_SYM("INLINE",436), VVtemp[15]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[3], ECL_SYM("LOCATION",1862), VVtemp[16], VVtemp[17]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[3], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[18]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[13]);                          /*  MAKE-KEYWORD    */
-  ecl_function_dispatch(cl_env_copy,VV[10])(3, VV[3], ECL_SYM("FUNCTION",398), VVtemp[19]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[5], ECL_SYM("LOCATION",1862), VVtemp[20], VVtemp[21]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[5], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[18]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[14]);                          /*  MAKE-GENSYM     */
-  ecl_function_dispatch(cl_env_copy,VV[10])(3, VV[5], ECL_SYM("FUNCTION",398), VVtemp[22]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[6], ECL_SYM("LOCATION",1862), VVtemp[23], VVtemp[24]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[6], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[25]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[15]);                          /*  MAKE-GENSYM-LIST */
-  ecl_function_dispatch(cl_env_copy,VV[10])(3, VV[6], ECL_SYM("FUNCTION",398), VVtemp[26]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[8], ECL_SYM("LOCATION",1862), VVtemp[27], VVtemp[28]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[8], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[29]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[16]);                          /*  SYMBOLICATE     */
-  ecl_function_dispatch(cl_env_copy,VV[10])(3, VV[8], ECL_SYM("FUNCTION",398), VVtemp[30]) /*  SET-DOCUMENTATION */;
+  si_set_documentation(3, VV[0], ECL_SYM("FUNCTION",396), VVtemp[5]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[1], ECL_SYM("LOCATION",1777), VVtemp[6], VVtemp[7]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[1], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[8]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[10]);                          /*  MAYBE-INTERN    */
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[9]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[2], ECL_SYM("LOCATION",1777), VVtemp[10], VVtemp[11]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[2], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[12]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[11]);                          /*  FORMAT-SYMBOL   */
+  si_set_documentation(3, VV[2], ECL_SYM("FUNCTION",396), VVtemp[13]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[3], ECL_SYM("LOCATION",1777), VVtemp[14], VVtemp[15]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[3], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[16]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[12]);                          /*  MAKE-KEYWORD    */
+  si_set_documentation(3, VV[3], ECL_SYM("FUNCTION",396), VVtemp[17]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[5], ECL_SYM("LOCATION",1777), VVtemp[18], VVtemp[19]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[5], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[16]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[13]);                          /*  MAKE-GENSYM     */
+  si_set_documentation(3, VV[5], ECL_SYM("FUNCTION",396), VVtemp[20]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[6], ECL_SYM("LOCATION",1777), VVtemp[21], VVtemp[22]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[6], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[23]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[14]);                          /*  MAKE-GENSYM-LIST */
+  si_set_documentation(3, VV[6], ECL_SYM("FUNCTION",396), VVtemp[24]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[8], ECL_SYM("LOCATION",1777), VVtemp[25], VVtemp[26]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[8], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[27]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[15]);                          /*  SYMBOLICATE     */
+  si_set_documentation(3, VV[8], ECL_SYM("FUNCTION",396), VVtemp[28]);
 }

@@ -1,25 +1,24 @@
-/*      Compiler: ECL 24.5.10                                         */
-/*      Date: 2024/7/24 06:55 (yyyy/mm/dd)                            */
+/*      Compiler: ECL 16.1.2                                          */
+/*      Date: 2024/7/24 08:12 (yyyy/mm/dd)                            */
 /*      Machine: Linux 6.9.7-arch1-1 x86_64                           */
-/*      Source: /home/packer/ws/github/kisp/asgl/lib/alexandria/numbers.lisp */
+/*      Source: lib/alexandria/numbers.lisp                           */
 #include <ecl/ecl-cmp.h>
 #include "lib/alexandria/numbers.eclh"
 /*      function definition for CLAMP                                 */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
 static cl_object L1clamp(cl_object v1number, cl_object v2min, cl_object v3max)
 {
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
  {
 TTL:
-  if (!(ecl_lower(v1number,v2min))) { goto L1; }
+  if (!(ecl_number_compare(v1number,v2min)<0)) { goto L1; }
   value0 = v2min;
   cl_env_copy->nvalues = 1;
   return value0;
 L1:;
-  if (!(ecl_greater(v1number,v3max))) { goto L3; }
+  if (!(ecl_number_compare(v1number,v3max)>0)) { goto L3; }
   value0 = v3max;
   cl_env_copy->nvalues = 1;
   return value0;
@@ -35,7 +34,6 @@ static cl_object L4gaussian_random(cl_narg narg, ...)
 {
  cl_object T0, T1;
  volatile cl_object lex0[2];
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -62,9 +60,9 @@ static cl_object L4gaussian_random(cl_narg narg, ...)
    cl_object v2;                                  /*  G1              */
    cl_object v3;                                  /*  G2              */
    value0 = LC2gauss();
+   v2 = value0;
    {
     const int v4 = cl_env_copy->nvalues;
-    v2 = value0;
     cl_object v5;
     v5 = (v4<=1)? ECL_NIL : cl_env_copy->values[1];
     v3 = v5;
@@ -83,7 +81,6 @@ static cl_object L4gaussian_random(cl_narg narg, ...)
 static cl_object LC3guard(volatile cl_object *lex0, cl_object v1x)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -111,9 +108,9 @@ L11:;
    cl_object v3;                                  /*  X1              */
    cl_object v4;                                  /*  X2              */
    value0 = LC2gauss();
+   v3 = value0;
    {
     const int v5 = cl_env_copy->nvalues;
-    v3 = value0;
     cl_object v6;
     v6 = (v5<=1)? ECL_NIL : cl_env_copy->values[1];
     v4 = v6;
@@ -172,7 +169,6 @@ L1:;
 static cl_object LC2gauss()
 {
  cl_object T0, T1, T2;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -195,7 +191,7 @@ L4:;
      T0 = ecl_expt(v1x1,ecl_make_fixnum(2));
      T1 = ecl_expt(v2x2,ecl_make_fixnum(2));
      v3w = ecl_plus(T0,T1);
-     if (!(ecl_lower(v3w,VV[3]))) { goto L11; }
+     if (!(ecl_number_compare(v3w,VV[3])<0)) { goto L11; }
      {
       cl_object v4v;
       T0 = cl_log(1, v3w);
@@ -221,7 +217,6 @@ L11:;
 static cl_object L5iota(cl_narg narg, cl_object v1n, ...)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -238,45 +233,39 @@ static cl_object L5iota(cl_narg narg, cl_object v1n, ...)
     v2start = ecl_make_fixnum(0);
    } else {
     v2start = keyvars[0];
-    {
-     bool v4;
-     v4 = ecl_numberp(v2start);
-     if (ecl_unlikely(!(v4)))
-         FEwrong_type_argument(ECL_SYM("NUMBER",608),v2start);
-     value0 = ECL_NIL;
-     cl_env_copy->nvalues = 0;
-    }
    }
    if (Null(keyvars[3])) {
     v3step = ecl_make_fixnum(1);
    } else {
     v3step = keyvars[1];
-    {
-     bool v4;
-     v4 = ecl_numberp(v3step);
-     if (ecl_unlikely(!(v4)))
-         FEwrong_type_argument(ECL_SYM("NUMBER",608),v3step);
-     value0 = ECL_NIL;
-     cl_env_copy->nvalues = 0;
-    }
    }
   }
   {
    cl_object v4;
    v4 = ecl_make_fixnum(0);
-   if (!(ECL_FIXNUMP(v1n)||ECL_BIGNUMP(v1n))) { goto L9; }
+   if (!(ECL_FIXNUMP(v1n)||ECL_BIGNUMP(v1n))) { goto L7; }
    v4 = v1n;
-   T0 = ecl_make_bool(ecl_greatereq(v4,ecl_make_fixnum(0)));
-   goto L6;
-L9:;
+   T0 = ecl_make_bool(ecl_number_compare(v4,ecl_make_fixnum(0))>=0);
+   goto L4;
+L7:;
    T0 = ECL_NIL;
-   goto L6;
+   goto L4;
   }
-L6:;
+L4:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[6],v1n);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
+  {
+   bool v4;
+   v4 = ecl_numberp(v2start);
+   if (ecl_unlikely(!(v4)))
+         FEwrong_type_argument(ECL_SYM("NUMBER",606),v2start);
+  }
+  {
+   bool v4;
+   v4 = ecl_numberp(v3step);
+   if (ecl_unlikely(!(v4)))
+         FEwrong_type_argument(ECL_SYM("NUMBER",606),v3step);
+  }
   {
    cl_object v4;
    cl_object v5i;
@@ -299,8 +288,6 @@ L17:;
      cl_object v8;
      v8 = v7;
      if (ecl_unlikely(ECL_ATOM(v8))) FEtype_error_cons(v8);
-     value0 = ECL_NIL;
-     cl_env_copy->nvalues = 0;
      T0 = v8;
     }
     v7 = ecl_list1(v5i);
@@ -325,7 +312,6 @@ L18:;
 static cl_object L6map_iota(cl_narg narg, cl_object v1function, cl_object v2n, ...)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -342,45 +328,39 @@ static cl_object L6map_iota(cl_narg narg, cl_object v1function, cl_object v2n, .
     v3start = ecl_make_fixnum(0);
    } else {
     v3start = keyvars[0];
-    {
-     bool v5;
-     v5 = ecl_numberp(v3start);
-     if (ecl_unlikely(!(v5)))
-         FEwrong_type_argument(ECL_SYM("NUMBER",608),v3start);
-     value0 = ECL_NIL;
-     cl_env_copy->nvalues = 0;
-    }
    }
    if (Null(keyvars[3])) {
     v4step = ecl_make_fixnum(1);
    } else {
     v4step = keyvars[1];
-    {
-     bool v5;
-     v5 = ecl_numberp(v4step);
-     if (ecl_unlikely(!(v5)))
-         FEwrong_type_argument(ECL_SYM("NUMBER",608),v4step);
-     value0 = ECL_NIL;
-     cl_env_copy->nvalues = 0;
-    }
    }
   }
   {
    cl_object v5;
    v5 = ecl_make_fixnum(0);
-   if (!(ECL_FIXNUMP(v2n)||ECL_BIGNUMP(v2n))) { goto L9; }
+   if (!(ECL_FIXNUMP(v2n)||ECL_BIGNUMP(v2n))) { goto L7; }
    v5 = v2n;
-   T0 = ecl_make_bool(ecl_greatereq(v5,ecl_make_fixnum(0)));
-   goto L6;
-L9:;
+   T0 = ecl_make_bool(ecl_number_compare(v5,ecl_make_fixnum(0))>=0);
+   goto L4;
+L7:;
    T0 = ECL_NIL;
-   goto L6;
+   goto L4;
   }
-L6:;
+L4:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[6],v2n);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
+  {
+   bool v5;
+   v5 = ecl_numberp(v3start);
+   if (ecl_unlikely(!(v5)))
+         FEwrong_type_argument(ECL_SYM("NUMBER",606),v3start);
+  }
+  {
+   bool v5;
+   v5 = ecl_numberp(v4step);
+   if (ecl_unlikely(!(v5)))
+         FEwrong_type_argument(ECL_SYM("NUMBER",606),v4step);
+  }
   {
    cl_object v5;
    cl_object v6i;
@@ -414,7 +394,6 @@ L17:;
 static cl_object L7lerp(cl_object v1v, cl_object v2a, cl_object v3b)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -432,13 +411,12 @@ TTL:
 static cl_object L8mean(cl_object v1sample)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
  {
 TTL:
-  T0 = (ECL_SYM("+",16)->symbol.gfdef);
+  T0 = (ECL_SYM("+",14)->symbol.gfdef);
   T1 = cl_reduce(2, T0, v1sample);
   {
    cl_fixnum v2;
@@ -454,7 +432,6 @@ TTL:
 static cl_object L9median(cl_object v1sample)
 {
  cl_object T0, T1, T2;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -464,8 +441,8 @@ TTL:
    cl_object v2vector;
    cl_fixnum v3length;
    cl_object v4middle;
-   T0 = ecl_function_dispatch(cl_env_copy,VV[43])(2, ECL_SYM("VECTOR",900), v1sample) /*  COPY-SEQUENCE */;
-   T1 = (ECL_SYM("<",74)->symbol.gfdef);
+   T0 = ecl_function_dispatch(cl_env_copy,VV[42])(2, ECL_SYM("VECTOR",898), v1sample) /*  COPY-SEQUENCE */;
+   T1 = (ECL_SYM("<",72)->symbol.gfdef);
    v2vector = cl_sort(2, T0, T1);
    v3length = ecl_length(v2vector);
    v4middle = ecl_truncate2(ecl_make_fixnum(v3length),ecl_make_fixnum(2));
@@ -481,8 +458,6 @@ TTL:
       v7 = v4middle;
       if (ecl_unlikely((ecl_fixnum(v7))>=(v5)->vector.dim))
            FEwrong_index(ECL_NIL,v5,-1,ecl_make_fixnum(ecl_fixnum(v7)),(v5)->vector.dim);
-      value0 = ECL_NIL;
-      cl_env_copy->nvalues = 0;
       v6 = ecl_fixnum(v7);
      }
      value0 = ecl_aref_unsafe(T0,v6);
@@ -502,8 +477,6 @@ L5:;
       v9 = v4middle;
       if (ecl_unlikely((ecl_fixnum(v9))>=(v7)->vector.dim))
            FEwrong_index(ECL_NIL,v7,-1,ecl_make_fixnum(ecl_fixnum(v9)),(v7)->vector.dim);
-      value0 = ECL_NIL;
-      cl_env_copy->nvalues = 0;
       v8 = ecl_fixnum(v9);
      }
      T0 = ecl_aref_unsafe(T1,v8);
@@ -520,8 +493,6 @@ L5:;
       v9 = ecl_one_minus(v4middle);
       if (ecl_unlikely((ecl_fixnum(v9))>=(v7)->vector.dim))
            FEwrong_index(ECL_NIL,v7,-1,ecl_make_fixnum(ecl_fixnum(v9)),(v7)->vector.dim);
-      value0 = ECL_NIL;
-      cl_env_copy->nvalues = 0;
       v8 = ecl_fixnum(v9);
      }
      T1 = ecl_aref_unsafe(T2,v8);
@@ -539,7 +510,7 @@ L5:;
 static cl_object L11variance(cl_narg narg, cl_object v1sample, ...)
 {
  cl_object T0, T1, T2;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -560,7 +531,7 @@ static cl_object L11variance(cl_narg narg, cl_object v1sample, ...)
   }
   {
    cl_object env1 = env0;
-   T1 = (ECL_SYM("+",16)->symbol.gfdef);
+   T1 = (ECL_SYM("+",14)->symbol.gfdef);
    T2 = cl_reduce(2, T1, v1sample);
    {
     cl_fixnum v3;
@@ -571,7 +542,7 @@ static cl_object L11variance(cl_narg narg, cl_object v1sample, ...)
    CLV0 = env1 = CONS(T0,env1);                   /*  MEAN            */
    {
     cl_object v3;
-    v3 = ecl_make_cclosure_va((cl_objectfn)LC10__lambda32,env1,Cblock,2);
+    v3 = ecl_make_cclosure_va((cl_objectfn)LC10__g32,env1,Cblock);
     T0 = v3;
    }
    T1 = cl_reduce(4, T0, v1sample, VV[12], ecl_make_fixnum(0));
@@ -595,9 +566,9 @@ L5:;
   }
  }
 }
-/*      closure LAMBDA32                                              */
+/*      closure G32                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC10__lambda32(cl_narg narg, cl_object v1a, cl_object v2b, ...)
+static cl_object LC10__g32(cl_narg narg, cl_object v1a, cl_object v2b, ...)
 {
  cl_object T0, T1;
  cl_object CLV0;
@@ -624,7 +595,7 @@ TTL:
 static cl_object L13standard_deviation(cl_narg narg, cl_object v1sample, ...)
 {
  cl_object T0, T1, T2, T3;
- cl_object env0 = ECL_NIL;
+ cl_object env0;
  cl_object CLV0;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -648,17 +619,17 @@ static cl_object L13standard_deviation(cl_narg narg, cl_object v1sample, ...)
    cl_object v4;
    cl_object v5biased;
    v3 = cl_list(2, VV[14], v2biased);
-   v4 = ecl_function_dispatch(cl_env_copy,VV[46])(2, v3, VV[14]) /*  SEARCH-KEYWORD */;
-   if (!((v4)==(ECL_SYM("MISSING-KEYWORD",2037)))) { goto L6; }
+   v4 = si_search_keyword(2, v3, VV[14]);
+   if (!((v4)==(ECL_SYM("MISSING-KEYWORD",1943)))) { goto L6; }
    v5biased = ECL_T;
    goto L5;
 L6:;
    v5biased = v4;
 L5:;
-   ecl_function_dispatch(cl_env_copy,VV[47])(2, v3, VV[15]) /*  CHECK-KEYWORD */;
+   si_check_keyword(2, v3, VV[15]);
    {
     cl_object env1 = env0;
-    T2 = (ECL_SYM("+",16)->symbol.gfdef);
+    T2 = (ECL_SYM("+",14)->symbol.gfdef);
     T3 = cl_reduce(2, T2, v1sample);
     {
      cl_fixnum v6;
@@ -669,7 +640,7 @@ L5:;
     CLV0 = env1 = CONS(T1,env1);                  /*  MEAN            */
     {
      cl_object v6;
-     v6 = ecl_make_cclosure_va((cl_objectfn)LC12__lambda40,env1,Cblock,2);
+     v6 = ecl_make_cclosure_va((cl_objectfn)LC12__g38,env1,Cblock);
      T1 = v6;
     }
     T2 = cl_reduce(4, T1, v1sample, VV[12], ecl_make_fixnum(0));
@@ -678,12 +649,12 @@ L5:;
      v6 = ecl_length(v1sample);
      {
       cl_fixnum v7;
-      if (Null(v5biased)) { goto L15; }
+      if (Null(v5biased)) { goto L13; }
       v7 = 0;
-      goto L14;
-L15:;
+      goto L12;
+L13:;
       v7 = 1;
-L14:;
+L12:;
       T3 = ecl_minus(ecl_make_fixnum(v6),ecl_make_fixnum(v7));
       T0 = ecl_divide(T2,T3);
      }
@@ -695,9 +666,9 @@ L14:;
   return value0;
  }
 }
-/*      closure LAMBDA40                                              */
+/*      closure G38                                                   */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC12__lambda40(cl_narg narg, cl_object v1a, cl_object v2b, ...)
+static cl_object LC12__g38(cl_narg narg, cl_object v1a, cl_object v2b, ...)
 {
  cl_object T0, T1;
  cl_object CLV0;
@@ -724,7 +695,6 @@ TTL:
 static cl_object LC15maxf(cl_object v1, cl_object v2si__env)
 {
  cl_object T0, T1, T2, T3, T4, T5, T6, T7, T8;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -735,7 +705,7 @@ TTL:
    cl_object v4si___reference;
    v3 = ecl_cdr(v1);
    if (!(v3==ECL_NIL)) { goto L3; }
-   ecl_function_dispatch(cl_env_copy,VV[49])(1, v1) /*  DM-TOO-FEW-ARGUMENTS */;
+   si_dm_too_few_arguments(v1);
 L3:;
    {
     cl_object v5;
@@ -749,33 +719,31 @@ L3:;
     cl_object v8;                                 /*  STORES          */
     cl_object v9;                                 /*  SETTER          */
     cl_object v10;                                /*  GETTER          */
-    value0 = (cl_env_copy->function=(ECL_SYM("GET-SETF-EXPANSION",412)->symbol.gfdef))->cfun.entry(2, v4si___reference, v2si__env) /*  GET-SETF-EXPANSION */;
-    {
-     v6 = value0;
-     v7 = cl_env_copy->values[1];
-     v8 = cl_env_copy->values[2];
-     v9 = cl_env_copy->values[3];
-     v10 = cl_env_copy->values[4];
-    }
+    value0 = (cl_env_copy->function=(ECL_SYM("GET-SETF-EXPANSION",410)->symbol.gfdef))->cfun.entry(2, v4si___reference, v2si__env) /*  GET-SETF-EXPANSION */;
+    v6 = value0;
+    v7 = cl_env_copy->values[1];
+    v8 = cl_env_copy->values[2];
+    v9 = cl_env_copy->values[3];
+    v10 = cl_env_copy->values[4];
     {
      cl_object v11si__all_vars;
      {
       cl_object v12;
-      v12 = ecl_make_cfun((cl_objectfn_fixed)LC14__lambda46,ECL_NIL,Cblock,1);
+      v12 = ecl_make_cfun((cl_objectfn_fixed)LC14__g44,ECL_NIL,Cblock,1);
       T0 = v12;
      }
      T1 = v3;
-     v11si__all_vars = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T0, T1) /*  MAPCAR */;
+     v11si__all_vars = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T0, T1) /*  MAPCAR */;
      if (!(ECL_SYMBOLP(v10))) { goto L11; }
-     T0 = (ECL_SYM("CAR",182)->symbol.gfdef);
-     T1 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T0, v11si__all_vars) /*  MAPCAR */;
-     T2 = cl_listX(3, ECL_SYM("MAX",553), v10, T1);
+     T0 = (ECL_SYM("CAR",180)->symbol.gfdef);
+     T1 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T0, v11si__all_vars) /*  MAPCAR */;
+     T2 = cl_listX(3, ECL_SYM("MAX",551), v10, T1);
      T3 = ecl_car(v8);
-     T4 = (ECL_SYM("FIRST",373)->symbol.gfdef);
-     T5 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T4, v11si__all_vars) /*  MAPCAR */;
+     T4 = (ECL_SYM("FIRST",371)->symbol.gfdef);
+     T5 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T4, v11si__all_vars) /*  MAPCAR */;
      T6 = CONS(VV[17],T5);
-     T7 = cl_list(2, ECL_SYM("DECLARE",276), T6);
-     T8 = cl_list(4, ECL_SYM("LET*",480), v11si__all_vars, T7, v9);
+     T7 = cl_list(2, ECL_SYM("DECLARE",274), T6);
+     T8 = cl_list(4, ECL_SYM("LET*",478), v11si__all_vars, T7, v9);
      value0 = cl_subst(3, T2, T3, T8);
      return value0;
 L11:;
@@ -807,19 +775,28 @@ L20:;
       goto L19;
 L26:;
       T0 = ecl_car(v8);
-      T1 = (ECL_SYM("CAR",182)->symbol.gfdef);
-      T2 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T1, v11si__all_vars) /*  MAPCAR */;
-      T3 = cl_listX(3, ECL_SYM("MAX",553), v10, T2);
-      T4 = cl_list(2, T0, T3);
-      T5 = ecl_append(v11si__all_vars,v14si__let_list);
-      v14si__let_list = CONS(T4,T5);
+      if (!(ECL_LISTP(v4si___reference))) { goto L31; }
+      T2 = ecl_car(v4si___reference);
+      if (!((T2)==(ECL_SYM("THE",856)))) { goto L31; }
+      T2 = ecl_cadr(v4si___reference);
+      T3 = cl_listX(3, ECL_SYM("MAX",551), v10, v3);
+      T1 = cl_list(3, ECL_SYM("THE",856), T2, T3);
+      goto L30;
+L31:;
+      T2 = (ECL_SYM("CAR",180)->symbol.gfdef);
+      T3 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T2, v11si__all_vars) /*  MAPCAR */;
+      T1 = cl_listX(3, ECL_SYM("MAX",551), v10, T3);
+L30:;
+      T2 = cl_list(2, T0, T1);
+      T3 = ecl_append(v11si__all_vars,v14si__let_list);
+      v14si__let_list = CONS(T2,T3);
       T0 = cl_nreverse(v14si__let_list);
-      T1 = (ECL_SYM("FIRST",373)->symbol.gfdef);
-      T2 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T1, v11si__all_vars) /*  MAPCAR */;
+      T1 = (ECL_SYM("FIRST",371)->symbol.gfdef);
+      T2 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T1, v11si__all_vars) /*  MAPCAR */;
       T3 = ecl_append(T2,v6);
       T4 = CONS(VV[17],T3);
-      T5 = cl_list(2, ECL_SYM("DECLARE",276), T4);
-      value0 = cl_list(4, ECL_SYM("LET*",480), T0, T5, v9);
+      T5 = cl_list(2, ECL_SYM("DECLARE",274), T4);
+      value0 = cl_list(4, ECL_SYM("LET*",478), T0, T5, v9);
       return value0;
      }
     }
@@ -827,12 +804,11 @@ L26:;
   }
  }
 }
-/*      local function LAMBDA46                                       */
+/*      local function G44                                            */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC14__lambda46(cl_object v1si__v)
+static cl_object LC14__g44(cl_object v1si__v)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -848,7 +824,6 @@ TTL:
 static cl_object LC17minf(cl_object v1, cl_object v2si__env)
 {
  cl_object T0, T1, T2, T3, T4, T5, T6, T7, T8;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -859,7 +834,7 @@ TTL:
    cl_object v4si___reference;
    v3 = ecl_cdr(v1);
    if (!(v3==ECL_NIL)) { goto L3; }
-   ecl_function_dispatch(cl_env_copy,VV[49])(1, v1) /*  DM-TOO-FEW-ARGUMENTS */;
+   si_dm_too_few_arguments(v1);
 L3:;
    {
     cl_object v5;
@@ -873,33 +848,31 @@ L3:;
     cl_object v8;                                 /*  STORES          */
     cl_object v9;                                 /*  SETTER          */
     cl_object v10;                                /*  GETTER          */
-    value0 = (cl_env_copy->function=(ECL_SYM("GET-SETF-EXPANSION",412)->symbol.gfdef))->cfun.entry(2, v4si___reference, v2si__env) /*  GET-SETF-EXPANSION */;
-    {
-     v6 = value0;
-     v7 = cl_env_copy->values[1];
-     v8 = cl_env_copy->values[2];
-     v9 = cl_env_copy->values[3];
-     v10 = cl_env_copy->values[4];
-    }
+    value0 = (cl_env_copy->function=(ECL_SYM("GET-SETF-EXPANSION",410)->symbol.gfdef))->cfun.entry(2, v4si___reference, v2si__env) /*  GET-SETF-EXPANSION */;
+    v6 = value0;
+    v7 = cl_env_copy->values[1];
+    v8 = cl_env_copy->values[2];
+    v9 = cl_env_copy->values[3];
+    v10 = cl_env_copy->values[4];
     {
      cl_object v11si__all_vars;
      {
       cl_object v12;
-      v12 = ecl_make_cfun((cl_objectfn_fixed)LC16__lambda57,ECL_NIL,Cblock,1);
+      v12 = ecl_make_cfun((cl_objectfn_fixed)LC16__g55,ECL_NIL,Cblock,1);
       T0 = v12;
      }
      T1 = v3;
-     v11si__all_vars = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T0, T1) /*  MAPCAR */;
+     v11si__all_vars = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T0, T1) /*  MAPCAR */;
      if (!(ECL_SYMBOLP(v10))) { goto L11; }
-     T0 = (ECL_SYM("CAR",182)->symbol.gfdef);
-     T1 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T0, v11si__all_vars) /*  MAPCAR */;
-     T2 = cl_listX(3, ECL_SYM("MIN",559), v10, T1);
+     T0 = (ECL_SYM("CAR",180)->symbol.gfdef);
+     T1 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T0, v11si__all_vars) /*  MAPCAR */;
+     T2 = cl_listX(3, ECL_SYM("MIN",557), v10, T1);
      T3 = ecl_car(v8);
-     T4 = (ECL_SYM("FIRST",373)->symbol.gfdef);
-     T5 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T4, v11si__all_vars) /*  MAPCAR */;
+     T4 = (ECL_SYM("FIRST",371)->symbol.gfdef);
+     T5 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T4, v11si__all_vars) /*  MAPCAR */;
      T6 = CONS(VV[17],T5);
-     T7 = cl_list(2, ECL_SYM("DECLARE",276), T6);
-     T8 = cl_list(4, ECL_SYM("LET*",480), v11si__all_vars, T7, v9);
+     T7 = cl_list(2, ECL_SYM("DECLARE",274), T6);
+     T8 = cl_list(4, ECL_SYM("LET*",478), v11si__all_vars, T7, v9);
      value0 = cl_subst(3, T2, T3, T8);
      return value0;
 L11:;
@@ -931,19 +904,28 @@ L20:;
       goto L19;
 L26:;
       T0 = ecl_car(v8);
-      T1 = (ECL_SYM("CAR",182)->symbol.gfdef);
-      T2 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T1, v11si__all_vars) /*  MAPCAR */;
-      T3 = cl_listX(3, ECL_SYM("MIN",559), v10, T2);
-      T4 = cl_list(2, T0, T3);
-      T5 = ecl_append(v11si__all_vars,v14si__let_list);
-      v14si__let_list = CONS(T4,T5);
+      if (!(ECL_LISTP(v4si___reference))) { goto L31; }
+      T2 = ecl_car(v4si___reference);
+      if (!((T2)==(ECL_SYM("THE",856)))) { goto L31; }
+      T2 = ecl_cadr(v4si___reference);
+      T3 = cl_listX(3, ECL_SYM("MIN",557), v10, v3);
+      T1 = cl_list(3, ECL_SYM("THE",856), T2, T3);
+      goto L30;
+L31:;
+      T2 = (ECL_SYM("CAR",180)->symbol.gfdef);
+      T3 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T2, v11si__all_vars) /*  MAPCAR */;
+      T1 = cl_listX(3, ECL_SYM("MIN",557), v10, T3);
+L30:;
+      T2 = cl_list(2, T0, T1);
+      T3 = ecl_append(v11si__all_vars,v14si__let_list);
+      v14si__let_list = CONS(T2,T3);
       T0 = cl_nreverse(v14si__let_list);
-      T1 = (ECL_SYM("FIRST",373)->symbol.gfdef);
-      T2 = (cl_env_copy->function=(ECL_SYM("MAPCAR",547)->symbol.gfdef))->cfun.entry(2, T1, v11si__all_vars) /*  MAPCAR */;
+      T1 = (ECL_SYM("FIRST",371)->symbol.gfdef);
+      T2 = (cl_env_copy->function=(ECL_SYM("MAPCAR",545)->symbol.gfdef))->cfun.entry(2, T1, v11si__all_vars) /*  MAPCAR */;
       T3 = ecl_append(T2,v6);
       T4 = CONS(VV[17],T3);
-      T5 = cl_list(2, ECL_SYM("DECLARE",276), T4);
-      value0 = cl_list(4, ECL_SYM("LET*",480), T0, T5, v9);
+      T5 = cl_list(2, ECL_SYM("DECLARE",274), T4);
+      value0 = cl_list(4, ECL_SYM("LET*",478), T0, T5, v9);
       return value0;
      }
     }
@@ -951,12 +933,11 @@ L26:;
   }
  }
 }
-/*      local function LAMBDA57                                       */
+/*      local function G55                                            */
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
-static cl_object LC16__lambda57(cl_object v1si__v)
+static cl_object LC16__g55(cl_object v1si__v)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -971,7 +952,6 @@ TTL:
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
 static cl_object L21_multiply_range(cl_object v1i, cl_object v2j)
 {
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -991,7 +971,6 @@ L1:;
 static cl_object LC20multiply_range(cl_object v1j, cl_object v2k)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -1015,8 +994,6 @@ L5:;
 L2:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[22],v1j);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
   {
    cl_fixnum v3;
    v3 = 0;
@@ -1035,8 +1012,6 @@ L16:;
 L13:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[22],v2k);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
   {
    cl_object v3;
    cl_object v4f;
@@ -1064,8 +1039,6 @@ L31:;
 L28:;
     if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[24],v6);
-    value0 = ECL_NIL;
-    cl_env_copy->nvalues = 0;
     v5m = ecl_fixnum(v6);
    }
    goto L40;
@@ -1077,16 +1050,14 @@ L39:;
      cl_object v7;
      v7 = ecl_make_fixnum(0);
      v7 = v6;
-     T0 = ecl_make_bool(ecl_greatereq(v7,ecl_make_fixnum(0)));
+     T0 = ecl_make_bool(ecl_number_compare(v7,ecl_make_fixnum(0))>=0);
      goto L46;
      T0 = ECL_NIL;
      goto L46;
     }
 L46:;
     if (ecl_unlikely(!((T0)!=ECL_NIL)))
-         FEwrong_type_argument(ECL_SYM("UNSIGNED-BYTE",887),v6);
-    value0 = ECL_NIL;
-    cl_env_copy->nvalues = 0;
+         FEwrong_type_argument(ECL_SYM("UNSIGNED-BYTE",885),v6);
     v4f = v6;
    }
    {
@@ -1110,8 +1081,6 @@ L59:;
 L56:;
     if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[24],v6);
-    value0 = ECL_NIL;
-    cl_env_copy->nvalues = 0;
     v5m = ecl_fixnum(v6);
    }
 L40:;
@@ -1129,7 +1098,6 @@ L66:;
 static cl_object LC19bisect_big(cl_object v1j, cl_object v2k)
 {
  cl_object T0, T1, T2;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -1140,7 +1108,7 @@ TTL:
    v3 = ecl_make_fixnum(0);
    if (!(ECL_FIXNUMP(v1j)||ECL_BIGNUMP(v1j))) { goto L5; }
    v3 = v1j;
-   T0 = ecl_make_bool(ecl_greatereq(v3,ecl_make_fixnum(1)));
+   T0 = ecl_make_bool(ecl_number_compare(v3,ecl_make_fixnum(1))>=0);
    goto L2;
 L5:;
    T0 = ECL_NIL;
@@ -1149,14 +1117,12 @@ L5:;
 L2:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[23],v1j);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
   {
    cl_object v3;
    v3 = ecl_make_fixnum(0);
    if (!(ECL_FIXNUMP(v2k)||ECL_BIGNUMP(v2k))) { goto L13; }
    v3 = v2k;
-   T0 = ecl_make_bool(ecl_greatereq(v3,ecl_make_fixnum(1)));
+   T0 = ecl_make_bool(ecl_number_compare(v3,ecl_make_fixnum(1))>=0);
    goto L10;
 L13:;
    T0 = ECL_NIL;
@@ -1165,8 +1131,6 @@ L13:;
 L10:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[23],v2k);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
   if (!(ecl_number_equalp(v1j,v2k))) { goto L17; }
   value0 = v1j;
   cl_env_copy->nvalues = 1;
@@ -1177,7 +1141,7 @@ L17:;
    T0 = ecl_minus(v2k,v1j);
    T1 = ecl_truncate2(T0,ecl_make_fixnum(2));
    v3middle = ecl_plus(v1j,T1);
-   if (!(ecl_lowereq(v3middle,ecl_make_fixnum(2305843009213693951)))) { goto L21; }
+   if (!(ecl_number_compare(v3middle,ecl_make_fixnum(2305843009213693951))<=0)) { goto L21; }
    T0 = LC18bisect(v1j, v3middle);
    goto L20;
 L21:;
@@ -1196,7 +1160,6 @@ L20:;
 static cl_object LC18bisect(cl_object v1j, cl_object v2k)
 {
  cl_object T0, T1, T2;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -1220,8 +1183,6 @@ L5:;
 L2:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[22],v1j);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
   {
    cl_fixnum v3;
    v3 = 0;
@@ -1240,10 +1201,8 @@ L16:;
 L13:;
   if (ecl_unlikely(!((T0)!=ECL_NIL)))
          FEwrong_type_argument(VV[22],v2k);
-  value0 = ECL_NIL;
-  cl_env_copy->nvalues = 0;
   T0 = ecl_minus(v2k,v1j);
-  if (!(ecl_lower(T0,ecl_make_fixnum(8)))) { goto L23; }
+  if (!(ecl_number_compare(T0,ecl_make_fixnum(8))<0)) { goto L23; }
   value0 = LC20multiply_range(v1j, v2k);
   return value0;
 L23:;
@@ -1265,13 +1224,12 @@ L23:;
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
 static cl_object L22_factorial(cl_object v1n)
 {
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
  {
 TTL:
-  if (!(ecl_lower(v1n,ecl_make_fixnum(2)))) { goto L1; }
+  if (!(ecl_number_compare(v1n,ecl_make_fixnum(2))<0)) { goto L1; }
   value0 = ecl_make_fixnum(1);
   cl_env_copy->nvalues = 1;
   return value0;
@@ -1284,7 +1242,6 @@ L1:;
 /*      optimize speed 3, debug 0, space 0, safety 2                  */
 static cl_object L23factorial(cl_object v1n)
 {
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -1298,7 +1255,7 @@ TTL:
     v3 = ecl_make_fixnum(0);
     if (!(ECL_FIXNUMP(v2)||ECL_BIGNUMP(v2))) { goto L7; }
     v3 = v2;
-    if (ecl_greatereq(v3,ecl_make_fixnum(0))) { goto L3; }
+    if (ecl_number_compare(v3,ecl_make_fixnum(0))>=0) { goto L3; }
     goto L4;
 L7:;
     goto L4;
@@ -1316,7 +1273,6 @@ L3:;
 static cl_object L24binomial_coefficient(cl_object v1n, cl_object v2k)
 {
  cl_object T0, T1, T2;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -1330,7 +1286,7 @@ TTL:
     v4 = ecl_make_fixnum(0);
     if (!(ECL_FIXNUMP(v3)||ECL_BIGNUMP(v3))) { goto L7; }
     v4 = v3;
-    if (ecl_greatereq(v4,ecl_make_fixnum(0))) { goto L3; }
+    if (ecl_number_compare(v4,ecl_make_fixnum(0))>=0) { goto L3; }
     goto L4;
 L7:;
     goto L4;
@@ -1347,7 +1303,7 @@ L3:;
     v4 = ecl_make_fixnum(0);
     if (!(ECL_FIXNUMP(v3)||ECL_BIGNUMP(v3))) { goto L18; }
     v4 = v3;
-    if (ecl_greatereq(v4,ecl_make_fixnum(0))) { goto L14; }
+    if (ecl_number_compare(v4,ecl_make_fixnum(0))>=0) { goto L14; }
     goto L15;
 L18:;
     goto L15;
@@ -1360,7 +1316,7 @@ L14:;
 L24:;
   si_assert_failure(1, VV[30]);
 L25:;
-  if (ecl_greatereq(v1n,v2k)) { goto L28; }
+  if (ecl_number_compare(v1n,v2k)>=0) { goto L28; }
   goto L24;
 L28:;
   if (ecl_zerop(v2k)) { goto L32; }
@@ -1375,7 +1331,7 @@ L30:;
   {
    cl_object v3n_k;
    v3n_k = ecl_minus(v1n,v2k);
-   if (!(ecl_lower(v2k,v3n_k))) { goto L35; }
+   if (!(ecl_number_compare(v2k,v3n_k)<0)) { goto L35; }
    {
     cl_object v4;
     v4 = v3n_k;
@@ -1406,7 +1362,6 @@ L43:;
 static cl_object L25subfactorial(cl_object v1n)
 {
  cl_object T0;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -1420,7 +1375,7 @@ TTL:
     v3 = ecl_make_fixnum(0);
     if (!(ECL_FIXNUMP(v2)||ECL_BIGNUMP(v2))) { goto L7; }
     v3 = v2;
-    if (ecl_greatereq(v3,ecl_make_fixnum(0))) { goto L3; }
+    if (ecl_number_compare(v3,ecl_make_fixnum(0))>=0) { goto L3; }
     goto L4;
 L7:;
     goto L4;
@@ -1470,7 +1425,6 @@ L25:;
 static cl_object L26count_permutations(cl_narg narg, cl_object v1n, ...)
 {
  cl_object T0, T1;
- cl_object env0 = ECL_NIL;
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
  ecl_cs_check(cl_env_copy,value0);
@@ -1497,7 +1451,7 @@ static cl_object L26count_permutations(cl_narg narg, cl_object v1n, ...)
     v4 = ecl_make_fixnum(0);
     if (!(ECL_FIXNUMP(v3)||ECL_BIGNUMP(v3))) { goto L8; }
     v4 = v3;
-    if (ecl_greatereq(v4,ecl_make_fixnum(0))) { goto L4; }
+    if (ecl_number_compare(v4,ecl_make_fixnum(0))>=0) { goto L4; }
     goto L5;
 L8:;
     goto L5;
@@ -1514,7 +1468,7 @@ L4:;
     v4 = ecl_make_fixnum(0);
     if (!(ECL_FIXNUMP(v3)||ECL_BIGNUMP(v3))) { goto L19; }
     v4 = v3;
-    if (ecl_greatereq(v4,ecl_make_fixnum(0))) { goto L15; }
+    if (ecl_number_compare(v4,ecl_make_fixnum(0))>=0) { goto L15; }
     goto L16;
 L19:;
     goto L16;
@@ -1527,7 +1481,7 @@ L15:;
 L25:;
   si_assert_failure(1, VV[30]);
 L26:;
-  if (ecl_greatereq(v1n,v2k)) { goto L29; }
+  if (ecl_number_compare(v1n,v2k)>=0) { goto L29; }
   goto L25;
 L29:;
   T0 = ecl_minus(v1n,v2k);
@@ -1541,7 +1495,7 @@ L29:;
 #ifdef __cplusplus
 extern "C"
 #endif
-ECL_DLLEXPORT void _eclGV3xc4hVq7NJM_aLIycC71(cl_object flag)
+ECL_DLLEXPORT void _eclGV3xc4hVq7NJM_NFi2dC71(cl_object flag)
 {
  const cl_env_ptr cl_env_copy = ecl_process_env();
  cl_object value0;
@@ -1556,101 +1510,92 @@ ECL_DLLEXPORT void _eclGV3xc4hVq7NJM_aLIycC71(cl_object flag)
  flag->cblock.data_text = compiler_data_text;
  flag->cblock.cfuns_size = compiler_cfuns_size;
  flag->cblock.cfuns = compiler_cfuns;
- flag->cblock.source = ecl_make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/numbers.lisp",-1);
+ flag->cblock.source = make_constant_base_string("/home/packer/ws/github/kisp/asgl/lib/alexandria/numbers.lisp");
  return;}
  #ifdef ECL_DYNAMIC_VV
  VV = Cblock->cblock.data;
  #endif
- Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_eclGV3xc4hVq7NJM_aLIycC71@";
+ Cblock->cblock.data_text = (const cl_object *)"@EcLtAg:_eclGV3xc4hVq7NJM_NFi2dC71@";
  VVtemp = Cblock->cblock.temp_data;
  ECL_DEFINE_SETF_FUNCTIONS
   si_select_package(VVtemp[0]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[1]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LOCATION",1862), VVtemp[2], VVtemp[3]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[0], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[4]) /*  ANNOTATE */;
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[1]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LOCATION",1777), VVtemp[2], VVtemp[3]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[0], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[4]) /*  ANNOTATE */;
   ecl_cmp_defun(VV[33]);                          /*  CLAMP           */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[0], ECL_SYM("FUNCTION",398), VVtemp[5]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[0], ECL_SYM("INLINE",436), VVtemp[6]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[1], ECL_SYM("LOCATION",1862), VVtemp[7], VVtemp[8]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[1], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[9]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[35]);                          /*  GAUSSIAN-RANDOM */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[1], ECL_SYM("FUNCTION",398), VVtemp[10]) /*  SET-DOCUMENTATION */;
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[11]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[5], ECL_SYM("LOCATION",1862), VVtemp[12], VVtemp[13]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[5], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[14]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[36]);                          /*  IOTA            */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[5], ECL_SYM("FUNCTION",398), VVtemp[15]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[5], ECL_SYM("INLINE",436), VVtemp[16]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[17]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[7], ECL_SYM("LOCATION",1862), VVtemp[18], VVtemp[19]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[7], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[20]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[39]);                          /*  MAP-IOTA        */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[7], ECL_SYM("FUNCTION",398), VVtemp[21]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[7], ECL_SYM("INLINE",436), VVtemp[22]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[23]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[8], ECL_SYM("LOCATION",1862), VVtemp[24], VVtemp[25]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[8], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[26]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[40]);                          /*  LERP            */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[8], ECL_SYM("FUNCTION",398), VVtemp[27]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[8], ECL_SYM("INLINE",436), VVtemp[28]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[29]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[9], ECL_SYM("LOCATION",1862), VVtemp[30], VVtemp[31]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[9], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[32]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[41]);                          /*  MEAN            */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[9], ECL_SYM("FUNCTION",398), VVtemp[33]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[9], ECL_SYM("INLINE",436), VVtemp[34]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[35]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[10], ECL_SYM("LOCATION",1862), VVtemp[36], VVtemp[37]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[10], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[32]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[42]);                          /*  MEDIAN          */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[10], ECL_SYM("FUNCTION",398), VVtemp[38]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[10], ECL_SYM("INLINE",436), VVtemp[39]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[40]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[11], ECL_SYM("LOCATION",1862), VVtemp[41], VVtemp[42]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[11], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[43]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[44]);                          /*  VARIANCE        */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[11], ECL_SYM("FUNCTION",398), VVtemp[44]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[11], ECL_SYM("INLINE",436), VVtemp[45]);
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[46]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[13], ECL_SYM("LOCATION",1862), VVtemp[47], VVtemp[48]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[13], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[43]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[45]);                          /*  STANDARD-DEVIATION */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[13], ECL_SYM("FUNCTION",398), VVtemp[49]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[13], ECL_SYM("INLINE",436), VVtemp[50]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[16], ECL_SYM("LOCATION",1862), VVtemp[51], VVtemp[52]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[16], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[53]) /*  ANNOTATE */;
-  ecl_cmp_defmacro(VV[48]);                       /*  MAXF            */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[16], ECL_SYM("FUNCTION",398), VVtemp[54]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[18], ECL_SYM("LOCATION",1862), VVtemp[55], VVtemp[56]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[18], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[53]) /*  ANNOTATE */;
-  ecl_cmp_defmacro(VV[50]);                       /*  MINF            */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[18], ECL_SYM("FUNCTION",398), VVtemp[57]) /*  SET-DOCUMENTATION */;
+  si_set_documentation(3, VV[0], ECL_SYM("FUNCTION",396), VVtemp[5]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[1], ECL_SYM("LOCATION",1777), VVtemp[6], VVtemp[7]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[1], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[8]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[34]);                          /*  GAUSSIAN-RANDOM */
+  si_set_documentation(3, VV[1], ECL_SYM("FUNCTION",396), VVtemp[9]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[10]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[5], ECL_SYM("LOCATION",1777), VVtemp[11], VVtemp[12]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[5], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[13]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[35]);                          /*  IOTA            */
+  si_set_documentation(3, VV[5], ECL_SYM("FUNCTION",396), VVtemp[14]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[15]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[7], ECL_SYM("LOCATION",1777), VVtemp[16], VVtemp[17]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[7], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[18]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[38]);                          /*  MAP-IOTA        */
+  si_set_documentation(3, VV[7], ECL_SYM("FUNCTION",396), VVtemp[19]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[20]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[8], ECL_SYM("LOCATION",1777), VVtemp[21], VVtemp[22]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[8], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[23]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[39]);                          /*  LERP            */
+  si_set_documentation(3, VV[8], ECL_SYM("FUNCTION",396), VVtemp[24]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[25]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[9], ECL_SYM("LOCATION",1777), VVtemp[26], VVtemp[27]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[9], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[28]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[40]);                          /*  MEAN            */
+  si_set_documentation(3, VV[9], ECL_SYM("FUNCTION",396), VVtemp[29]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[30]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[10], ECL_SYM("LOCATION",1777), VVtemp[31], VVtemp[32]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[10], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[28]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[41]);                          /*  MEDIAN          */
+  si_set_documentation(3, VV[10], ECL_SYM("FUNCTION",396), VVtemp[33]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[34]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[11], ECL_SYM("LOCATION",1777), VVtemp[35], VVtemp[36]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[11], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[37]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[43]);                          /*  VARIANCE        */
+  si_set_documentation(3, VV[11], ECL_SYM("FUNCTION",396), VVtemp[38]);
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[39]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[13], ECL_SYM("LOCATION",1777), VVtemp[40], VVtemp[41]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[13], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[37]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[44]);                          /*  STANDARD-DEVIATION */
+  si_set_documentation(3, VV[13], ECL_SYM("FUNCTION",396), VVtemp[42]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[16], ECL_SYM("LOCATION",1777), VVtemp[43], VVtemp[44]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[16], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[45]) /*  ANNOTATE */;
+  ecl_cmp_defmacro(VV[45]);                       /*  MAXF            */
+  si_set_documentation(3, VV[16], ECL_SYM("FUNCTION",396), VVtemp[46]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[18], ECL_SYM("LOCATION",1777), VVtemp[47], VVtemp[48]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[18], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[45]) /*  ANNOTATE */;
+  ecl_cmp_defmacro(VV[46]);                       /*  MINF            */
+  si_set_documentation(3, VV[18], ECL_SYM("FUNCTION",396), VVtemp[49]);
   si_Xmake_constant(VV[19], ecl_make_fixnum(8));
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[19], ECL_SYM("LOCATION",1862), VVtemp[58], VVtemp[59]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[19], ECL_SYM("LOCATION",1777), VVtemp[50], VVtemp[51]) /*  ANNOTATE */;
   si_Xmake_constant(VV[20], ecl_make_fixnum(13));
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[20], ECL_SYM("LOCATION",1862), VVtemp[60], VVtemp[61]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[21], ECL_SYM("LOCATION",1862), VVtemp[62], VVtemp[63]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[21], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[64]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[51]);                          /*  %MULTIPLY-RANGE */
-  (cl_env_copy->function=(ECL_SYM("MAPC",545)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",668), VVtemp[65]) /*  MAPC */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[25], ECL_SYM("LOCATION",1862), VVtemp[66], VVtemp[67]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[25], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[68]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[52]);                          /*  %FACTORIAL      */
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[26], ECL_SYM("LOCATION",1862), VVtemp[69], VVtemp[70]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[26], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[68]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[53]);                          /*  FACTORIAL       */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[26], ECL_SYM("FUNCTION",398), VVtemp[71]) /*  SET-DOCUMENTATION */;
-  si_put_sysprop(VV[26], ECL_SYM("INLINE",436), VVtemp[72]);
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[28], ECL_SYM("LOCATION",1862), VVtemp[73], VVtemp[74]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[28], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[75]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[54]);                          /*  BINOMIAL-COEFFICIENT */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[28], ECL_SYM("FUNCTION",398), VVtemp[76]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[31], ECL_SYM("LOCATION",1862), VVtemp[77], VVtemp[78]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[31], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[68]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[55]);                          /*  SUBFACTORIAL    */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[31], ECL_SYM("FUNCTION",398), VVtemp[79]) /*  SET-DOCUMENTATION */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[32], ECL_SYM("LOCATION",1862), VVtemp[80], VVtemp[81]) /*  ANNOTATE */;
-  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1856))(4, VV[32], ECL_SYM("LAMBDA-LIST",1000), ECL_NIL, VVtemp[82]) /*  ANNOTATE */;
-  ecl_cmp_defun(VV[56]);                          /*  COUNT-PERMUTATIONS */
-  ecl_function_dispatch(cl_env_copy,VV[34])(3, VV[32], ECL_SYM("FUNCTION",398), VVtemp[83]) /*  SET-DOCUMENTATION */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[20], ECL_SYM("LOCATION",1777), VVtemp[52], VVtemp[53]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[21], ECL_SYM("LOCATION",1777), VVtemp[54], VVtemp[55]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[21], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[56]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[47]);                          /*  %MULTIPLY-RANGE */
+  (cl_env_copy->function=(ECL_SYM("MAPC",543)->symbol.gfdef))->cfun.entry(2, ECL_SYM("PROCLAIM",666), VVtemp[57]) /*  MAPC */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[25], ECL_SYM("LOCATION",1777), VVtemp[58], VVtemp[59]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[25], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[60]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[48]);                          /*  %FACTORIAL      */
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[26], ECL_SYM("LOCATION",1777), VVtemp[61], VVtemp[62]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[26], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[60]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[49]);                          /*  FACTORIAL       */
+  si_set_documentation(3, VV[26], ECL_SYM("FUNCTION",396), VVtemp[63]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[28], ECL_SYM("LOCATION",1777), VVtemp[64], VVtemp[65]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[28], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[66]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[50]);                          /*  BINOMIAL-COEFFICIENT */
+  si_set_documentation(3, VV[28], ECL_SYM("FUNCTION",396), VVtemp[67]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[31], ECL_SYM("LOCATION",1777), VVtemp[68], VVtemp[69]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[31], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[60]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[51]);                          /*  SUBFACTORIAL    */
+  si_set_documentation(3, VV[31], ECL_SYM("FUNCTION",396), VVtemp[70]);
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[32], ECL_SYM("LOCATION",1777), VVtemp[71], VVtemp[72]) /*  ANNOTATE */;
+  ecl_function_dispatch(cl_env_copy,ECL_SYM("ANNOTATE",1771))(4, VV[32], ECL_SYM("LAMBDA-LIST",998), ECL_NIL, VVtemp[73]) /*  ANNOTATE */;
+  ecl_cmp_defun(VV[52]);                          /*  COUNT-PERMUTATIONS */
+  si_set_documentation(3, VV[32], ECL_SYM("FUNCTION",396), VVtemp[74]);
 }
