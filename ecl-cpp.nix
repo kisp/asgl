@@ -45,11 +45,11 @@ stdenv.mkDerivation rec {
   ];
 
   patches = [
-    # https://gitlab.com/embeddable-common-lisp/ecl/-/merge_requests/1
-    (fetchpatch {
-      url = "https://raw.githubusercontent.com/sagemath/sage/9.2/build/pkgs/ecl/patches/write_error.patch";
-      sha256 = "0hfxacpgn4919hg0mn4wf4m8r7y592r4gw7aqfnva7sckxi6w089";
-    })
+    # # https://gitlab.com/embeddable-common-lisp/ecl/-/merge_requests/1
+    # (fetchpatch {
+    #   url = "https://raw.githubusercontent.com/sagemath/sage/9.2/build/pkgs/ecl/patches/write_error.patch";
+    #   sha256 = "0hfxacpgn4919hg0mn4wf4m8r7y592r4gw7aqfnva7sckxi6w089";
+    # })
   ];
 
   configureFlags = [
