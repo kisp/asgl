@@ -8,4 +8,4 @@ set -euxo pipefail
 git clean -fxd
 
 nix-shell \
-  --pure --run 'bash steps.sh'
+    --pure --run 'bash steps.sh'
