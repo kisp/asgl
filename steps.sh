@@ -5,7 +5,7 @@ echo hello
 autoconf configure.ac > configure
 chmod +x configure
 
-./configure
+./configure --without-gist
 
 ./scripts/generate-make-mk.sh
 
