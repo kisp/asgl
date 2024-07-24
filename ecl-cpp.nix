@@ -41,7 +41,7 @@ let
       mpfr
       gcc
     ]
-    ++ stdenv.lib.optionals useBoehmgc [
+    ++ lib.optionals useBoehmgc [
       # replaces ecl's own gc which other packages can depend on, thus propagated
       boehmgc
     ];
