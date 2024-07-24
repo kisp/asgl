@@ -1,5 +1,5 @@
 {
-  stdenv,
+  lib, stdenv,
   fetchurl,
   fetchpatch,
   libtool,
