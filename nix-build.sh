@@ -4,7 +4,7 @@ set -euxo pipefail
 
 git add .
 
-git commit -m wip || true
+# git commit -m wip || true
 
 git clean -fxd
 
