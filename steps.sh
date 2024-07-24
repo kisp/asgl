@@ -10,3 +10,5 @@ chmod +x configure
 ./scripts/generate-make-mk.sh
 
 make
+
+./bin/asgl
