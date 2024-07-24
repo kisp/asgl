@@ -7,4 +7,6 @@ chmod +x configure
 
 ./configure
 
+./scripts/generate-make-mk.sh
+
 make
