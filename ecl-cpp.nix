@@ -57,7 +57,7 @@ stdenv.mkDerivation {
     "--with-gmp-prefix=${gmp.dev}"
     "--with-cxx"
     "--with-libffi-prefix=${libffi.dev}"
-  ] ++ (stdenv.lib.optional (!noUnicode) "--enable-unicode");
+  ] ++ (lib.optional (!noUnicode) "--enable-unicode");
 
   patches = [
     (fetchpatch {
