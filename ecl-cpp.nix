@@ -23,7 +23,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "https://common-lisp.net/project/ecl/static/files/release/ecl-${version}.tgz";
-    hash = "sha256-LUgrGgpPvV2IFDRRcDInnYCMtkBeIt2R721zNTRGS5k=";
+    hash = "sha256-dqWFxhbo+oOmtyCTJaMJ2lvAymjgZY85b0mVVjgRElQ=";
   };
 
   nativeBuildInputs = [
