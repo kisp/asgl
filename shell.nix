@@ -3,12 +3,8 @@
 }:
 
 let
-
   ecl_cpp = pkgs.callPackage ./ecl-cpp.nix { };
-  pkgsForGecode = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/515b06ef2ae59b9813b3606888e1791ede8f9090.tar.gz";
-  }) { };
-
+  gecode = pkgs.callPackage ./gecode.nix { };
 in
 
 pkgs.mkShell {
@@ -16,7 +12,7 @@ pkgs.mkShell {
     pkgs.which
     pkgs.autoconf
     ecl_cpp
-    pkgsForGecode.gecode
+    gecode
     pkgs.ragel
   ];
   shellHook = ''
