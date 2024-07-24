@@ -15,7 +15,6 @@ pkgs.mkShell {
   buildInputs = [
     pkgs.which
     pkgs.autoconf
-    # pkgs.gmp
     ecl_cpp
     pkgsForGecode.gecode
     pkgs.ragel
