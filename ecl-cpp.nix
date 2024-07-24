@@ -19,7 +19,7 @@
 
 stdenv.mkDerivation rec {
   pname = "ecl";
-  version = "24.5.10";
+  version = "16.1.2";
 
   src = fetchurl {
     url = "https://common-lisp.net/project/ecl/static/files/release/ecl-${version}.tgz";
