@@ -2,12 +2,18 @@
   pkgs ? import <nixpkgs> { },
 }:
 
+let
+
+ecl_cpp = pkgs.callPackage ./ecl_cpp.nix {};
+
+in
+
 pkgs.mkShell {
   buildInputs = [
     pkgs.which
     pkgs.autoconf
     pkgs.gmp
-    pkgs.ecl
+    ecl_cpp
     pkgs.gecode
     pkgs.ragel
   ];
