@@ -7,6 +7,7 @@ pkgs.mkShell {
     pkgs.cowsay
     pkgs.which
     pkgs.autoconf
+    pkgs.gmp
   ];
   shellHook = ''
     echo "Welcome to the development environment!"
