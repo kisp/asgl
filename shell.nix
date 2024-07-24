@@ -8,6 +8,7 @@ pkgs.mkShell {
     pkgs.autoconf
     pkgs.gmp
     pkgs.ecl
+    pkgs.gecode
   ];
   shellHook = ''
     echo "Welcome to the development environment!"
