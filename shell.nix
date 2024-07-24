@@ -4,7 +4,7 @@
 
 let
 
-ecl_cpp = pkgs.callPackage ./ecl_cpp.nix {};
+ecl_cpp = pkgs.callPackage ./ecl-cpp.nix {};
 
 in
 
