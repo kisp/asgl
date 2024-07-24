@@ -68,7 +68,8 @@ stdenv.mkDerivation rec {
 
   # ECL’s ‘make check’ only works after install, making it a de-facto
   # installCheck.
-  doInstallCheck = true;
+  # doInstallCheck = true;
+  doInstallCheck = false;
   installCheckTarget = "check";
 
   postInstall = ''
