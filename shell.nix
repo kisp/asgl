@@ -9,6 +9,7 @@ pkgs.mkShell {
     pkgs.gmp
     pkgs.ecl
     pkgs.gecode
+    pkgs.ragel
   ];
   shellHook = ''
     echo "Welcome to the development environment!"
