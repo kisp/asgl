@@ -6,7 +6,7 @@ git add .
 
 git commit -m wip || true
 
-git clean -nxd
+git clean -fxd
 
 nix-shell \
   --pure --run 'bash steps.sh'
