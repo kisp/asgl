@@ -72,3 +72,4 @@ gecode.c
 af-constraints.c
 sat.c
 README.pdf
+result

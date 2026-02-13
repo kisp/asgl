@@ -40,6 +40,7 @@ pkgs.stdenv.mkDerivation rec {
 
   buildPhase = ''
     echo "Building ASGL..."
+    bash scripts/generate-make-mk.sh
     make all
   '';
 
