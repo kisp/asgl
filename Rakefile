@@ -14,3 +14,10 @@ desc "Run the internal self-check"
 task :check do
   system("ASGL_HOME=$(pwd) ./result/bin/asgl --check") or abort("asgl --check failed!")
 end
+
+desc "Run the cucumber feature tests"
+task :test do
+  system("ln -sf ../result/bin/asgl bin/asgl") or abort("ln -s failed!")
+  system("cucumber features/informational.feature") or abort("cucumber failed!")
+  system("cucumber") or abort("cucumber failed!")
+end
