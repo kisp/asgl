@@ -1,0 +1,29 @@
+---
+on:
+  # push:
+  #   branches:
+  #     - master
+  # pull_request:
+  #   branches:
+  #     - master
+  workflow_dispatch:
+
+name: Build asgl
+
+jobs:
+  build_template:
+    name: Build asgl
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - uses: cachix/install-nix-action@v22
+        with:
+          nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/63dacb46bf939521bdc93981b4cbb7ecb58427a0.tar.gz
+
+      - name: download shell env
+        run: nix-shell --run ls
+
+      - name: ecl version
+        run: nix-shell --run 'ecl --version'

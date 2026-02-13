@@ -4,6 +4,7 @@ lisp-scripts/compile-file-system-p.lisp
 tmp
 bin/asgl
 gecode
+*.cxx
 *.o
 gr1/gr1
 gr1/gr1.c
@@ -71,3 +72,4 @@ gecode.c
 af-constraints.c
 sat.c
 README.pdf
+result
