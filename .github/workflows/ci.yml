@@ -1,13 +1,14 @@
 ---
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  # push:
+  #   branches:
+  #     - master
+  # pull_request:
+  #   branches:
+  #     - master
+  workflow_dispatch:
 
-name: Build and deploy template
+name: Build asgl
 
 jobs:
   build_template:
