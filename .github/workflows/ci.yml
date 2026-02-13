@@ -11,7 +11,7 @@ name: Build and deploy template
 
 jobs:
   build_template:
-    name: Build template
+    name: Build asgl
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
