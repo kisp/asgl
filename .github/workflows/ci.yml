@@ -33,3 +33,9 @@ jobs:
 
       - name: run check
         run: nix-shell --run 'ASGL_HOME=$(pwd) ./result/bin/asgl --check'
+
+      - name: run test very fast
+        run: nix-shell --run 'rake test_very_fast'
+
+      - name: run test
+        run: nix-shell --run 'rake test'
