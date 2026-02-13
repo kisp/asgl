@@ -9,3 +9,8 @@ task :build do
   puts "Build completed successfully!"
   system("./result/bin/asgl") or abort("asgl failed!")
 end
+
+desc "Run the internal self-check"
+task :check do
+  system("ASGL_HOME=$(pwd) ./result/bin/asgl --check") or abort("asgl --check failed!")
+end
