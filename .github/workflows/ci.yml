@@ -27,3 +27,9 @@ jobs:
 
       - name: ecl version
         run: nix-shell --run 'ecl --version'
+
+      - name: nix-build
+        run: nix-build
+
+      - name: run check
+        run: nix-shell --run 'ASGL_HOME=$(pwd) ./result/bin/asgl --check'
