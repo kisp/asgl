@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/kisp/asgl.svg?branch=master)](https://travis-ci.org/kisp/asgl)
-
 # ASGL
 
 [ASGL](https://github.com/kisp/asgl#asgl) is an abstract argumentation
