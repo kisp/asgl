@@ -29,14 +29,11 @@ pkgs.stdenv.mkDerivation rec {
     pkgs.bundler
   ];
 
-  # Generate configure and Makefile from configure.ac / Makefile.in
-  preConfigure = ''
-    echo "Running autoreconf..."
-    autoreconf -vfi
-  '';
-
   # Configure with --without-gist as per upstream build
   configurePhase = ''
+    echo "Running autoreconf..."
+    autoreconf -vfi
+
     echo "Configuring ASGL..."
     ./configure --without-gist
   '';
