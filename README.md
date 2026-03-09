@@ -200,7 +200,22 @@ The unit tests can also be run individually, e.g. by
 
 # Nix
 
-ASGL can be built and run using [Nix](https://nixos.org/). To build:
+ASGL can be built and run using [Nix](https://nixos.org/).
+
+The repository includes a `.envrc` file for [direnv](https://direnv.net/) that
+pins `nixpkgs` to a specific version (currently 24.05). This is the only version
+that is guaranteed to build, so it is strongly recommended to use `direnv` with
+the provided `.envrc`:
+
+```
+$ direnv allow
+```
+
+Once allowed, `direnv` will automatically set `NIX_PATH` to the pinned
+`nixpkgs` version whenever you enter the project directory, ensuring
+reproducible builds.
+
+To build:
 
 ```
 $ nix-build
