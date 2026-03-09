@@ -206,6 +206,19 @@ ASGL can be built and run using [Nix](https://nixos.org/). To build:
 $ nix-build
 ```
 
+After a successful build, the `asgl` binary is available under `./result`:
+
+```
+$ ./result/bin/asgl --problems
+[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]
+```
+
+To install ASGL into your user environment so that `asgl` is on your `PATH`:
+
+```
+$ nix-env -i -f default.nix
+```
+
 To enter a development shell with all prerequisites available:
 
 ```
