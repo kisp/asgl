@@ -9,7 +9,7 @@ pkgs.stdenv.mkDerivation rec {
   pname = "asgl";
   version = "0.1.4";
 
-  src = ./.;
+  src = pkgs.lib.cleanSource ./.;
 
   nativeBuildInputs = [
     pkgs.autoconf
