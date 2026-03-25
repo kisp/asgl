@@ -90,9 +90,11 @@ refer to [ICCMA15](http://argumentationcompetition.org/2015/rules.html).
 
 # Important files
 
-Dockerfile
-: executable instructions to build a [docker](https://www.docker.com/)
-container for compiling and running ASGL based on a clean ubuntu image
+default.nix
+: Nix expression to build ASGL as a Nix derivation
+
+shell.nix
+: Nix expression providing a development shell with all prerequisites
 
 asgl.lisp
 : the main implementation of ASGL
@@ -124,11 +126,10 @@ tests/
 Building ASGL needs a number of prerequisites to be installed
 beforehand, which are listed below.
 
-A more precise, executable specification is given in the accompanying
-```Dockerfile```. The instructions given there will perform all the
-necessary steps based on a clean ubuntu image. This allows for ASGL to
-be easily built and run in a [docker](https://www.docker.com/)
-container.
+A more precise, executable specification of the prerequisites is given
+in the accompanying Nix expressions (```default.nix```, ```shell.nix```,
+```ecl-cpp.nix```, ```gecode.nix```). Using [Nix](https://nixos.org/),
+ASGL can be built and run without manually installing each dependency.
 
 ## GECODE
 
@@ -197,6 +198,44 @@ some long running tests).
 The unit tests can also be run individually, e.g. by
 ```ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp ```.
 
-# Docker
+# Nix
 
-There is a docker image automatically built at [Docker Hub](https://hub.docker.com/r/kisp/asgl/builds/).
+ASGL can be built and run using [Nix](https://nixos.org/).
+
+The repository includes a `.envrc` file for [direnv](https://direnv.net/) that
+pins `nixpkgs` to a specific version (currently 24.05). This is the only version
+that is guaranteed to build, so it is strongly recommended to use `direnv` with
+the provided `.envrc`:
+
+```
+$ direnv allow
+```
+
+Once allowed, `direnv` will automatically set `NIX_PATH` to the pinned
+`nixpkgs` version whenever you enter the project directory, ensuring
+reproducible builds.
+
+To build:
+
+```
+$ nix-build
+```
+
+After a successful build, the `asgl` binary is available under `./result`:
+
+```
+$ ./result/bin/asgl --problems
+[DC-CO, DC-GR, DC-PR, DC-ST, DS-CO, DS-GR, DS-PR, DS-ST, EE-CO, EE-GR, EE-PR, EE-ST, SE-CO, SE-GR, SE-PR, SE-ST]
+```
+
+To install ASGL into your user environment so that `asgl` is on your `PATH`:
+
+```
+$ nix-env -i -f default.nix
+```
+
+To enter a development shell with all prerequisites available:
+
+```
+$ nix-shell
+```
