@@ -21,11 +21,11 @@
 %%{
   machine count_args;
   action E { arg_count++; }
-  val = [^), ]+;
-ws = ('\n' | ' ')+;
+  val = [^), \t\r\n]+;
+ws = ('\n' | '\r' | '\t' | ' ')+;
 arg = 'arg' ws? '(' ws? val ws? ')' ws? '.' %E;
-att = 'att' ws? '(' ws? val ws? ',' ws? val ')' ws? '.';
-main := ws? (arg | att) (ws (arg | att))* ws? 0 @{ res = 0; };
+att = 'att' ws? '(' ws? val ws? ',' ws? val ws? ')' ws? '.';
+main := ws? (arg | att) (ws? (arg | att))* ws? 0 @{ res = 0; };
 }%%
 
 %% write data;

@@ -16,6 +16,6 @@
 
 #include <ecl/ecl.h>
 
-void ragel_apx_parse(char *buffer, long size, cl_object table, cl_object fn);
+void ragel_apx_parse(char *buffer, long size, cl_object table, cl_object declared, cl_object fn);
 char *slurp_file(cl_object namestring, long *size);
 int count_args(char *buffer, long size);

@@ -90,18 +90,21 @@ refer to [ICCMA15](http://argumentationcompetition.org/2015/rules.html).
 
 ## The command line
 
-`asgl -h` (or `--help`) prints the usage. Without `-f`, or with `-f -`, the
-framework is read from the standard input:
+`asgl -h` (or `--help`) prints the usage, `asgl -v` (or `--version`) the
+version. Without `-f`, or with `-f -`, the framework is read from the
+standard input. Statements need no separator, and whitespace is space,
+tab, CR or LF, so a framework fits on one line:
 
 ```
-$ echo 'arg(a). arg(b). att(a,b).' | asgl -p EE-PR
+$ echo 'arg(a).arg(b).att(a,b).' | asgl -p EE-PR
 [
   [a]
 ]
 ```
 
 A mistake in the command line or in the input (an unknown option, an
-unsupported problem, a missing file, an empty input, input that is not apx)
+unsupported problem, a missing file, an empty input, input that is not apx,
+an attack on an argument that no `arg(...)` declares)
 is reported in one line on the standard error, with exit status 2:
 
 ```
@@ -233,6 +236,12 @@ $ nix build .#checks.x86_64-linux.self-check    # the unit tests
 $ nix build .#checks.x86_64-linux.features      # every cucumber feature
 $ nix run .#self-check -- tests/tests-quick.lisp  # unit tests on this tree
 ```
+
+Before changing the apx grammars (`common/early/count_args.rl`,
+`common/early/ragel_apx_parse.rl`), run their syntax suite, and again
+after: `nix run .#self-check -- tests/tests-apx-syntax.lisp`. Each case is
+a text and what ASGL makes of it; an expectation that changes is a change
+of the language ASGL reads.
 
 # Nix
 

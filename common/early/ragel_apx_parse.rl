@@ -28,6 +28,8 @@
       ecl_sethash(mys, table, index);
       index = ecl_plus(index, ecl_make_fixnum(1));
     }
+    /* the names arg(...) declares, as against those an attack mentions */
+    ecl_sethash(mys, declared, ECL_T);
   }
 
   action ATT_START {
@@ -61,16 +63,16 @@
     ecl_function_dispatch(cl_env_copy,fn)(2, att_val_a, att_val_b);
   }
 
-  val = [^), ]+;
-ws = ('\n' | ' ')+;
+  val = [^), \t\r\n]+;
+ws = ('\n' | '\r' | '\t' | ' ')+;
 arg = 'arg' ws? '(' ws? (val >S %E) ws? ')' ws? '.';
-att = (('att' %ATT_START) ws? '(' ws? (val >S %ATT_VAL_A) ws? ',' ws? (val >S %ATT_VAL_B) ')' ws? '.') %ATT_END;
-main := ws? (arg | att) (ws (arg | att | ws))* ws? 0 @{ res = 0; };
+att = (('att' %ATT_START) ws? '(' ws? (val >S %ATT_VAL_A) ws? ',' ws? (val >S %ATT_VAL_B) ws? ')' ws? '.') %ATT_END;
+main := ws? (arg | att) (ws? (arg | att))* ws? 0 @{ res = 0; };
 }%%
 
 %% write data;
 
-void ragel_apx_parse(char *buffer, long size, cl_object table, cl_object fn) {
+void ragel_apx_parse(char *buffer, long size, cl_object table, cl_object declared, cl_object fn) {
   char *p = buffer;
   char *pe = p + size + 1;
   int cs = 0;

@@ -36,6 +36,6 @@
    #:do-parents
    #:do-parents-grandparents)
   ;; apx
-  (:export #:read-apx-file)
+  (:export #:read-apx-file #:apx-error)
   ;; graph-input
   (:export #:read-graph-input))

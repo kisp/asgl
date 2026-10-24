@@ -48,6 +48,9 @@
     (read input)
     (read input)))
 
+(define-condition apx-error (simple-error) ()
+  (:documentation "Text that is apx in its syntax, but not a framework."))
+
 (defun read-apx-file (pathname)
   (unless (probe-file pathname)
     (error "file ~S does not exist" pathname))
@@ -62,19 +65,33 @@ long msize = 99;
 @(return 0) = slurp_file(#0, &msize);
 @(return 1) = msize;
 }")
-      (let ((arg-count
-             (ffi:c-inline (buffer size) (:pointer-void :long) :int
-                           "{ @(return 0) = count_args((char*)#0, #1); }")))
-        (let ((vector (make-array arg-count))
-              (hash (make-hash-table :test #'equal))
-              ;; TODO use graph api
-              (graph (make-array arg-count)))
-          (ffi:c-inline (buffer size hash
-                                (lambda (from to)
-                                  (add-edge graph from to)))
-                        (:pointer-void :long :object :object)
-                        :void
-                        "{ ragel_apx_parse((char*)#0, #1, #2, #3); }")
+      ;; count_args checks the syntax; its count is the number of arg(...)
+      ;; statements, not of names, so the sizes come from the parse
+      (ffi:c-inline (buffer size) (:pointer-void :long) :int
+                    "{ @(return 0) = count_args((char*)#0, #1); }")
+      (let ((hash (make-hash-table :test #'equal))
+            (declared (make-hash-table :test #'equal))
+            (edges '()))
+        (ffi:c-inline (buffer size hash declared
+                              (lambda (from to)
+                                (push (cons from to) edges)))
+                      (:pointer-void :long :object :object :object)
+                      :void
+                      "{ ragel_apx_parse((char*)#0, #1, #2, #3, #4); }")
+        (let ((undeclared (sort (loop for name being the hash-keys in hash
+                                      unless (gethash name declared)
+                                        collect name)
+                                #'< :key (lambda (name) (gethash name hash)))))
+          (when undeclared
+            (error 'apx-error
+                   :format-control "an attack names ~{~A~^, ~}, which no arg(...) declares"
+                   :format-arguments (list undeclared))))
+        (let* ((count (hash-table-count hash))
+               (vector (make-array count))
+               ;; TODO use graph api
+               (graph (make-array count :initial-element nil)))
+          (dolist (edge (nreverse edges))
+            (add-edge graph (car edge) (cdr edge)))
           (hash-table2vector hash vector)
           (values graph vector hash)))))
   #+nil

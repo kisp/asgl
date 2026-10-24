@@ -8,9 +8,11 @@
 ;;;                           (attacker attacked) pairs in any order
 ;;;   (:reject :count-args)   count_args refuses the text
 ;;;   (:reject :parse)        count_args accepts it, ragel_apx_parse not
-;;;   (:crash :count-mismatch) both accept it, but ragel_apx_parse finds
-;;;                           more names than count_args counted, and the
-;;;                           vector of names overflows
+;;;   (:reject :undeclared)   the syntax is apx, but an attack names an
+;;;                           argument that no arg(...) declares
+;;;   (:crash :count-mismatch) the vector of names overflows: what
+;;;                           ragel_apx_parse found was sized by count_args
+;;;                           (no case expects it since the parse sizes it)
 ;;;
 ;;; Change a grammar and run this suite first: an expectation that changes
 ;;; is a change of the language ASGL reads.
@@ -67,6 +69,8 @@
                       append (loop for attacker in (aref graph attacked)
                                    collect (list (aref vector attacker)
                                                  (aref vector attacked))))))
+      (apx-error ()
+        (list :reject :undeclared))
       (type-error ()
         (list :crash :count-mismatch))
       (simple-error (condition)
@@ -139,39 +143,51 @@
   (name-quoted "arg('a').<LF>" (:accept ("'a'") ()))
   (name-punctuation "arg(!a).<LF>arg(b_2).<LF>arg($c).<LF>" (:accept ("!a" "b_2" "$c") ())))
 
-;;; Accepted today, but not apx: the grammar's VAL is [^), ]+, so a newline
-;;; or a tab becomes part of a name
+;;; Statements need no separator; whitespace is space, tab, CR and LF,
+;;; anywhere between the tokens. (Until this suite's second commit all of
+;;; these were rejected: the grammar wanted space or newline between statements,
+;;; knew no tab or CR, and no space before an attack's closing parenthesis.)
 
 (define-apx-syntax-cases
-  (tab-in-name "arg(a<TAB>b).<LF>" (:accept ("a<TAB>b") ())))
+  (one-line-without-spaces "arg(a).arg(b)." (:accept ("a" "b") ()))
+  (one-line-attack-without-spaces "arg(a).arg(b).att(a,b)."
+                                  (:accept ("a" "b") (("a" "b"))))
+  (one-line-mixed "arg(a). arg(b).att(b,a). att(a,b)."
+                  (:accept ("a" "b") (("b" "a") ("a" "b"))))
+  (tab-between "arg(a).<TAB>arg(b).<LF>" (:accept ("a" "b") ()))
+  (tab-in-front "<TAB>arg(a).<LF>" (:accept ("a") ()))
+  (tab-inside "arg(<TAB>a<TAB>).<LF>att(<TAB>a<TAB>,<TAB>a<TAB>).<LF>"
+              (:accept ("a") (("a" "a"))))
+  (crlf "arg(a).<CR><LF>arg(b).<CR><LF>" (:accept ("a" "b") ()))
+  (crlf-attack "arg(a).<CR><LF>arg(b).<CR><LF>att(a,b).<CR><LF>"
+               (:accept ("a" "b") (("a" "b"))))
+  (space-before-attack-close "arg(a).<LF>arg(b).<LF>att(a,b ).<LF>"
+                             (:accept ("a" "b") (("a" "b"))))
+  (newline-inside-statement "arg(<LF>a<LF>).<LF>" (:accept ("a") ())))
 
-;;; Crashes today: VAL may hold a newline and WS? may too, so where a name
-;;; ends is ambiguous; ragel_apx_parse then fires its name actions on both
-;;; readings and finds more names than count_args counted
-
-(define-apx-syntax-cases
-  (newline-inside-statement "arg(<LF>a<LF>).<LF>" (:crash :count-mismatch))
-  (newline-in-name "arg(a<LF>b).<LF>" (:crash :count-mismatch)))
-
-;;; Names declared twice, or attacked without being declared. Today
-;;; count_args counts statements, not names: a name declared twice leaves
-;;; an empty slot (NIL) in the vector, and a name that only an attack
-;;; mentions overflows it
-
-(define-apx-syntax-cases
-  (duplicate-arg "arg(a).<LF>arg(a).<LF>" (:accept ("a" nil) ()))
-  (undeclared-in-attack "arg(a).<LF>att(a,b).<LF>" (:crash :count-mismatch)))
-
-;;; Rejected today, but apx: no separator between statements, tabs, CRLF,
-;;; and space before the parenthesis that closes an attack
+;;; A name holds no whitespace. (Before, VAL was [^), ]+: a tab became part
+;;; of a name, and a newline made the end of a name ambiguous, so
+;;; ragel_apx_parse found more names than count_args counted and crashed.)
 
 (define-apx-syntax-cases
-  (one-line-without-spaces "arg(a).arg(b)." (:reject :count-args))
-  (one-line-attack-without-spaces "arg(a).arg(b).att(a,b)." (:reject :count-args))
-  (tab-between "arg(a).<TAB>arg(b).<LF>" (:reject :count-args))
-  (tab-in-front "<TAB>arg(a).<LF>" (:reject :count-args))
-  (crlf "arg(a).<CR><LF>arg(b).<CR><LF>" (:reject :count-args))
-  (space-before-attack-close "arg(a).<LF>arg(b).<LF>att(a,b ).<LF>" (:reject :count-args)))
+  (tab-in-name "arg(a<TAB>b).<LF>" (:reject :count-args))
+  (newline-in-name "arg(a<LF>b).<LF>" (:reject :count-args))
+  (cr-in-name "arg(a<CR>b).<LF>" (:reject :count-args)))
+
+;;; Names declared twice are one argument; a name that only an attack
+;;; mentions is refused. (Before, the vector of names was sized by the
+;;; number of arg(...) statements: a duplicate left a NIL argument,
+;;; [[a,NIL]], and an undeclared name overflowed it.)
+
+(define-apx-syntax-cases
+  (duplicate-arg "arg(a).<LF>arg(a).<LF>" (:accept ("a") ()))
+  (duplicate-arg-with-attack "arg(a).<LF>arg(b).<LF>arg(a).<LF>att(b,a).<LF>"
+                             (:accept ("a" "b") (("b" "a"))))
+  (duplicate-attack "arg(a).<LF>arg(b).<LF>att(a,b).<LF>att(a,b).<LF>"
+                    (:accept ("a" "b") (("a" "b") ("a" "b"))))
+  (undeclared-in-attack "arg(a).<LF>att(a,b).<LF>" (:reject :undeclared))
+  (undeclared-attacker "arg(b).<LF>att(a,b).<LF>" (:reject :undeclared))
+  (only-attacks "att(a,b).<LF>" (:reject :undeclared)))
 
 ;;; Rejected: not apx
 

@@ -1455,7 +1455,7 @@
 (defun print-usage (&optional (stream *standard-output*))
   (format stream "~
 Usage: asgl -p PROBLEM [-fo apx] [-f FILE|-] [-a ARGUMENT]
-       asgl --problems | --formats | -h | --help
+       asgl --problems | --formats | -h | --help | -v | --version
 
 Solves PROBLEM for the argumentation framework in FILE, in Aspartix
 format (arg(a). att(a,b).). Without -f, or with -f -, the framework is
@@ -1469,6 +1469,7 @@ read from the standard input.
   --problems    the problems ASGL solves
   --formats     the input formats
   -h, --help    this text
+  -v, --version the version of ASGL
 
 Without any argument, asgl says who it is and how it was configured.
 "))
@@ -1497,7 +1498,10 @@ no value."
 (defun call-reading-input (description thunk)
   "THUNK, with the parser's complaint about bad input made a USAGE-ERROR
 that names DESCRIPTION, the file or the standard input."
-  (handler-bind ((simple-error
+  (handler-bind ((apx-error
+                   (lambda (condition)
+                     (usage-error "~A is not a framework: ~A" description condition)))
+                  (simple-error
                    (lambda (condition)
                      (when (member (simple-condition-format-control condition)
                                    *apx-parse-failures* :test #'equal)
@@ -1596,8 +1600,14 @@ that names DESCRIPTION, the file or the standard input."
 (defvar *cover-file*
   (merge-pathnames "cover.data" (asgl-home)))
 
+(defparameter *version* "v0.1.4-40-g0e7355d"
+  "What asgl --version and the informational message call this ASGL.")
+
+(defun print-version ()
+  (format t "ASGL version ~A~%" *version*))
+
 (defun print-informational-message ()
-  (format t "ASGL version ~A~%" "v0.1.4-40-g0e7355d")
+  (print-version)
   (write-line "Kilian Sprotte <kilian.sprotte@gmail.com>")
   (terpri)
   (write-line "configuration options: ")
@@ -1669,6 +1679,8 @@ that names DESCRIPTION, the file or the standard input."
           (print-informational-message))
          ((member (second ext:*command-args*) '("-h" "--help") :test #'equal)
           (print-usage))
+         ((member (second ext:*command-args*) '("-v" "--version") :test #'equal)
+          (print-version))
          ((equal "--formats" (second ext:*command-args*))
           (print-supported-graph-formats))
          ((equal "--problems" (second ext:*command-args*))

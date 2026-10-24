@@ -85,3 +85,37 @@ Feature: command line
      Then the exit status should be 2
      And the stderr should contain "ERROR: bad.apx is not a framework in apx format"
      And the stderr should not contain "Backtrace"
+
+  Scenario: -v and --version print the version
+     When I run `asgl -v`
+     Then the exit status should be 0
+     And the stdout should contain "ASGL version "
+     When I run `asgl --version`
+     Then the exit status should be 0
+     And the stdout should contain "ASGL version "
+
+  Scenario: a framework on one line, without spaces
+     When I run `asgl -p EE-CO` interactively
+     And I type "arg(5).arg(7)."
+     And I close the stdin stream
+     Then the exit status should be 0
+     And the output should be eql to "[[5,7]]"
+
+  Scenario: a file with tabs and CRLF line ends
+     Given a file named "crlf.apx" with "arg(a).\r\n\targ(b).\r\natt(a,b ).\r\n"
+     When I run `asgl -p EE-GR -f crlf.apx`
+     Then the exit status should be 0
+     And the output should be eql to "[[a]]"
+
+  Scenario: an argument declared twice is one argument
+     Given a file named "twice.apx" with "arg(a).\narg(a).\n"
+     When I run `asgl -p EE-CO -f twice.apx`
+     Then the exit status should be 0
+     And the output should be eql to "[[a]]"
+
+  Scenario: an attack on an undeclared argument
+     Given a file named "undeclared.apx" with "arg(a).\natt(a,b).\n"
+     When I run `asgl -p EE-CO -f undeclared.apx`
+     Then the exit status should be 2
+     And the stderr should contain "ERROR: undeclared.apx is not a framework: an attack names b, which no arg(...) declares"
+     And the stderr should not contain "Backtrace"
