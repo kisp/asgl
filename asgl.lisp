@@ -1476,9 +1476,10 @@ Without any argument, asgl says who it is and how it was configured.
 
 (defun parse-options (arguments)
   "The command line ARGUMENTS, -option value ..., as a keyword plist for
-MAIN%; a USAGE-ERROR for an option that MAIN% does not take, or that has
-no value."
-  (loop while arguments
+MAIN%; a USAGE-ERROR for an option that MAIN% does not take, that has
+no value, or that is given twice."
+  (loop with seen = '()
+        while arguments
         for option = (pop arguments)
         for name = (and (> (length option) 1)
                         (char= #\- (char option 0))
@@ -1487,6 +1488,9 @@ no value."
              (usage-error "unknown option ~A" option))
            (when (null arguments)
              (usage-error "~A needs a value" option))
+           (when (member name seen :test #'string=)
+             (usage-error "~A is given twice" option))
+           (push name seen)
         append (list (intern (string-upcase name) "KEYWORD")
                      (pop arguments))))
 
@@ -1544,6 +1548,11 @@ that names DESCRIPTION, the file or the standard input."
     (usage-error "unsupported format ~A; apx is the only one" fo))
   (when (and f g)
     (usage-error "-f and -g cannot both be given"))
+  (let ((decision (member (subseq p 0 3) '("DC-" "DS-") :test #'string-equal)))
+    (when (and decision (null a))
+      (usage-error "~:@(~A~) needs -a ARGUMENT, the argument it decides" p))
+    (when (and a (not decision))
+      (usage-error "-a is only for DC- and DS- problems")))
   (when (and f (not (equal f "-")) (not (probe-file f)))
     (usage-error "no such file: ~A" f))
   (let ((stdin-file (and (not g) (or (null f) (equal f "-"))
@@ -1556,6 +1565,12 @@ that names DESCRIPTION, the file or the standard input."
            (call-reading-input
             (if stdin-file "the standard input" f)
             (lambda ()
+              ;; -a names an argument of the framework: the solvers do not ask
+              (when (and a path)
+                (multiple-value-bind (graph vector hash) (read-apx-file path)
+                  (declare (ignore graph vector))
+                  (unless (gethash a hash)
+                    (usage-error "~A is not an argument of the framework" a))))
               (main%% :fo fo :f (if stdin-file (namestring stdin-file) f)
                       :p p :a a :g g :gist gist :log-level log-level
                       :timing timing :eval eval :load load

@@ -147,6 +147,9 @@ lingeling/
 tests/
 : unit tests
 
+CHANGELOG.md
+: what changed, release by release
+
 
 # Prerequisites
 
@@ -236,6 +239,12 @@ $ nix build .#checks.x86_64-linux.self-check    # the unit tests
 $ nix build .#checks.x86_64-linux.features      # every cucumber feature
 $ nix run .#self-check -- tests/tests-quick.lisp  # unit tests on this tree
 ```
+
+`features/command-line-suite.feature` is generated, 95 scenarios from a table
+of designed test cases: every two classes of an invocation together (what is
+asked, the problem, `-a`, the format, where the framework comes from and how
+it is written, the order of the options, an extra option), every two classes
+of the input together in a run that succeeds, and every outcome. Generate it again rather than editing it.
 
 Before changing the apx grammars (`common/early/count_args.rl`,
 `common/early/ragel_apx_parse.rl`), run their syntax suite, and again
