@@ -86,13 +86,15 @@ Feature: command line
      And the stderr should contain "ERROR: bad.apx is not a framework in apx format"
      And the stderr should not contain "Backtrace"
 
-  Scenario: -v and --version print the version
+  Scenario: -v prints the version
      When I run `asgl -v`
      Then the exit status should be 0
-     And the stdout should contain "ASGL version "
+     And the stdout should be the version line
+
+  Scenario: --version prints the version
      When I run `asgl --version`
      Then the exit status should be 0
-     And the stdout should contain "ASGL version "
+     And the stdout should be the version line
 
   Scenario: a framework on one line, without spaces
      When I run `asgl -p EE-CO` interactively

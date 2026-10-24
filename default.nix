@@ -1,4 +1,7 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> {}
+  # the commit, as `asgl --version` names it; the flake passes self.shortRev
+, commit ? null
+}:
 
 let
   ecl = pkgs.callPackage ./ecl-cpp.nix { };
@@ -7,9 +10,13 @@ in
 
 pkgs.stdenv.mkDerivation rec {
   pname = "asgl";
-  version = "0.1.4";
+  # ./VERSION is the version; asgl.lisp reads the same file
+  version = pkgs.lib.fileContents ./VERSION;
 
   src = pkgs.lib.cleanSource ./.;
+
+  # read by asgl.lisp at compile time; a sandbox has no .git to ask
+  ASGL_COMMIT = if commit == null then "" else commit;
 
   nativeBuildInputs = [
     pkgs.autoconf

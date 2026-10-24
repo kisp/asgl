@@ -1615,11 +1615,30 @@ that names DESCRIPTION, the file or the standard input."
 (defvar *cover-file*
   (merge-pathnames "cover.data" (asgl-home)))
 
-(defparameter *version* "v0.1.4-40-g0e7355d"
-  "What asgl --version and the informational message call this ASGL.")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun compile-time-commit ()
+    "The commit ASGL is compiled from: $ASGL_COMMIT (the Nix build sets it),
+else what git says in a checkout, 1a7da06 or 1a7da06-dirty; NIL when
+neither knows."
+    (let ((env (ext:getenv "ASGL_COMMIT")))
+      (if (and env (plusp (length env)))
+          env
+          (ignore-errors
+           (multiple-value-bind (stream exit-code)
+               (ext:run-program "git" '("describe" "--always" "--dirty" "--abbrev=7" "--exclude=*")
+                                :error nil)
+             (let ((line (read-line stream nil)))
+               (when (and (eql 0 exit-code) line)
+                 line))))))))
+
+(defparameter *version* #.(with-open-file (in "VERSION") (read-line in))
+  "The version of ASGL, from the file VERSION.")
+
+(defparameter *commit* #.(compile-time-commit)
+  "The commit ASGL is compiled from, or NIL.")
 
 (defun print-version ()
-  (format t "ASGL version ~A~%" *version*))
+  (format t "ASGL version ~A~@[ (~A)~]~%" *version* *commit*))
 
 (defun print-informational-message ()
   (print-version)

@@ -111,7 +111,7 @@ sat.o: sat.lisp $(asgl_config_fas) $(early_fas) $(alexandria_fas)
 	  -eval '(compile-file-system-p "$<" :dynamic-libraries t)'
 	test -f $@
 
-asgl.o: asgl.lisp gecode.fas sat.fas af-constraints.fas $(asgl_config_fas) $(early_fas) \
+asgl.o: asgl.lisp VERSION gecode.fas sat.fas af-constraints.fas $(asgl_config_fas) $(early_fas) \
 	  $(myam_fas) $(alexandria_fas) $(arnesi_list_match_fas)
 	rm -f $@
 	ecl -norc \

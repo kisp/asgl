@@ -16,13 +16,17 @@
       ];
       forEachSystem =
         f: nixpkgs.lib.genAttrs systems (system: f (import nixpkgs { inherit system; }));
+      # the commit built, for `asgl --version`: 1a7da06, or 1a7da06-dirty
+      # for a working tree with changes
+      commit = self.shortRev or self.dirtyShortRev or null;
+      asglFor = pkgs: import ./default.nix { inherit pkgs commit; };
     in
     {
-      # The package IS the unchanged classic ./default.nix, fed the pinned pkgs.
-      # So `nix build .#asgl` and a plain `nix-build` produce the same store path;
-      # the flake adds a layer, it does not fork the build.
+      # The package IS the classic ./default.nix, fed the pinned pkgs and the
+      # commit. A plain `nix-build` builds the same, only its `asgl --version`
+      # names no commit; the flake adds a layer, it does not fork the build.
       packages = forEachSystem (pkgs: rec {
-        asgl = import ./default.nix { inherit pkgs; };
+        asgl = asglFor pkgs;
         default = asgl;
       });
 
@@ -31,7 +35,7 @@
       apps = forEachSystem (pkgs: rec {
         asgl = {
           type = "app";
-          program = "${import ./default.nix { inherit pkgs; }}/bin/asgl";
+          program = "${asglFor pkgs}/bin/asgl";
         };
         default = asgl;
         # nix run .#self-check [-- tests/tests-quick.lisp ...], from the
@@ -41,7 +45,7 @@
           type = "app";
           program = "${pkgs.writeShellScript "asgl-self-check" ''
             export ASGL_HOME="$PWD"
-            exec ${import ./default.nix { inherit pkgs; }}/bin/asgl --check "$@"
+            exec ${asglFor pkgs}/bin/asgl --check "$@"
           ''}";
         };
       });
@@ -59,7 +63,7 @@
       checks = forEachSystem (
         pkgs:
         let
-          asgl = import ./default.nix { inherit pkgs; };
+          asgl = asglFor pkgs;
           src = pkgs.lib.cleanSource ./.;
           cucumber = pkgs.bundlerEnv {
             name = "cucumber-aruba-for-asgl";

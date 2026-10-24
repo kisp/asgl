@@ -12,7 +12,11 @@ arguments. What is new adds to it.
 
 ### Added
 
-- `-h` / `--help` prints the usage; `-v` / `--version` prints the version.
+- `-h` / `--help` prints the usage; `-v` / `--version` prints the version
+  and the short commit the build is from: `ASGL version 0.1.4 (1a7da06)`,
+  `(1a7da06-dirty)` for a working tree with changes. The commit comes from
+  the flake (`self.shortRev`) or from git in a checkout; a build with
+  neither prints the version alone.
 - The framework is read from the standard input when `-f` is left out or is
   `-`: `echo 'arg(a).arg(b).att(a,b).' | asgl -p EE-PR`.
 - Statements of an apx file need no separator between them, so a framework
@@ -44,6 +48,8 @@ arguments. What is new adds to it.
 - Options are parsed strictly: only those ASGL takes, each once, each with
   its value.
 - The copyright years are 2015-2026.
+- The version is kept in one place, the file `VERSION`; `default.nix` and
+  `asgl.lisp` read it.
 
 ### Fixed
 
@@ -57,6 +63,8 @@ arguments. What is new adds to it.
   with an EE- or SE- problem was silently ignored.
 - An empty file failed in `slurp_file`.
 - `asgl -h` and any unknown option ended in a backtrace.
+- The version, written into `asgl.lisp` by hand in 2015, was
+  `v0.1.4-40-g0e7355d`, naming a commit that is not in the repository.
 
 ## [0.1.4] - 2015-10-05
 

@@ -91,7 +91,7 @@ refer to [ICCMA15](http://argumentationcompetition.org/2015/rules.html).
 ## The command line
 
 `asgl -h` (or `--help`) prints the usage, `asgl -v` (or `--version`) the
-version. Without `-f`, or with `-f -`, the framework is read from the
+version, from the file `VERSION`, and the short commit the build is from. Without `-f`, or with `-f -`, the framework is read from the
 standard input. Statements need no separator, and whitespace is space,
 tab, CR or LF, so a framework fits on one line:
 
