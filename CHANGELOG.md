@@ -10,10 +10,12 @@ arguments. What is new adds to it.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-24
+
 ### Added
 
 - `-h` / `--help` prints the usage; `-v` / `--version` prints the version
-  and the short commit the build is from: `ASGL version 0.1.4 (1a7da06)`,
+  and the short commit the build is from: `ASGL version 0.2.0 (1a7da06)`,
   `(1a7da06-dirty)` for a working tree with changes. The commit comes from
   the flake (`self.shortRev`) or from git in a checkout; a build with
   neither prints the version alone.
@@ -69,3 +71,7 @@ arguments. What is new adds to it.
 ## [0.1.4] - 2015-10-05
 
 The tag v0.1.4. For it and before, see the git history.
+
+[Unreleased]: https://github.com/kisp/asgl/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kisp/asgl/compare/v0.1.4...v0.2.0
+[0.1.4]: https://github.com/kisp/asgl/releases/tag/v0.1.4
