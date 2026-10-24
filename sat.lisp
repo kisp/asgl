@@ -1,7 +1,7 @@
 ;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; -*-
 
 ;;; ASGL an abstract argumentation solver in ECL and GECODE.
-;;; Copyright (C) 2015  Kilian Sprotte
+;;; Copyright (C) 2015-2026  Kilian Sprotte
 
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by

@@ -9,7 +9,7 @@ interface to the [Lingeling SAT Solver](http://fmv.jku.at/lingeling/)
 as an alternative solver backend.  The interface of ASGL conforms to
 [ICCMA15](http://argumentationcompetition.org/2015/rules.html).
 
-    Copyright (C) 2015  Kilian Sprotte
+    Copyright (C) 2015-2026  Kilian Sprotte
     This program comes with ABSOLUTELY NO WARRANTY.
     This is free software, and you are welcome to redistribute it
     under certain conditions.
@@ -87,6 +87,30 @@ $ asgl -p EE-ST -fo apx -f "af.apx"
 
 For further examples and documentation of the interface, please
 refer to [ICCMA15](http://argumentationcompetition.org/2015/rules.html).
+
+## The command line
+
+`asgl -h` (or `--help`) prints the usage. Without `-f`, or with `-f -`, the
+framework is read from the standard input:
+
+```
+$ echo 'arg(a). arg(b). att(a,b).' | asgl -p EE-PR
+[
+  [a]
+]
+```
+
+A mistake in the command line or in the input (an unknown option, an
+unsupported problem, a missing file, an empty input, input that is not apx)
+is reported in one line on the standard error, with exit status 2:
+
+```
+$ echo 'arg(5).' | asgl -p EE-CF
+ERROR: unsupported problem EE-CF; asgl --problems lists those it solves
+asgl -h shows the usage
+```
+
+Any other error is unexpected and keeps its backtrace, with exit status 1.
 
 # Important files
 
@@ -197,6 +221,18 @@ some long running tests).
 
 The unit tests can also be run individually, e.g. by
 ```ASGL_HOME=`pwd` ./bin/asgl --check tests/tests-quick.lisp ```.
+
+## With the flake
+
+`nix flake check` runs the whole test suite: the unit tests of `asgl --check`
+and every cucumber feature, with the ICCMA15 data unpacked. Each part is a
+check of its own and can be run alone:
+
+```
+$ nix build .#checks.x86_64-linux.self-check    # the unit tests
+$ nix build .#checks.x86_64-linux.features      # every cucumber feature
+$ nix run .#self-check -- tests/tests-quick.lisp  # unit tests on this tree
+```
 
 # Nix
 

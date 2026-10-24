@@ -34,6 +34,16 @@
           program = "${import ./default.nix { inherit pkgs; }}/bin/asgl";
         };
         default = asgl;
+        # nix run .#self-check [-- tests/tests-quick.lisp ...], from the
+        # repository: the Lisp unit tests, all or the files named, against
+        # this working tree
+        self-check = {
+          type = "app";
+          program = "${pkgs.writeShellScript "asgl-self-check" ''
+            export ASGL_HOME="$PWD"
+            exec ${import ./default.nix { inherit pkgs; }}/bin/asgl --check "$@"
+          ''}";
+        };
       });
 
       # `nix develop` == the classic ./shell.nix (autoconf/ecl/gecode/ragel plus
@@ -41,6 +51,76 @@
       devShells = forEachSystem (pkgs: {
         default = import ./shell.nix { inherit pkgs; };
       });
+
+      # `nix flake check` runs the whole test suite, each part as a check of
+      # its own, so that one part can be run alone:
+      #   nix build .#checks.x86_64-linux.self-check   the Lisp unit tests
+      #   nix build .#checks.x86_64-linux.features     every cucumber feature
+      checks = forEachSystem (
+        pkgs:
+        let
+          asgl = import ./default.nix { inherit pkgs; };
+          src = pkgs.lib.cleanSource ./.;
+          cucumber = pkgs.bundlerEnv {
+            name = "cucumber-aruba-for-asgl";
+            gemdir = ./.;
+          };
+          # a writable copy of the sources, the tests write into it
+          workCopy = ''
+            export HOME=$TMPDIR
+            cp -r ${src} work
+            chmod -R u+w work
+            cd work
+          '';
+        in
+        {
+          # asgl --check: the suite of tests/*.lisp, which compiles
+          # tests/support/*.lisp first: so a C compiler and the headers ECL
+          # includes, the inputs of the development shell
+          self-check =
+            pkgs.runCommandCC "asgl-self-check"
+              {
+                nativeBuildInputs = [ asgl ];
+                buildInputs = [
+                  (pkgs.callPackage ./ecl-cpp.nix { })
+                  (pkgs.callPackage ./gecode.nix { })
+                  pkgs.boehmgc
+                  pkgs.gmp
+                  pkgs.libffi
+                ];
+              }
+              ''
+                set -o pipefail
+                ${workCopy}
+                ASGL_HOME=$PWD asgl --check | tee $out
+                grep -q 'SELF-CHECK PASSED SUCCESSFULLY' $out
+              '';
+
+          # every cucumber feature, with the data unpacked as `rake test` does
+          features =
+            pkgs.runCommand "asgl-features"
+              {
+                nativeBuildInputs = [
+                  cucumber
+                  pkgs.ruby
+                  pkgs.perl
+                  pkgs.which
+                  pkgs.gnutar
+                  pkgs.xz
+                ];
+              }
+              ''
+                set -o pipefail
+                ${workCopy}
+                mkdir -p bin
+                ln -sf ${asgl}/bin/asgl bin/asgl
+                rm -rf data/iccma15_testcases && tar xf data/iccma15_testcases.tar.xz
+                rm -rf data/real-ee-gr-solutions && tar -C data -xf data/real-ee-gr-solutions.tar.xz
+                rm -rf data/iccma15_solutions && tar xf data/iccma15_solutions.tar.xz && bash support/fixes.sh
+                cucumber --format progress | tee $out
+              '';
+        }
+      );
 
       formatter = forEachSystem (pkgs: pkgs.nixfmt-rfc-style);
     };

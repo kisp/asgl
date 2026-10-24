@@ -1,5 +1,5 @@
 // ASGL an abstract argumentation solver in ECL and GECODE.
-// Copyright (C) 2015  Kilian Sprotte
+// Copyright (C) 2015-2026  Kilian Sprotte
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ char *slurp_file(cl_object namestring, long *size) {
   buffer = (char*)calloc( 1, lSize+1 );
   if( !buffer ) { fclose(fp); fputs("memory alloc fails",stderr); exit(1);}
 
-  /* copy */
-  if( 1!=fread( buffer , lSize, 1 , fp) )
+  /* copy; an empty file has nothing to read */
+  if( lSize > 0 && 1!=fread( buffer , lSize, 1 , fp) )
     fclose(fp),free(buffer),fputs("entire read fails",stderr),exit(1);
 
   fclose(fp);

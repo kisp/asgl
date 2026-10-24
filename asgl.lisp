@@ -1,7 +1,7 @@
 ;;; -*- Mode:Lisp; Syntax:ANSI-Common-Lisp; -*-
 
 ;;; ASGL an abstract argumentation solver in ECL and GECODE.
-;;; Copyright (C) 2015  Kilian Sprotte
+;;; Copyright (C) 2015-2026  Kilian Sprotte
 
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -1432,6 +1432,97 @@
                (parse-integer string :start (1+ pos)))))
       (t form))))
 
+;;; The command line: usage, mistakes in it, and the input on stdin.
+
+(define-condition usage-error (simple-error) ()
+  (:documentation "A mistake in the command line: said in one line, exit 2."))
+
+(defun usage-error (control &rest arguments)
+  (error 'usage-error :format-control control :format-arguments arguments))
+
+(defparameter *supported-problems*
+  '("DC-CO" "DC-GR" "DC-PR" "DC-ST"
+    "DS-CO" "DS-GR" "DS-PR" "DS-ST"
+    "EE-CO" "EE-GR" "EE-PR" "EE-ST"
+    "SE-CO" "SE-GR" "SE-PR" "SE-ST")
+  "The problems ASGL solves, as -p names them.")
+
+(defparameter *options*
+  '("fo" "f" "p" "a" "g" "gist" "log-level" "timing" "eval" "load"
+    "intval" "intvar" "seed" "decay" "constr" "sat" "sat-force-freeze")
+  "The options MAIN% takes, each with a value: -fo apx, -f FILE, ...")
+
+(defun print-usage (&optional (stream *standard-output*))
+  (format stream "~
+Usage: asgl -p PROBLEM [-fo apx] [-f FILE|-] [-a ARGUMENT]
+       asgl --problems | --formats | -h | --help
+
+Solves PROBLEM for the argumentation framework in FILE, in Aspartix
+format (arg(a). att(a,b).). Without -f, or with -f -, the framework is
+read from the standard input.
+
+  -p PROBLEM    one of asgl --problems, for instance EE-PR: every
+                preferred extension
+  -fo apx       the input format; apx is the only one
+  -f FILE       the framework; - for the standard input
+  -a ARGUMENT   the argument a DC- or DS- problem asks about
+  --problems    the problems ASGL solves
+  --formats     the input formats
+  -h, --help    this text
+
+Without any argument, asgl says who it is and how it was configured.
+"))
+
+(defun parse-options (arguments)
+  "The command line ARGUMENTS, -option value ..., as a keyword plist for
+MAIN%; a USAGE-ERROR for an option that MAIN% does not take, or that has
+no value."
+  (loop while arguments
+        for option = (pop arguments)
+        for name = (and (> (length option) 1)
+                        (char= #\- (char option 0))
+                        (string-left-trim "-" option))
+        do (unless (and name (member name *options* :test #'string=))
+             (usage-error "unknown option ~A" option))
+           (when (null arguments)
+             (usage-error "~A needs a value" option))
+        append (list (intern (string-upcase name) "KEYWORD")
+                     (pop arguments))))
+
+(defparameter *apx-parse-failures*
+  '("(count_args) Parsing apx file failed. Invalid format?"
+    "(ragel_apx_parse) Parsing apx file failed. Invalid format?")
+  "What the C parser of common/early says when the input is not apx.")
+
+(defun call-reading-input (description thunk)
+  "THUNK, with the parser's complaint about bad input made a USAGE-ERROR
+that names DESCRIPTION, the file or the standard input."
+  (handler-bind ((simple-error
+                   (lambda (condition)
+                     (when (member (simple-condition-format-control condition)
+                                   *apx-parse-failures* :test #'equal)
+                       (usage-error "~A is not a framework in apx format ~
+                                     (arg(a). att(a,b).)" description)))))
+    (funcall thunk)))
+
+(defun stdin-to-file ()
+  "A new temporary file with what the standard input holds."
+  (let ((path (ext:mkstemp (merge-pathnames
+                            "asgl-stdin"
+                            (let ((tmpdir (ext:getenv "TMPDIR")))
+                              (if (and tmpdir (plusp (length tmpdir)))
+                                  (pathname (concatenate 'string
+                                                         (string-right-trim "/" tmpdir)
+                                                         "/"))
+                                  #p"/tmp/"))))))
+    (unless path
+      (error "could not make a temporary file for the standard input"))
+    (with-open-file (out path :direction :output :if-exists :supersede)
+      (loop for line = (read-line *standard-input* nil)
+            while line
+            do (write-line line out)))
+    path))
+
 (defun main% (&key (fo "apx") f p a g (gist "nil")
                 (log-level "1") (timing "t")
                 (eval "nil") (load nil)
@@ -1441,10 +1532,37 @@
                 (constr "0")
                 (sat "nil")
                 (sat-force-freeze "t"))
+  (unless p
+    (usage-error "-p PROBLEM is required; asgl --problems lists them"))
+  (unless (member p *supported-problems* :test #'string-equal)
+    (usage-error "unsupported problem ~A; asgl --problems lists those it solves" p))
   (unless (equal fo "apx")
-    (error "unsupported format ~S" fo))
-  (unless (xor f g)
-    (error "exactly one of -f or -g must be given"))
+    (usage-error "unsupported format ~A; apx is the only one" fo))
+  (when (and f g)
+    (usage-error "-f and -g cannot both be given"))
+  (when (and f (not (equal f "-")) (not (probe-file f)))
+    (usage-error "no such file: ~A" f))
+  (let ((stdin-file (and (not g) (or (null f) (equal f "-"))
+                         (stdin-to-file))))
+    (unwind-protect
+         (let ((path (or stdin-file f)))
+           (when (and path (zerop (with-open-file (in path) (file-length in))))
+             (usage-error "~A is empty: a framework needs at least one arg(...)"
+                          (if stdin-file "the standard input" f)))
+           (call-reading-input
+            (if stdin-file "the standard input" f)
+            (lambda ()
+              (main%% :fo fo :f (if stdin-file (namestring stdin-file) f)
+                      :p p :a a :g g :gist gist :log-level log-level
+                      :timing timing :eval eval :load load
+                      :intval intval :intvar intvar :seed seed :decay decay
+                      :constr constr :sat sat :sat-force-freeze sat-force-freeze))))
+      (when stdin-file
+        (delete-file stdin-file)))))
+
+(defun main%% (&key fo f p a g gist log-level timing eval load
+                 intval intvar seed decay constr sat sat-force-freeze)
+  (declare (ignore fo))
   (let* ((*use-gist* (read-from-string gist))
          (*log-level* (read-from-string log-level))
          (*with-timing* (read-from-string timing))
@@ -1490,7 +1608,7 @@
                       (read-line stream)
                     (close stream))))
   (terpri)
-  (write-line "Copyright (C) 2015  Kilian Sprotte")
+  (write-line "Copyright (C) 2015-2026  Kilian Sprotte")
   (write-line "This program comes with ABSOLUTELY NO WARRANTY.")
   (write-line "This is free software, and you are welcome to redistribute it")
   (write-line "under certain conditions."))
@@ -1499,10 +1617,7 @@
   (write-line "[apx]"))
 
 (defun print-supported-problems ()
-  (format t "[DC-CO, DC-GR, DC-PR, DC-ST, ~
-              DS-CO, DS-GR, DS-PR, DS-ST, ~
-              EE-CO, EE-GR, EE-PR, EE-ST, ~
-              SE-CO, SE-GR, SE-PR, SE-ST]~%"))
+  (format t "[~{~A~^, ~}]~%" *supported-problems*))
 
 (defun run-repl ()
   (let ((init-file (merge-pathnames ".asglrc" (user-homedir-pathname))))
@@ -1533,6 +1648,11 @@
 (defun cl-user::main ()
   (setq *debugger-hook* (lambda (c old)
                           (declare (ignore old))
+                          ;; a mistake in the command line: one line, no backtrace
+                          (when (typep c 'usage-error)
+                            (format *error-output* "ERROR: ~A~%asgl -h shows the usage~%" c)
+                            (finish-output *error-output*)
+                            (ext:quit 2))
                           (let ((*print-length* 3)
                                 (*print-level* 3))
                             (ext:dump-c-backtrace 32)
@@ -1547,6 +1667,8 @@
        (cond
          ((null (cdr ext:*command-args*))
           (print-informational-message))
+         ((member (second ext:*command-args*) '("-h" "--help") :test #'equal)
+          (print-usage))
          ((equal "--formats" (second ext:*command-args*))
           (print-supported-graph-formats))
          ((equal "--problems" (second ext:*command-args*))
@@ -1563,7 +1685,7 @@
           (load (third ext:*command-args*)))
          ((equal "--check" (second ext:*command-args*))
           (run-self-check (cddr ext:*command-args*)))
-         (t (apply #'main% (adopt-keywords (cdr ext:*command-args*)))))
+         (t (apply #'main% (parse-options (cdr ext:*command-args*)))))
     #+cover
     (cover:save-points *cover-file*)))
 
